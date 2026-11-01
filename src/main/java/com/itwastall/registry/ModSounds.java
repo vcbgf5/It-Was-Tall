@@ -26,6 +26,33 @@ public final class ModSounds {
     public static final SoundEvent AMBIENT_HEARTBEAT = register("ambient.heartbeat");
     public static final SoundEvent AMBIENT_STING = register("ambient.sting");
     public static final SoundEvent AMBIENT_KNOCK_DISTANT = register("ambient.knock_distant");
+    public static final SoundEvent AMBIENT_CAVE_DRIP = register("ambient.cave_drip");
+    public static final SoundEvent AMBIENT_ROCK_FALL = register("ambient.rock_fall");
+    public static final SoundEvent AMBIENT_CHAINS = register("ambient.chains");
+    public static final SoundEvent AMBIENT_HUM = register("ambient.hum");
+    public static final SoundEvent AMBIENT_REVERSED_VOICE = register("ambient.reversed_voice");
+
+    public static final SoundEvent GROWL = register("entity.tall_one.growl");
+    public static final SoundEvent SNIFF = register("entity.tall_one.sniff");
+    public static final SoundEvent SCRAPE = register("entity.tall_one.scrape");
+
+    // small scares
+    public static final SoundEvent SCARE_TWIG = register("scare.twig");
+    public static final SoundEvent SCARE_PEBBLE = register("scare.pebble");
+    public static final SoundEvent SCARE_DOOR = register("scare.door");
+    public static final SoundEvent SCARE_GLASS_TAP = register("scare.glass_tap");
+    public static final SoundEvent SCARE_KNOCK = register("scare.knock");
+    public static final SoundEvent SCARE_FOOTSTEPS = register("scare.footsteps");
+    public static final SoundEvent SCARE_WHISPER_RUN = register("scare.whisper_run");
+    public static final SoundEvent SCARE_GIGGLE = register("scare.giggle");
+    public static final SoundEvent SCARE_METAL = register("scare.metal");
+    public static final SoundEvent SCARE_STATIC = register("scare.static");
+    public static final SoundEvent SCARE_BREATH = register("scare.breath");
+    public static final SoundEvent SCARE_MUSIC_BOX = register("scare.music_box");
+
+    // ui (played on the client)
+    public static final SoundEvent UI_MESSAGE = register("ui.message");
+    public static final SoundEvent UI_TINNITUS = register("ui.tinnitus");
 
     private ModSounds() {
     }

@@ -29,6 +29,8 @@ public final class JumpscareOverlay {
             framesLeft = MIN_FRAMES;
         }
         MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.JUMPSCARE, 1.0f, 1.0f));
+        // ringing ears afterwards
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_TINNITUS, 1.0f, 0.6f));
     }
 
     public static void render(DrawContext ctx, RenderTickCounter tickCounter) {

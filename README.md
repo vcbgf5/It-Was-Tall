@@ -14,8 +14,13 @@ Horror mod do Minecrafta (**Fabric 1.21.1**). Coś wysokiego cię obserwuje. Nie
   - **dźwięki kopania** zbliżające się z góry,
   - **gasną pochodnie** za twoimi plecami, od najdalszej do najbliższej,
   - **stoi za tobą**: odwrócisz się = jumpscare.
-- **Własne straszne dźwięki** (36 plików, generowane proceduralnie): krzyk, bicie serca, szepty i oddech za plecami,
-  drony, wiatr, skrzypienie, krzyki i pukanie w oddali, kilof, jumpscare.
+- **Własne straszne dźwięki** (82 pliki w 40 zdarzeniach, generowane proceduralnie): krzyki z łamiącym się głosem,
+  warczenie, węszenie, bicie serca, szepty i oddech za plecami, drony, buczenie, wiatr, skrzypienie, kapanie, łańcuchy,
+  osypujące się kamienie, odwrócony głos, pukanie w szybę, kilof, jumpscare + piszczenie w uszach.
+- **Małe straszaki co 20–60 s**: trzask gałązki, spadający kamyk, stuk w szybę, skrzypnięcie drzwi, kulejące kroki
+  za plecami, szept „run…” przy uchu, chichot, zgrzyt metalu, pozytywka… (zależnie od miejsca, słyszysz tylko ty).
+- **Napis na ekranie „don't hide. just run.”**: czerwony, migoczący, z glitchami. Pojawia się po tym, jak schowasz się
+  w bazie (po jumpscarze), gdy długo siedzisz w bazie w nocy i czasem losowo w nocy / w kopalni.
 - **Ambient zależny od miejsca**: kopalnia / noc na zewnątrz / noc w bazie / dzień (rzadko). Gdy „To” jest blisko,
   słychać bicie serca. Dźwięki słyszy tylko ten gracz, którego dotyczą.
 - Config: `config/itwastall.json` (jumpscare, czas jumpscare'a, odległości, kopanie, częstotliwość zdarzeń w kopalni…).
@@ -26,6 +31,8 @@ Horror mod do Minecrafta (**Fabric 1.21.1**). Coś wysokiego cię obserwuje. Nie
 | `/itwastall spawn [odległość]` | stawia go tam, gdzie patrzysz (domyślnie 30 bloków), patrzy na ciebie |
 | `/itwastall jumpscare` | test jumpscare'a 0,1 s |
 | `/itwastall mine dig\|sounds\|torches\|peek` | wymusza zdarzenie z kopalni |
+| `/itwastall scare` | mały straszak od razu |
+| `/itwastall message [tekst]` | napis na ekranie (domyślnie „don't hide. just run.”) |
 
 ## Budowanie
 Wymaga Javy 21.

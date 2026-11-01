@@ -1,6 +1,9 @@
 package com.itwastall.command;
 
 import com.itwastall.entity.MineEvents;
+import com.itwastall.entity.ScareSounds;
+import com.itwastall.config.ItWasTallConfig;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.itwastall.entity.TallOneEntity;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModEntities;
@@ -23,6 +26,8 @@ import static net.minecraft.server.command.CommandManager.literal;
  * /itwastall spawn [distance]  - spawns It in front of you (where you are looking), staring at you
  * /itwastall jumpscare         - test the 0.1 s jumpscare
  * /itwastall mine dig|sounds|torches|peek - force a cave event
+ * /itwastall scare             - a small scare sound right now
+ * /itwastall message [text]    - red on-screen message (default "don't hide. just run.")
  */
 public final class ItWasTallCommand {
     private ItWasTallCommand() {
@@ -37,6 +42,19 @@ public final class ItWasTallCommand {
                         .then(argument("distance", IntegerArgumentType.integer(4, 96))
                                 .executes(ctx -> spawn(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "distance")))))
                 .then(mineCommand())
+                .then(literal("scare").executes(ctx -> {
+                    ScareSounds.playRandomScare(ctx.getSource().getPlayerOrThrow());
+                    return 1;
+                }))
+                .then(literal("message")
+                        .executes(ctx -> {
+                            ScareSounds.showMessage(ctx.getSource().getPlayerOrThrow(), ItWasTallConfig.INSTANCE.scareText);
+                            return 1;
+                        })
+                        .then(argument("text", StringArgumentType.greedyString()).executes(ctx -> {
+                            ScareSounds.showMessage(ctx.getSource().getPlayerOrThrow(), StringArgumentType.getString(ctx, "text"));
+                            return 1;
+                        })))
                 .then(literal("jumpscare")
                         .executes(ctx -> {
                             ModNetworking.sendJumpscare(ctx.getSource().getPlayerOrThrow());

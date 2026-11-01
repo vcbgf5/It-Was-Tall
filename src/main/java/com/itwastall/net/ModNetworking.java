@@ -12,6 +12,14 @@ public final class ModNetworking {
 
     public static void init() {
         PayloadTypeRegistry.playS2C().register(JumpscarePayload.ID, JumpscarePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
+    }
+
+    public static void sendScareText(ServerPlayerEntity player, String text) {
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        if (cfg.scareMessages && ServerPlayNetworking.canSend(player, ScareTextPayload.ID)) {
+            ServerPlayNetworking.send(player, new ScareTextPayload(text, cfg.messageMillis));
+        }
     }
 
     public static void sendJumpscare(ServerPlayerEntity player) {

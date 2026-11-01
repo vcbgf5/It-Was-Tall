@@ -6,9 +6,12 @@
    },
    {
     "name": "itwastall:entity/stare2"
+   },
+   {
+    "name": "itwastall:entity/stare3"
    }
   ],
-  "subtitle": "subtitles.itwastall.stare"
+  "subtitle": "subtitles.itwastall.entity.tall_one.stare"
  },
  "entity.tall_one.scream": {
   "sounds": [
@@ -17,9 +20,12 @@
    },
    {
     "name": "itwastall:entity/scream2"
+   },
+   {
+    "name": "itwastall:entity/scream3"
    }
   ],
-  "subtitle": "subtitles.itwastall.scream"
+  "subtitle": "subtitles.itwastall.entity.tall_one.scream"
  },
  "entity.tall_one.step": {
   "sounds": [
@@ -31,9 +37,12 @@
    },
    {
     "name": "itwastall:entity/step3"
+   },
+   {
+    "name": "itwastall:entity/step4"
    }
   ],
-  "subtitle": "subtitles.itwastall.step"
+  "subtitle": "subtitles.itwastall.entity.tall_one.step"
  },
  "entity.tall_one.sink": {
   "sounds": [
@@ -41,7 +50,7 @@
     "name": "itwastall:entity/sink"
    }
   ],
-  "subtitle": "subtitles.itwastall.sink"
+  "subtitle": "subtitles.itwastall.entity.tall_one.sink"
  },
  "entity.tall_one.hurt": {
   "sounds": [
@@ -50,25 +59,37 @@
    },
    {
     "name": "itwastall:entity/hurt2"
+   },
+   {
+    "name": "itwastall:entity/hurt3"
    }
   ],
-  "subtitle": "subtitles.itwastall.hurt"
+  "subtitle": "subtitles.itwastall.entity.tall_one.hurt"
  },
  "entity.tall_one.attack": {
   "sounds": [
    {
-    "name": "itwastall:entity/attack"
+    "name": "itwastall:entity/attack1"
+   },
+   {
+    "name": "itwastall:entity/attack2"
    }
   ],
-  "subtitle": "subtitles.itwastall.attack"
+  "subtitle": "subtitles.itwastall.entity.tall_one.attack"
  },
  "entity.tall_one.knock": {
   "sounds": [
    {
-    "name": "itwastall:entity/knock"
+    "name": "itwastall:entity/knock_glass1"
+   },
+   {
+    "name": "itwastall:entity/knock_glass2"
+   },
+   {
+    "name": "itwastall:entity/knock_door"
    }
   ],
-  "subtitle": "subtitles.itwastall.knock"
+  "subtitle": "subtitles.itwastall.entity.tall_one.knock"
  },
  "entity.tall_one.dig": {
   "sounds": [
@@ -85,12 +106,45 @@
     "name": "itwastall:entity/dig4"
    }
   ],
-  "subtitle": "subtitles.itwastall.dig"
+  "subtitle": "subtitles.itwastall.entity.tall_one.dig"
+ },
+ "entity.tall_one.growl": {
+  "sounds": [
+   {
+    "name": "itwastall:entity/growl1"
+   },
+   {
+    "name": "itwastall:entity/growl2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.entity.tall_one.growl"
+ },
+ "entity.tall_one.sniff": {
+  "sounds": [
+   {
+    "name": "itwastall:entity/sniff"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.entity.tall_one.sniff"
+ },
+ "entity.tall_one.scrape": {
+  "sounds": [
+   {
+    "name": "itwastall:entity/scrape1"
+   },
+   {
+    "name": "itwastall:entity/scrape2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.entity.tall_one.scrape"
  },
  "jumpscare": {
   "sounds": [
    {
-    "name": "itwastall:jumpscare"
+    "name": "itwastall:jumpscare1"
+   },
+   {
+    "name": "itwastall:jumpscare2"
    }
   ]
  },
@@ -121,7 +175,7 @@
     "stream": true
    }
   ],
-  "subtitle": "subtitles.itwastall.wind"
+  "subtitle": "subtitles.itwastall.ambient.wind"
  },
  "ambient.creak": {
   "sounds": [
@@ -133,9 +187,12 @@
    },
    {
     "name": "itwastall:ambient/creak3"
+   },
+   {
+    "name": "itwastall:ambient/creak4"
    }
   ],
-  "subtitle": "subtitles.itwastall.creak"
+  "subtitle": "subtitles.itwastall.ambient.creak"
  },
  "ambient.distant_scream": {
   "sounds": [
@@ -144,9 +201,12 @@
    },
    {
     "name": "itwastall:ambient/distant_scream2"
+   },
+   {
+    "name": "itwastall:ambient/distant_scream3"
    }
   ],
-  "subtitle": "subtitles.itwastall.distant_scream"
+  "subtitle": "subtitles.itwastall.ambient.distant_scream"
  },
  "ambient.whisper": {
   "sounds": [
@@ -161,9 +221,12 @@
    },
    {
     "name": "itwastall:ambient/whisper4"
+   },
+   {
+    "name": "itwastall:ambient/whisper5"
    }
   ],
-  "subtitle": "subtitles.itwastall.whisper"
+  "subtitle": "subtitles.itwastall.ambient.whisper"
  },
  "ambient.breath": {
   "sounds": [
@@ -172,9 +235,12 @@
    },
    {
     "name": "itwastall:ambient/breath2"
+   },
+   {
+    "name": "itwastall:ambient/breath3"
    }
   ],
-  "subtitle": "subtitles.itwastall.breath"
+  "subtitle": "subtitles.itwastall.ambient.breath"
  },
  "ambient.heartbeat": {
   "sounds": [
@@ -182,21 +248,201 @@
     "name": "itwastall:ambient/heartbeat"
    }
   ],
-  "subtitle": "subtitles.itwastall.heartbeat"
+  "subtitle": "subtitles.itwastall.ambient.heartbeat"
  },
  "ambient.sting": {
   "sounds": [
    {
-    "name": "itwastall:ambient/sting"
+    "name": "itwastall:ambient/sting1"
+   },
+   {
+    "name": "itwastall:ambient/sting2"
    }
   ]
  },
  "ambient.knock_distant": {
   "sounds": [
    {
-    "name": "itwastall:ambient/knock_distant"
+    "name": "itwastall:ambient/knock_distant1"
+   },
+   {
+    "name": "itwastall:ambient/knock_distant2"
    }
   ],
-  "subtitle": "subtitles.itwastall.knock_distant"
+  "subtitle": "subtitles.itwastall.ambient.knock_distant"
+ },
+ "ambient.cave_drip": {
+  "sounds": [
+   {
+    "name": "itwastall:ambient/cave_drip1"
+   },
+   {
+    "name": "itwastall:ambient/cave_drip2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.ambient.cave_drip"
+ },
+ "ambient.rock_fall": {
+  "sounds": [
+   {
+    "name": "itwastall:ambient/rock_fall"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.ambient.rock_fall"
+ },
+ "ambient.chains": {
+  "sounds": [
+   {
+    "name": "itwastall:ambient/chains"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.ambient.chains"
+ },
+ "ambient.hum": {
+  "sounds": [
+   {
+    "name": "itwastall:ambient/hum",
+    "stream": true
+   }
+  ]
+ },
+ "ambient.reversed_voice": {
+  "sounds": [
+   {
+    "name": "itwastall:ambient/reversed_voice1"
+   },
+   {
+    "name": "itwastall:ambient/reversed_voice2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.ambient.reversed_voice"
+ },
+ "scare.twig": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/twig1"
+   },
+   {
+    "name": "itwastall:scare/twig2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.twig"
+ },
+ "scare.pebble": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/pebble1"
+   },
+   {
+    "name": "itwastall:scare/pebble2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.pebble"
+ },
+ "scare.door": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/door1"
+   },
+   {
+    "name": "itwastall:scare/door2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.door"
+ },
+ "scare.glass_tap": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/glass_tap1"
+   },
+   {
+    "name": "itwastall:scare/glass_tap2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.glass_tap"
+ },
+ "scare.knock": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/knock"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.knock"
+ },
+ "scare.footsteps": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/footsteps1"
+   },
+   {
+    "name": "itwastall:scare/footsteps2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.footsteps"
+ },
+ "scare.whisper_run": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/whisper_run"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.whisper_run"
+ },
+ "scare.giggle": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/giggle1"
+   },
+   {
+    "name": "itwastall:scare/giggle2"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.giggle"
+ },
+ "scare.metal": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/metal"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.metal"
+ },
+ "scare.static": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/static"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.static"
+ },
+ "scare.breath": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/breath"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.breath"
+ },
+ "scare.music_box": {
+  "sounds": [
+   {
+    "name": "itwastall:scare/music_box"
+   }
+  ],
+  "subtitle": "subtitles.itwastall.scare.music_box"
+ },
+ "ui.message": {
+  "sounds": [
+   {
+    "name": "itwastall:ui/message"
+   }
+  ]
+ },
+ "ui.tinnitus": {
+  "sounds": [
+   {
+    "name": "itwastall:ui/tinnitus"
+   }
+  ]
  }
 }

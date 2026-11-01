@@ -34,13 +34,16 @@ public final class AmbientSounds {
     private static final Weighted[] UNDERGROUND = {
             w(ModSounds.AMBIENT_DRONE, 25), w(ModSounds.AMBIENT_CREAK, 15), c(ModSounds.AMBIENT_WHISPER, 15),
             c(ModSounds.AMBIENT_BREATH, 10), w(ModSounds.AMBIENT_DISTANT_SCREAM, 10), w(ModSounds.AMBIENT_KNOCK_DISTANT, 10),
-            w(ModSounds.DIG, 10), c(ModSounds.AMBIENT_HEARTBEAT, 5)};
+            w(ModSounds.DIG, 10), c(ModSounds.AMBIENT_HEARTBEAT, 5), w(ModSounds.AMBIENT_CAVE_DRIP, 20), w(ModSounds.AMBIENT_ROCK_FALL, 8),
+            w(ModSounds.AMBIENT_CHAINS, 6), w(ModSounds.AMBIENT_HUM, 6), c(ModSounds.AMBIENT_REVERSED_VOICE, 5)};
     private static final Weighted[] OUTSIDE_NIGHT = {
             w(ModSounds.AMBIENT_WIND, 30), w(ModSounds.AMBIENT_DISTANT_SCREAM, 20), w(ModSounds.AMBIENT_CREAK, 15),
-            c(ModSounds.AMBIENT_WHISPER, 10), w(ModSounds.AMBIENT_DRONE, 10), w(ModSounds.STEP, 10), c(ModSounds.AMBIENT_BREATH, 5)};
+            c(ModSounds.AMBIENT_WHISPER, 10), w(ModSounds.AMBIENT_DRONE, 10), w(ModSounds.STEP, 10), c(ModSounds.AMBIENT_BREATH, 5),
+            w(ModSounds.GROWL, 6), w(ModSounds.AMBIENT_REVERSED_VOICE, 4)};
     private static final Weighted[] SHELTER_NIGHT = {
             w(ModSounds.AMBIENT_CREAK, 30), w(ModSounds.AMBIENT_KNOCK_DISTANT, 25), c(ModSounds.AMBIENT_BREATH, 15),
-            c(ModSounds.AMBIENT_WHISPER, 15), w(ModSounds.AMBIENT_DRONE, 10), w(ModSounds.STEP, 5)};
+            c(ModSounds.AMBIENT_WHISPER, 15), w(ModSounds.AMBIENT_DRONE, 10), w(ModSounds.STEP, 5), w(ModSounds.AMBIENT_HUM, 8),
+            w(ModSounds.SCRAPE, 6), c(ModSounds.AMBIENT_REVERSED_VOICE, 4)};
     private static final Weighted[] DAY = {
             w(ModSounds.AMBIENT_WIND, 40), w(ModSounds.AMBIENT_CREAK, 30), w(ModSounds.AMBIENT_DRONE, 30)};
 
@@ -92,7 +95,7 @@ public final class AmbientSounds {
             if (random.nextDouble() >= chance) continue;
 
             Weighted pick = itNear && random.nextInt(3) == 0 ? c(ModSounds.AMBIENT_HEARTBEAT, 1) : pick(table, random);
-            if (pick.sound() == ModSounds.AMBIENT_DRONE || pick.sound() == ModSounds.AMBIENT_WIND) {
+            if (pick.sound() == ModSounds.AMBIENT_DRONE || pick.sound() == ModSounds.AMBIENT_WIND || pick.sound() == ModSounds.AMBIENT_HUM) {
                 if (now < st.nextDrone) continue;
                 st.nextDrone = now + 20 * 30;
             }

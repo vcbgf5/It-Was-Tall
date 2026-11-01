@@ -10,6 +10,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Simple JSON config stored in config/itwastall.json. */
 public final class ItWasTallConfig {
@@ -56,6 +58,26 @@ public final class ItWasTallConfig {
         public boolean ambientSounds = true;
         /** Chance per second that an ambient sound plays (at night / underground; daytime is 4x rarer). */
         public double ambientChancePerSecond = 0.06;
+
+        // ---- small scares ----
+        /** Short scare sounds close to you (twig snap, pebble, tap on glass, footsteps behind, giggle...). */
+        public boolean scareSounds = true;
+        public int scareMinSeconds = 20;
+        public int scareMaxSeconds = 60;
+
+        // ---- on-screen messages ----
+        /** Red flickering text in the middle of the screen. */
+        public boolean scareMessages = true;
+        /** The main message (shown about half of the time, and always after it sinks at your base). */
+        public String scareText = "don't hide. just run.";
+        /** Other messages that can appear. */
+        public List<String> messages = new ArrayList<>(List.of(
+                "just run.", "it was tall.", "it sees you.", "turn around.", "you can't hide down here.", "it knows where you sleep."));
+        /** Random messages at night / underground every this many minutes. */
+        public int messageMinMinutes = 5;
+        public int messageMaxMinutes = 15;
+        /** How long a message stays on screen. */
+        public int messageMillis = 2800;
     }
 
     private ItWasTallConfig() {

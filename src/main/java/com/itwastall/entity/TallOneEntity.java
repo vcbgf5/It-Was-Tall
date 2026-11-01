@@ -197,6 +197,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         if (modeTicks == 2 && player instanceof ServerPlayerEntity sp) {
             MineEvents.playTo(sp, ModSounds.AMBIENT_STING, getEyePos(), 1.2f, 1.0f);
         }
+        if (dist < 24 && modeTicks % 90 == 45) {
+            getWorld().playSound(null, getBlockPos(), ModSounds.GROWL, getSoundCategory(), 0.9f, 0.8f + random.nextFloat() * 0.2f);
+        }
         if (modeTicks % STARE_SOUND_INTERVAL == 1) {
             playSoundTo(player, ModSounds.STARE, 0.6f, 0.8f + random.nextFloat() * 0.2f);
         }
@@ -284,6 +287,8 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         if (modeTicks >= jumpscareAt) {
             if (player instanceof ServerPlayerEntity sp) {
                 ModNetworking.sendJumpscare(sp);
+                // you hid... it doesn't like that
+                ScareSounds.queueMessage(sp, ItWasTallConfig.INSTANCE.scareText, 40);
             }
             discard();
         }
@@ -305,6 +310,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     }
 
     public void startPeek() {
+        getWorld().playSound(null, getBlockPos(), ModSounds.SNIFF, getSoundCategory(), 0.7f, 1.0f);
         setMode(Mode.PEEK);
         getNavigation().stop();
     }
@@ -353,6 +359,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         int stage = Math.min(9, (int) (digTicks * 10f / Math.max(1, digDuration)));
         for (int i = 0; i < digCells.size(); i++) {
             getWorld().setBlockBreakingInfo(breakId(i), digCells.get(i), stage);
+        }
+        if (digTicks == 1 && random.nextInt(4) == 0) {
+            getWorld().playSound(null, getBlockPos(), ModSounds.SCRAPE, getSoundCategory(), 0.8f, 0.9f);
         }
         if (!digCells.isEmpty() && digTicks % 6 == 1) {
             BlockPos c = digCells.get(random.nextInt(digCells.size()));
