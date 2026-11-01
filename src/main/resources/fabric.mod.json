@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "itwastall",
+  "version": "${version}",
+  "name": "It Was Tall",
+  "description": "Something tall is watching. Don't let it follow you home.",
+  "authors": ["dziubek"],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/itwastall/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.itwastall.ItWasTall"],
+    "client": ["com.itwastall.client.ItWasTallClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "geckolib": ">=4.6"
+  }
+}
