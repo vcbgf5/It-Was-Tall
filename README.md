@@ -25,14 +25,28 @@ Horror mod do Minecrafta (**Fabric 1.21.1**). Coś wysokiego cię obserwuje. Nie
   słychać bicie serca. Dźwięki słyszy tylko ten gracz, którego dotyczą.
 - Config: `config/itwastall.json` (jumpscare, czas jumpscare'a, odległości, kopanie, częstotliwość zdarzeń w kopalni…).
 
-## Komendy (OP)
+## Multiplayer
+- Mod musi być **na serwerze i u każdego gracza** (Fabric + Fabric API + GeckoLib).
+- Każdy gracz ma **własne** nawiedzenie: osobne timery pojawiania się, straszaków, napisów i zdarzeń w kopalni.
+- Dźwięki-straszaki, ambient, napisy i jumpscare dostaje **tylko ten gracz**, którego dotyczą. Inni mogą zobaczyć
+  samą postać (to normalny mob), ale nie słyszą jego szeptów.
+- „To” patrzy na jednego gracza, ale jeśli **ktoś inny podejdzie za blisko**, rzuca się na niego. Kto go uderzy,
+  ten staje się celem.
+- Samo z siebie pojawia się w nocy co 8–16 min na gracza (pierwszy raz po ~3 min); nigdy dwa przy jednym graczu;
+  limit na serwer: `maxActiveIts` (domyślnie 3).
+
+## Komendy (OP, działają też z konsoli serwera)
 | Komenda | Co robi |
 |---|---|
-| `/itwastall spawn [odległość]` | stawia go tam, gdzie patrzysz (domyślnie 30 bloków), patrzy na ciebie |
-| `/itwastall jumpscare` | test jumpscare'a 0,1 s |
-| `/itwastall mine dig\|sounds\|torches\|peek` | wymusza zdarzenie z kopalni |
-| `/itwastall scare` | mały straszak od razu |
-| `/itwastall message [tekst]` | napis na ekranie (domyślnie „don't hide. just run.”) |
+| `/itwastall spawn [odległość] [gracz]` | stawia go przed graczem (domyślnie 30 bloków), patrzy na niego |
+| `/itwastall haunt [gracze]` | pojawia się „naturalnie”: w oddali, przed graczem |
+| `/itwastall jumpscare [gracze]` | jumpscare 0,1 s |
+| `/itwastall scare [gracze]` | mały straszak od razu |
+| `/itwastall message [gracze] [tekst]` | napis na ekranie (domyślnie „don't hide. just run.”) |
+| `/itwastall mine dig\|sounds\|torches\|peek [gracz]` | wymusza zdarzenie z kopalni |
+| `/itwastall status` | ile postaci jest teraz na serwerze |
+
+Np. `/itwastall message Kolega it sees you.` albo z konsoli: `itwastall jumpscare @a`.
 
 ## Budowanie
 Wymaga Javy 21.

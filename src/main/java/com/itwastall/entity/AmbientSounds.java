@@ -59,6 +59,11 @@ public final class AmbientSounds {
         return new Weighted(s, weight, true);
     }
 
+    /** Drops per-player data when a player leaves the server. */
+    public static void forget(UUID player) {
+        STATES.remove(player);
+    }
+
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(AmbientSounds::tick);
     }

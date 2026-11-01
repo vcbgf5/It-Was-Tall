@@ -60,6 +60,11 @@ public final class MineEvents {
     private MineEvents() {
     }
 
+    /** Drops per-player data when a player leaves the server. */
+    public static void forget(UUID player) {
+        STATES.remove(player);
+    }
+
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(MineEvents::tick);
     }

@@ -29,6 +29,19 @@ public final class ItWasTallConfig {
         public double chaseTriggerDistance = 12.0;
         /** Seconds of looking at it while walking closer before it starts chasing. */
         public double stareTriggerSeconds = 3.0;
+        // ---- haunting (It appearing on its own) ----
+        /** It shows up by itself in the distance and stares at you. Every player has their own timer. */
+        public boolean hauntEvents = true;
+        /** Minutes after joining before the first appearance. */
+        public int hauntFirstMinutes = 3;
+        /** Minutes between appearances for one player. */
+        public int hauntMinMinutes = 8;
+        public int hauntMaxMinutes = 16;
+        /** Only at night. */
+        public boolean hauntOnlyAtNight = true;
+        /** Server-wide limit of Its that exist at the same time. */
+        public int maxActiveIts = 3;
+
         /** Speed multiplier while chasing. */
         public double chaseSpeed = 1.45;
         /** Ticks between sinking into the ground and the jumpscare. */

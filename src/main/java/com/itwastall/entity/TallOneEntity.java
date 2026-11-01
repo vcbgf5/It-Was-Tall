@@ -186,6 +186,13 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             if (modeTicks > 200) discard();
             return;
         }
+        // Multiplayer: anyone else who walks right up to it gets chased instead.
+        PlayerEntity intruder = getWorld().getClosestPlayer(getX(), getY(), getZ(), cfg.chaseTriggerDistance,
+                p -> EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR.test(p) && p != player);
+        if (intruder != null && !ShelterCheck.isSheltered(getWorld(), intruder.getBlockPos())) {
+            startChase(intruder);
+            return;
+        }
         faceTowards(player);
 
         double dist = distanceTo(player);
@@ -214,6 +221,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     }
 
     private void startChase(PlayerEntity player) {
+        setVictim(player);
         setNoGravity(false);
         clearDig();
         setMode(Mode.CHASE);
@@ -498,17 +506,18 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         getLookControl().lookAt(player, 30f, 30f);
     }
 
+    /** Only the haunted player hears it (other players on the server don't). */
     private void playSoundTo(PlayerEntity player, SoundEvent sound, float volume, float pitch) {
-        // null "except" + position at the player = only nearby players hear it; good enough for one target
-        getWorld().playSound(null, player.getBlockPos(), sound, getSoundCategory(), volume, pitch);
+        if (player instanceof ServerPlayerEntity sp) MineEvents.playTo(sp, sound, getEyePos(), volume, pitch);
     }
 
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (getMode() == Mode.SINK || getMode() == Mode.PEEK) return false;
         boolean hurt = super.damage(source, amount);
-        if (hurt && (getMode() == Mode.STARE || getMode() == Mode.DIG) && source.getAttacker() instanceof PlayerEntity p) {
-            startChase(p);
+        if (hurt && source.getAttacker() instanceof PlayerEntity p) {
+            if (getMode() == Mode.STARE || getMode() == Mode.DIG) startChase(p);
+            else if (getMode() == Mode.CHASE) setVictim(p); // whoever hits it becomes its target
         }
         return hurt;
     }
