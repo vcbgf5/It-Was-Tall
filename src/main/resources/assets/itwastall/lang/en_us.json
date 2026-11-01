@@ -8,5 +8,12 @@
   "subtitles.itwastall.hurt": "It hurts",
   "subtitles.itwastall.attack": "It strikes",
   "subtitles.itwastall.knock": "Knocking",
-  "subtitles.itwastall.dig": "Digging nearby"
+  "subtitles.itwastall.dig": "Digging nearby",
+  "subtitles.itwastall.wind": "Wind howls",
+  "subtitles.itwastall.creak": "Something creaks",
+  "subtitles.itwastall.distant_scream": "Distant scream",
+  "subtitles.itwastall.whisper": "Whispering",
+  "subtitles.itwastall.breath": "Breathing behind you",
+  "subtitles.itwastall.heartbeat": "Heartbeat",
+  "subtitles.itwastall.knock_distant": "Distant knocking"
 }

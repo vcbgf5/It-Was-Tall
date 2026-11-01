@@ -194,6 +194,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         boolean approaching = lastVictimDistance > 0 && dist < lastVictimDistance - 0.02;
         lastVictimDistance = dist;
 
+        if (modeTicks == 2 && player instanceof ServerPlayerEntity sp) {
+            MineEvents.playTo(sp, ModSounds.AMBIENT_STING, getEyePos(), 1.2f, 1.0f);
+        }
         if (modeTicks % STARE_SOUND_INTERVAL == 1) {
             playSoundTo(player, ModSounds.STARE, 0.6f, 0.8f + random.nextFloat() * 0.2f);
         }
@@ -222,6 +225,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         }
         setTarget(player);
         getLookControl().lookAt(player, 30f, 30f);
+        if (modeTicks % 100 == 1 && player instanceof ServerPlayerEntity sp) {
+            MineEvents.playTo(sp, ModSounds.AMBIENT_HEARTBEAT, sp.getPos(), 1.0f, 1.0f);
+        }
 
         if (ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) {
             startSink();

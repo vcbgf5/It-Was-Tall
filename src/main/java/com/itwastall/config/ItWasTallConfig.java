@@ -50,6 +50,12 @@ public final class ItWasTallConfig {
         public int mineMaxY = 50;
         /** Digging slowdown: 1.0 = like a player with an iron pickaxe, higher = slower and creepier. */
         public double digSlowdown = 2.0;
+
+        // ---- ambience ----
+        /** Creepy ambient sounds (wind, whispers, breathing behind you, creaks, drones, distant screams...). */
+        public boolean ambientSounds = true;
+        /** Chance per second that an ambient sound plays (at night / underground; daytime is 4x rarer). */
+        public double ambientChancePerSecond = 0.06;
     }
 
     private ItWasTallConfig() {

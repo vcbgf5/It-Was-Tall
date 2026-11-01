@@ -2,6 +2,7 @@ package com.itwastall;
 
 import com.itwastall.command.ItWasTallCommand;
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.entity.AmbientSounds;
 import com.itwastall.entity.MineEvents;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModEntities;
@@ -29,6 +30,7 @@ public class ItWasTall implements ModInitializer {
         ModItems.init();
         ModNetworking.init();
         MineEvents.init();
+        AmbientSounds.init();
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         LOGGER.info("It was tall.");
     }

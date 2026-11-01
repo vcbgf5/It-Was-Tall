@@ -17,6 +17,16 @@ public final class ModSounds {
     public static final SoundEvent DIG = register("entity.tall_one.dig");
     public static final SoundEvent JUMPSCARE = register("jumpscare");
 
+    public static final SoundEvent AMBIENT_DRONE = register("ambient.drone");
+    public static final SoundEvent AMBIENT_WIND = register("ambient.wind");
+    public static final SoundEvent AMBIENT_CREAK = register("ambient.creak");
+    public static final SoundEvent AMBIENT_DISTANT_SCREAM = register("ambient.distant_scream");
+    public static final SoundEvent AMBIENT_WHISPER = register("ambient.whisper");
+    public static final SoundEvent AMBIENT_BREATH = register("ambient.breath");
+    public static final SoundEvent AMBIENT_HEARTBEAT = register("ambient.heartbeat");
+    public static final SoundEvent AMBIENT_STING = register("ambient.sting");
+    public static final SoundEvent AMBIENT_KNOCK_DISTANT = register("ambient.knock_distant");
+
     private ModSounds() {
     }
 

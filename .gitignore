@@ -6,4 +6,3 @@ run/
 *.iml
 .vscode/
 tools/preview/shots/
-tools/preview/three.min.js

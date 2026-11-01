@@ -14,6 +14,10 @@ Horror mod do Minecrafta (**Fabric 1.21.1**). Coś wysokiego cię obserwuje. Nie
   - **dźwięki kopania** zbliżające się z góry,
   - **gasną pochodnie** za twoimi plecami, od najdalszej do najbliższej,
   - **stoi za tobą**: odwrócisz się = jumpscare.
+- **Własne straszne dźwięki** (36 plików, generowane proceduralnie): krzyk, bicie serca, szepty i oddech za plecami,
+  drony, wiatr, skrzypienie, krzyki i pukanie w oddali, kilof, jumpscare.
+- **Ambient zależny od miejsca**: kopalnia / noc na zewnątrz / noc w bazie / dzień (rzadko). Gdy „To” jest blisko,
+  słychać bicie serca. Dźwięki słyszy tylko ten gracz, którego dotyczą.
 - Config: `config/itwastall.json` (jumpscare, czas jumpscare'a, odległości, kopanie, częstotliwość zdarzeń w kopalni…).
 
 ## Komendy (OP)
@@ -34,6 +38,8 @@ Zależności w grze: Fabric Loader, Fabric API, GeckoLib (Fabric 1.21.1).
 ## Narzędzia (tools/)
 - `gen_model.py` – generuje model (`geo/entity/tall_one.geo.json`) i tekstury z `tools/source/face_photo.png`.
 - `gen_animations.py` – generuje animacje.
+- `gen_sounds.py` – syntezuje wszystkie dźwięki (numpy + ffmpeg).
+- `build_sound_preview.py` + `preview/it_was_tall_sounds.html` – strona do odsłuchu dźwięków.
 - `build_preview.py` + `preview/it_was_tall_preview.html` – podgląd 3D w przeglądarce (z animacjami i sceną).
   Do przebudowania podglądu potrzebny jest `tools/preview/three.min.js` (three.js r128).
 

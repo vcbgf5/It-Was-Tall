@@ -274,7 +274,7 @@ public final class MineEvents {
                     it.setVictim(player);
                     world.spawnEntity(it);
                     it.startPeek();
-                    playTo(player, ModSounds.STARE, it.getPos(), 0.4f, 0.6f);
+                    playTo(player, ModSounds.AMBIENT_BREATH, it.getEyePos(), 0.8f, 0.9f);
                     return true;
                 }
             }
