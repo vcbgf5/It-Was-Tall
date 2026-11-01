@@ -1,3 +1,5 @@
+<p align="center"><img src="tools/icon/icon_1024.png" width="256" alt="It Was Tall"></p>
+
 # It Was Tall
 
 Horror mod do Minecrafta (**Fabric 1.21.1**). Coś wysokiego cię obserwuje. Nie pozwól, żeby poszło za tobą do domu.
@@ -59,6 +61,7 @@ Zależności w grze: Fabric Loader, Fabric API, GeckoLib (Fabric 1.21.1).
 ## Narzędzia (tools/)
 - `gen_model.py` – generuje model (`geo/entity/tall_one.geo.json`) i tekstury z `tools/source/face_photo.png`.
 - `gen_animations.py` – generuje animacje.
+- `build_icon.py` – ikona moda: render sylwetki z prawdziwego modelu + noc, księżyc, mgła, napis (Pillow + three.js).
 - `gen_sounds.py` – syntezuje wszystkie dźwięki (numpy + ffmpeg).
 - `build_sound_preview.py` + `preview/it_was_tall_sounds.html` – strona do odsłuchu dźwięków.
 - `build_preview.py` + `preview/it_was_tall_preview.html` – podgląd 3D w przeglądarce (z animacjami i sceną).
