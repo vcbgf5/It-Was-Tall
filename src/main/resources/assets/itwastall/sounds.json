@@ -431,6 +431,15 @@
   ],
   "subtitle": "subtitles.itwastall.scare.music_box"
  },
+ "ui.it_joined": {
+  "sounds": [
+   {
+    "name": "itwastall:ambient/drone2",
+    "volume": 1.0,
+    "pitch": 0.8
+   }
+  ]
+ },
  "ui.message": {
   "sounds": [
    {

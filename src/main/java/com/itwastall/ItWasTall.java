@@ -2,6 +2,7 @@ package com.itwastall;
 
 import com.itwastall.command.ItWasTallCommand;
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.director.Director;
 import com.itwastall.entity.AmbientSounds;
 import com.itwastall.entity.HauntDirector;
 import com.itwastall.entity.MineEvents;
@@ -12,6 +13,8 @@ import com.itwastall.registry.ModItems;
 import com.itwastall.registry.ModSounds;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
@@ -45,6 +48,14 @@ public class ItWasTall implements ModInitializer {
             HauntDirector.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
+        // Director: load phase/stage/tension from the world data before anything runs...
+        ServerLifecycleEvents.SERVER_STARTING.register(Director::init);
+        // ...tick the activation counter / tension / stage promotions (ORDER NOTE: registered
+        // AFTER the mechanic systems above on purpose so they see the fresh tick's state first;
+        // order is not critical, Director only reads + writes the shared live state...)
+        ServerTickEvents.END_SERVER_TICK.register(Director::tick);
+        // ...and flush the state when the server stops.
+        ServerLifecycleEvents.SERVER_STOPPING.register(Director::stop);
         LOGGER.info("It was tall.");
     }
 }

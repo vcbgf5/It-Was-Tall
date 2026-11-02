@@ -91,6 +91,70 @@ public final class ItWasTallConfig {
         public int messageMaxMinutes = 15;
         /** How long a message stays on screen. */
         public int messageMillis = 2800;
+
+        // ---- phase activation (PHASE 0 -> ACTIVE) ----
+        /** When the "IT JOINED" one-day intro triggers. */
+        public Activation activation = new Activation();
+
+        /** Tension accrual and stage thresholds (PHASES.md §2). */
+        public Tension tension = new Tension();
+
+        /**
+         * Per-stage overrides of director/Stage.java's balance table; entry {@code i} overrides stage {@code i}.
+         * Missing fields (or missing entries) fall back to the built-in table values, so leave this
+         * array away entirely to use the defaults.
+         */
+        public StageOverride[] stages = new StageOverride[6];
+    }
+
+    /** Activation of the mod after the first full Minecraft day. */
+    public static final class Activation {
+        /** Physical elapsed server ticks during PHASE 0 before the IT JOINED sequence may fire (24000 = one day). */
+        public int afterTicks = 24000;
+        /** Require night (time of day 13000..23000) in the Overworld for the automatic activation. */
+        public boolean requireNight = true;
+    }
+
+    /** Escalation of tension driving the stage auto-promotions. */
+    public static final class Tension {
+        /** Scales every source of tension. */
+        public double escalationSpeed = 1.0;
+        /** Tension per second for playing at night in the Overworld. */
+        public double nightPerSec = 0.03;
+        /** Tension per second for standing in darkness (block light < 4) at night. */
+        public double darknessPerSec = 0.10;
+        /** Tension per second for being underground (Y below {@code mineMaxY}), day or night. */
+        public double undergroundPerSec = 0.12;
+        /** Stage threshold i promotes to stage i + 1 when {@code tension >= thresholds[i]}. */
+        public List<Integer> thresholds = new ArrayList<>(List.of(20, 40, 55, 70, 85));
+    }
+
+    /** Optional per-stage overrides; all fields nullable, null = use the built-in stage table. */
+    public static final class StageOverride {
+        /** Haunt appearance distance range (blocks). */
+        public Integer hauntMinDist;
+        public Integer hauntMaxDist;
+        /** Cooldown between hauntings per player (seconds). */
+        public Integer hauntCooldownMinSec;
+        public Integer hauntCooldownMaxSec;
+        /** Tall One may start chasing. */
+        public Boolean chaseEnabled;
+        public Double chaseChance;
+        public Boolean sinkEnabled;
+        /** Cave digging events. */
+        public Boolean digEnabled;
+        public Boolean peekEnabled;
+        /** 0 = none, 1 = sound only, 2 = sound + figure, 3 = break glass. */
+        public Integer windowKnockLevel;
+        public Boolean scareTextEnabled;
+        public Double scareTextChancePerHideEvent;
+        public Boolean jumpscareEnabled;
+        /** Chance for a false presence sighting (0..1). */
+        public Double falsePresenceChance;
+        /** 2 = none, 3 = mine only, 4 = mine + base, 5 = mine + base + base lights. */
+        public Integer torchDouseLevel;
+        /** 0 = none, 1 = exit + lights, 2 = + dont_look, 3 = + hide_and_seek. */
+        public Integer tasksFlag;
     }
 
     private ItWasTallConfig() {

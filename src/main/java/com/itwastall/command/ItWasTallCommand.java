@@ -1,6 +1,7 @@
 package com.itwastall.command;
 
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.director.Director;
 import com.itwastall.entity.HauntDirector;
 import com.itwastall.entity.MineEvents;
 import com.itwastall.entity.ScareSounds;
@@ -39,7 +40,12 @@ import static net.minecraft.server.command.CommandManager.literal;
  * /itwastall scare [players]                    - a small scare sound
  * /itwastall message [players] [text]           - red on-screen message (default "don't hide. just run.")
  * /itwastall mine dig|sounds|torches|peek [player] - force a cave event
- * /itwastall status                             - how many Its exist on the server
+ * /itwastall stage                                - FAZE (PRE/ACTIVE), ETAP (0-5 + name), tension, itJoined
+ * /itwastall stage <0-5>                          - set the stage immediately (runtime, no restart)
+ * /itwastall tension                              - show the tension
+ * /itwastall tension <+/-(number)>                - add/remove tension
+ * /itwastall phase activate                       - force the IT JOINED sequence (PRE -> ACTIVE)
+ * /itwastall status                               - how many Its exist on the server + phase/stage info
  * </pre>
  */
 public final class ItWasTallCommand {
@@ -74,11 +80,67 @@ public final class ItWasTallCommand {
                                             return each(ctx, EntityArgumentType.getPlayers(ctx, "players"), "message", p -> ScareSounds.showMessage(p, text));
                                         }))))
                 .then(mineCommand())
+                .then(literal("stage")
+                        .executes(ctx -> {
+                            ctx.getSource().sendFeedback(() -> Text.literal(Director.statusLine()), false);
+                            return Director.stageIndex();
+                        })
+                        .then(argument("stage", IntegerArgumentType.integer(0, 5))
+                                .executes(ctx -> {
+                                    int n = IntegerArgumentType.getInteger(ctx, "stage");
+                                    Director.setStage(n);
+                                    String feedback = "Stage set to " + n + " (" + Director.currentStage().displayName() + ")."
+                                            + " Applies from the next tick, no restart needed.";
+                                    ctx.getSource().sendFeedback(() -> Text.literal(feedback), false);
+                                    return n;
+                                })))
+                .then(literal("tension")
+                        .executes(ctx -> {
+                            double v = Director.tension();
+                            ctx.getSource().sendFeedback(() -> Text.literal("Tension: " + fmt(v) + " / 100 (stage " + Director.stageIndex() + ")"), false);
+                            return (int) v; // narrow: brigadier wants an int status code here
+                        })
+                        .then(argument("amount", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    double amount = parseSigned(StringArgumentType.getString(ctx, "amount"));
+                                    Director.addTension(amount);
+                                    ctx.getSource().sendFeedback(() -> Text.literal("Tension " + (amount >= 0 ? "+ " : "- ") + fmt(Math.abs(amount))
+                                            + " -> " + fmt(Director.tension()) + " / 100 (stage " + Director.stageIndex() + ")"), false);
+                                    return 1;
+                                })))
+                .then(literal("phase")
+                        .then(literal("activate")
+                                .executes(ctx -> {
+                                    boolean ok = Director.activatePhase(ctx.getSource().getServer());
+                                    if (ok) {
+                                        ctx.getSource().sendFeedback(() -> Text.literal("Phase activated — IT JOINED broadcast to everyone."), false);
+                                    } else {
+                                        ctx.getSource().sendError(Text.literal("Phase is already ACTIVE."));
+                                    }
+                                    return ok ? 1 : 0;
+                                })))
                 .then(literal("status").executes(ctx -> {
                     int n = HauntDirector.countActive(ctx.getSource().getServer());
                     ctx.getSource().sendFeedback(() -> Text.literal("Its on the server: " + n + " / " + ItWasTallConfig.INSTANCE.maxActiveIts), false);
+                    ctx.getSource().sendFeedback(() -> Text.literal(Director.statusLine()), false);
                     return n;
                 })));
+    }
+
+    /** Command readout: PHASE, ETAP (index + name), tension, itJoined. */
+    private static String fmt(double v) {
+        return String.format(Locale.ROOT, "%.2f", v);
+    }
+
+    /** "/itwastall tension <amount>": accept "10", "+10", "-7.5". */
+    private static double parseSigned(String raw) {
+        String s = raw.trim();
+        try {
+            if (s.startsWith("+")) s = s.substring(1);
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Not a number: " + raw);
+        }
     }
 
     private interface PlayerAction {
