@@ -40,7 +40,7 @@ public final class ItWasTallConfig {
         /** Only at night. */
         public boolean hauntOnlyAtNight = true;
         /** Server-wide limit of Its that exist at the same time. */
-        public int maxActiveIts = 3;
+        public int maxActiveIts = 1;
 
         /** Speed multiplier while chasing. */
         public double chaseSpeed = 1.45;
