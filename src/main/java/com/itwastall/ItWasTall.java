@@ -49,7 +49,7 @@ public class ItWasTall implements ModInitializer {
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...
-        ServerLifecycleEvents.SERVER_STARTING.register(Director::init);
+        ServerLifecycleEvents.SERVER_STARTED.register(Director::init);
         // ...tick the activation counter / tension / stage promotions (ORDER NOTE: registered
         // AFTER the mechanic systems above on purpose so they see the fresh tick's state first;
         // order is not critical, Director only reads + writes the shared live state...)
