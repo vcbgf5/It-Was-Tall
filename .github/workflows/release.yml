@@ -1,6 +1,4 @@
-# Creates a GitHub Release with the built mod jar.
-# Trigger 1: push a tag like "0.3.1" (or any v-prefixed/numeric semver tag).
-# Trigger 2: run "workflow_dispatch" and enter the tag name manually.
+
 name: Release
 
 on:
@@ -8,10 +6,11 @@ on:
     tags:
       - '[0-9]*.[0-9]*.[0-9]*'
       - 'v[0-9]*.[0-9]*.[0-9]*'
+
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag for the release (e.g. 0.3.1). Created at current main if it does not exist.'
+        description: 'Release version (e.g. 0.3.1)'
         required: true
         type: string
 
@@ -21,17 +20,55 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ github.ref_name }}
-    steps:
-      - name: Resolve tag
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: echo "TAG=${{ inputs.tag }}" >> "$GITHUB_ENV"
 
+    steps:
+      # First checkout main so we can create a missing tag.
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # Resolve the requested tag and create it if necessary.
+      - name: Resolve and create tag
+        id: resolve
+        env:
+          INPUT_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          TAG="$INPUT_TAG"
+
+          if [[ ! "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version tag: $TAG"
+            exit 1
+          fi
+
+          echo "Requested tag: $TAG"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists."
+          else
+            if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+              echo "Error: tag $TAG does not exist."
+              exit 1
+            fi
+
+            echo "Creating tag $TAG on current main..."
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # Checkout the actual release tag.
       - name: Checkout at tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ steps.resolve.outputs.tag }}
           fetch-depth: 1
 
       - name: Set up Java 21
@@ -40,25 +77,37 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Gradle cache
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
 
-      - name: Build jar (version from tag)
-        run: ./gradlew build --no-daemon -Pmod_version=${{ env.TAG }}
-
-      - name: Verify jar name matches tag
+      # Build the mod.
+      - name: Build mod
         run: |
-          ls -l build/libs/
-          test -f "build/libs/it-was-tall-${{ env.TAG }}.jar"
+          ./gradlew build --no-daemon -Pmod_version=${{ steps.resolve.outputs.tag }}
 
-      - name: Create GitHub Release and upload jar
+      # Verify the resulting jar.
+      - name: Verify JAR
+        env:
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          ls -lah build/libs/
+
+          test -f "build/libs/it-was-tall-${TAG}.jar" || {
+            echo "ERROR: JAR not found!"
+            exit 1
+          }
+
+          echo "JAR successfully built!"
+
+      # Publish GitHub Release.
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG }}
-          name: It Was Tall ${{ env.TAG }}
+          tag_name: ${{ steps.resolve.outputs.tag }}
+          name: It Was Tall ${{ steps.resolve.outputs.tag }}
           generate_release_notes: true
           draft: false
           prerelease: false
-          files: build/libs/it-was-tall-${{ env.TAG }}.jar
+          files: build/libs/it-was-tall-${{ steps.resolve.outputs.tag }}.jar
