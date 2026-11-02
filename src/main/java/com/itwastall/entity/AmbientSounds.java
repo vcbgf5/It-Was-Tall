@@ -1,6 +1,7 @@
 package com.itwastall.entity;
 
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.director.Director;
 import com.itwastall.registry.ModEntities;
 import com.itwastall.registry.ModSounds;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -11,7 +12,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -99,7 +102,13 @@ public final class AmbientSounds {
             if (itNear) chance *= 2;
             if (random.nextDouble() >= chance) continue;
 
-            Weighted pick = itNear && random.nextInt(3) == 0 ? c(ModSounds.AMBIENT_HEARTBEAT, 1) : pick(table, random);
+            // Heartbeat only when It is really close AND from ETAP 3 up (PHASES.md §4: "heartbeat
+            // od Stage 3"); in FAZA PRE It doesn't exist yet, so never.
+            boolean heartbeatOk = itNear && Director.phase() == 1 && Director.currentStage().ordinal() >= 3;
+            Weighted pick = heartbeatOk && random.nextInt(3) == 0 ? c(ModSounds.AMBIENT_HEARTBEAT, 1) : pick(table, random);
+            // "close" category is stage-gated exactly like in ScareSounds (PHASES §3): blocked
+            // until ETAP 2, 40% from ETAP 2, 60% from ETAP 4; PRE never.
+            if (pick.close() && !closeAllowed(random)) pick = pickWide(table, random);
             if (pick.sound() == ModSounds.AMBIENT_DRONE || pick.sound() == ModSounds.AMBIENT_WIND || pick.sound() == ModSounds.AMBIENT_HUM) {
                 if (now < st.nextDrone) continue;
                 st.nextDrone = now + 20 * 30;
@@ -118,6 +127,26 @@ public final class AmbientSounds {
             if (r < 0) return w;
         }
         return table[0];
+    }
+
+    /** Weighted pick restricted to the wide (non-"close") entries — the stage-gated fallback. */
+    private static Weighted pickWide(Weighted[] table, Random random) {
+        List<Weighted> wide = new ArrayList<>();
+        for (Weighted w : table) if (!w.close()) wide.add(w);
+        return wide.isEmpty() ? table[0] : pick(wide.toArray(new Weighted[0]), random);
+    }
+
+    /**
+     * Is the "close" ambience category allowed right now (same stage mapping as ScareSounds,
+     * PHASES.md §3: blocked until ETAP 2, 40% from ETAP 2, 60% from ETAP 4; FAZA PRE never).
+     */
+    private static boolean closeAllowed(Random random) {
+        if (Director.phase() == 0) return false;
+        return switch (Director.currentStage().ordinal()) {
+            case 0, 1 -> false;
+            case 2, 3 -> random.nextFloat() < 0.40f;
+            default -> random.nextFloat() < 0.60f;
+        };
     }
 
     private static void play(ServerPlayerEntity player, Weighted w, Random random) {

@@ -1,6 +1,8 @@
 package com.itwastall.entity;
 
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.director.Director;
+import com.itwastall.director.Stage;
 import com.itwastall.registry.ModEntities;
 import com.itwastall.registry.ModSounds;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -90,7 +92,7 @@ public final class MineEvents {
             st.undergroundTicks = isUnderground(player) ? st.undergroundTicks + 20 : Math.max(0, st.undergroundTicks - 60);
 
             if (!cfg.mineEvents || st.cooldown > 0 || st.undergroundTicks < cfg.mineMinSecondsUnderground * 20) continue;
-            if (player.getRandom().nextDouble() >= cfg.mineEventChancePerSecond) continue;
+            if (player.getRandom().nextDouble() >= cfg.mineEventChancePerSecond * stageChanceMul()) continue;
             if (itIsNear(player)) continue;
             if (trigger(player, randomKind(player.getRandom()))) {
                 st.cooldown = cfg.mineEventCooldownSeconds * 20;
@@ -103,22 +105,54 @@ public final class MineEvents {
         return !player.getServerWorld().getEntitiesByType(ModEntities.TALL_ONE, box, e -> true).isEmpty();
     }
 
+    /**
+     * Per-stage chance multiplier for mine events (local mapping — the Stage table has no dedicated
+     * getter; values follow PHASES.md §3/Etapy notes, documented here):
+     * FAZA PRE = x0.5 (PHASES §1), ETAP 0 = x0.5 (" tylko SOUNDS, szansa połowa bazowa"),
+     * ETAP 1 = x1.0, ETAP 2 = +40%, ETAP 3+ = +50%.
+     */
+    private static double stageChanceMul() {
+        if (Director.phase() == 0) return 0.5;
+        return switch (Director.currentStage().ordinal()) {
+            case 0 -> 0.5;
+            case 1 -> 1.0;
+            case 2 -> 1.4;
+            default -> 1.5;
+        };
+    }
+
+    /**
+     * Picks an event kind considering only what the current stage allows (PHASES.md §3
+     * "Parametry per ETAP", rows DIG / TORCHES(douse) / PEEK; SOUNDS is always allowed).
+     * Base spread keeps the old 35/25/20/20 weights; PEEK arrives at ETAP 4 and is rolled
+     * with a higher weight at ETAP 5 (local mapping, noted here). FAZA PRE: only SOUNDS.
+     */
     private static Kind randomKind(Random random) {
-        int r = random.nextInt(100);
-        if (r < 35) return Kind.DIG;
-        if (r < 60) return Kind.SOUNDS;
-        if (r < 80) return Kind.TORCHES;
-        return Kind.PEEK;
+        if (Director.phase() == 0) return Kind.SOUNDS; // PHASES §1: listening sounds only
+        Stage st = Director.currentStage();
+        List<Kind> pool = new ArrayList<>();
+        addTimes(pool, Kind.DIG, st.digEnabled() ? 35 : 0);
+        addTimes(pool, Kind.SOUNDS, 25);
+        addTimes(pool, Kind.TORCHES, st.torchDouseLevel() >= 3 ? 20 : 0); // level 3 = mine only
+        addTimes(pool, Kind.PEEK, st.peekEnabled() ? (st.ordinal() >= 5 ? 30 : 15) : 0);
+        if (pool.isEmpty()) return Kind.SOUNDS; // ETAP 0: dig/torches/peek all blocked -> sounds
+        return pool.get(random.nextInt(pool.size()));
+    }
+
+    private static void addTimes(List<Kind> pool, Kind kind, int times) {
+        for (int i = 0; i < times; i++) pool.add(kind);
     }
 
     /** Starts an event for the player. Falls back to a milder event if the chosen one can't happen here. */
     public static boolean trigger(ServerPlayerEntity player, Kind kind) {
-        return switch (kind) {
+        boolean ok = switch (kind) {
             case DIG -> spawnDigger(player) || startSounds(player);
             case SOUNDS -> startSounds(player);
             case TORCHES -> startTorches(player) || startSounds(player);
             case PEEK -> spawnPeeker(player) || startTorches(player) || startSounds(player);
         };
+        if (ok && Director.phase() == 1) Director.addTension(0.5); // PHASES §2: "inne wydarzenie (kopalnia)" +0.5, 1x na zdarzenie
+        return ok;
     }
 
     // ---------------------------------------------------------------------- DIG ----

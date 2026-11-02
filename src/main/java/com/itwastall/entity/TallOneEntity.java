@@ -1,8 +1,11 @@
 package com.itwastall.entity;
 
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.director.Director;
+import com.itwastall.director.Stage;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModSounds;
+import com.itwastall.world.ItWasTallState;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -30,6 +33,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
+
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
@@ -82,6 +86,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private int jumpscareAt = -1;
     private double lastVictimDistance = -1;
     private int chaseStuckTicks;
+
+    // per-chase tension-hook guards (PHASES §2: each hook fires at most once per chase/event)
+    private boolean chaseTensionGiven;   // +4 at chase start, once per chase
+    private boolean watchTensionGiven;   // +1 at >= 2 s of staring, once per sighting (30 min cap via ItWasTallState)
 
     // DIG state
     private final List<BlockPos> digCells = new ArrayList<>();
@@ -169,6 +177,13 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         modeTicks++;
         if (attackCooldown > 0) attackCooldown--;
 
+        // PHASES §1 (FAZA PRE): the mod is quiet before IT JOINED — an entity that exists anyway
+        // (e.g. spawn-egg testing) freezes and quietly disappears after 30 s, without any effect.
+        if (Director.phase() == 0) {
+            if (modeTicks > 600) discard();
+            return;
+        }
+
         PlayerEntity player = findVictim();
         switch (getMode()) {
             case STARE -> tickStare(player);
@@ -181,6 +196,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     private void tickStare(@Nullable PlayerEntity player) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        Stage st = Director.currentStage(); // live per tick (PHASES §0) — no snapshot from init
         getNavigation().stop();
         if (player == null) {
             if (modeTicks > 200) discard();
@@ -190,7 +206,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         PlayerEntity intruder = getWorld().getClosestPlayer(getX(), getY(), getZ(), cfg.chaseTriggerDistance,
                 p -> EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR.test(p) && p != player);
         if (intruder != null && !ShelterCheck.isSheltered(getWorld(), intruder.getBlockPos())) {
-            startChase(intruder);
+            maybeStartChase(intruder);
             return;
         }
         faceTowards(player);
@@ -211,13 +227,41 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             playSoundTo(player, ModSounds.STARE, 0.6f, 0.8f + random.nextFloat() * 0.2f);
         }
 
+        maybeAwardWatchTension(player); // PHASES §2: looked at >= 2 s -> +1.0 (30 min cap per player)
+
         boolean tooClose = dist < cfg.chaseTriggerDistance;
         boolean staredDown = lookedAtTicks > cfg.stareTriggerSeconds * 20 && approaching;
         if ((tooClose || staredDown) && !ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) {
-            startChase(player);
+            maybeStartChase(player); // stage-gated: chase may simply not happen (see helper)
         } else if (modeTicks > cfg.stareTimeoutSeconds * 20) {
             discard();
         }
+    }
+
+    /**
+     * Stage-gated chase trigger (PHASES §3 row "CHASE"): while chase is not enabled (ETAP 0-2, and
+     * ETAP 1-2 always), or when the stage's chance roll fails (ETAP 3 keeps it optional at 35%),
+     * It instead quietly disappears — no scream, no jumpscare. The roll happens once, exactly when
+     * the trigger conditions are first met, so a failing roll means one sighting that walks away.
+     */
+    private void maybeStartChase(PlayerEntity player) {
+        Stage st = Director.currentStage();
+        if (!st.chaseEnabled() || this.random.nextFloat() >= st.chaseChance()) {
+            disappearQuiet();
+            return;
+        }
+        startChase(player);
+    }
+
+    /** Quiet disappearance: no sound, no effect, no jumpscare ("It znika", PHASES Etapy notes). */
+    private void disappearQuiet() {
+        discard();
+    }
+
+    /** Ends an encounter where it had to give up: SINK when the stage allows it, quiet otherwise. */
+    private void finishEncounter() {
+        if (Director.currentStage().sinkEnabled()) startSink();
+        else disappearQuiet();
     }
 
     private void startChase(PlayerEntity player) {
@@ -227,6 +271,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         setMode(Mode.CHASE);
         setTarget(player);
         getWorld().playSound(null, getBlockPos(), ModSounds.SCREAM, getSoundCategory(), 2.5f, 0.85f);
+        if (!chaseTensionGiven && Director.phase() == 1) {
+            chaseTensionGiven = true;
+            Director.addTension(4.0); // PHASES §2: rozpoczęcie pościgu +4, 1x na pościg (flag on entity)
+        }
     }
 
     private void tickChase(@Nullable PlayerEntity player) {
@@ -234,6 +282,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             discard();
             return;
         }
+        Stage st = Director.currentStage(); // live per tick (PHASES §0)
         setTarget(player);
         getLookControl().lookAt(player, 30f, 30f);
         if (modeTicks % 100 == 1 && player instanceof ServerPlayerEntity sp) {
@@ -241,15 +290,23 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         }
 
         if (ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) {
-            startSink();
+            // SINK is unlocked from ETAP 4 (PHASES §3 row "SINK"); earlier stages end the chase quietly
+            finishEncounter();
             return;
         }
+        // PHASES §3 ETAP 5: chaseSpeed 1.6 instead of the config default; an explicitly changed
+        // chaseSpeed in config/itwastall.json (the documented default is 1.45) still wins here.
+        double baseSpeed = ItWasTallConfig.INSTANCE.chaseSpeed;
+        double speed = st.ordinal() >= 5 && baseSpeed == 1.45 ? 1.6 : baseSpeed;
         if (modeTicks % 5 == 0 || getNavigation().isIdle()) {
-            getNavigation().startMovingTo(player, ItWasTallConfig.INSTANCE.chaseSpeed);
+            getNavigation().startMovingTo(player, speed);
         }
         // Underground tunnels are usually too low for it: if it cannot reach the player, it digs instead.
         boolean stuck = getNavigation().isIdle() || getVelocity().horizontalLengthSquared() < 1.0E-4;
         chaseStuckTicks = stuck && distanceTo(player) > 3.0 ? chaseStuckTicks + 1 : 0;
+        // PHASES §3 ETAP 5 "Szyby": when blocked, It can break glass directly in front of it (the
+        // player's base) with a single attack-like animation; other stages never break glass.
+        if (st.ordinal() == 5 && chaseStuckTicks > 0 && chaseStuckTicks % 20 == 0) breakGlassTowards(player);
         if (chaseStuckTicks > 40 && canDig() && MineEvents.isUnderground(player)) {
             chaseStuckTicks = 0;
             startDig();
@@ -265,6 +322,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     }
 
     private void startSink() {
+        boolean escapedFromChase = getMode() == Mode.CHASE; // the player reached shelter during a chase
         setNoGravity(false);
         clearDig();
         setMode(Mode.SINK);
@@ -276,6 +334,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         int max = Math.max(min, cfg.jumpscareDelayMaxTicks);
         jumpscareAt = SINK_ANIM_TICKS + min + random.nextInt(max - min + 1);
         getWorld().playSound(null, getBlockPos(), ModSounds.SINK, getSoundCategory(), 1.8f, 0.7f);
+        if (escapedFromChase && Director.phase() == 1) Director.addTension(-3.0); // PHASES §2: udana ucieczka do bazy w pościgu -3
     }
 
     private void tickSink(@Nullable PlayerEntity player) {
@@ -294,9 +353,14 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         if (jumpscareAt < 0) jumpscareAt = SINK_ANIM_TICKS + 20;
         if (modeTicks >= jumpscareAt) {
             if (player instanceof ServerPlayerEntity sp) {
-                ModNetworking.sendJumpscare(sp);
-                // you hid... it doesn't like that
-                ScareSounds.queueMessage(sp, ItWasTallConfig.INSTANCE.scareText, 40);
+                // Jumpscare is unlocked from ETAP 4 (PHASES §3 row "Jumpscare"); earlier stages
+                // simply discard — the scariest card is played only when the stage allows it.
+                if (Director.currentStage().jumpscareEnabled()) {
+                    ModNetworking.sendJumpscare(sp);
+                    if (Director.phase() == 1) Director.addTension(6.0); // PHASES §2: jumpscare +6, 1x na zdarzenie
+                    // no jumpscare per config: it still doesn't like that it sank
+                    ScareSounds.scareTextAfterHide(sp, random); // PHASES §3: "don't hide. just run." from ETAP 3
+                }
             }
             discard();
         }
@@ -345,7 +409,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         getNavigation().stop();
         setVelocity(Vec3d.ZERO);
         if (player == null || !canDig() || modeTicks > 20 * 180) {
-            startSink();
+            finishEncounter(); // PHASES §3: SINK only when the stage allows it, otherwise quiet
             return;
         }
         faceTowards(player);
@@ -358,7 +422,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
         if (digNext == null) {
             if (!planDigStep(player)) {
-                if (++digFailures > 6) startSink();
+                if (++digFailures > 6) finishEncounter(); // PHASES §3: SINK only when the stage allows it
             }
             return;
         }
@@ -472,13 +536,19 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     private void tickPeek(@Nullable PlayerEntity player) {
         getNavigation().stop();
-        if (player == null) {
-            discard();
+        Stage st = Director.currentStage(); // live per tick (PHASES §0)
+        // PEEK is unlocked from ETAP 4 (PHASES §3 row "PEEK"): if the stage changed while one was
+        // standing there (or FAZA PRE re-entered), it quietly leaves instead of finishing the trick.
+        if (player == null || !st.peekEnabled()) {
+            disappearQuiet();
             return;
         }
         faceTowards(player);
         if (isBeingWatchedBy(player)) {
-            if (player instanceof ServerPlayerEntity sp) ModNetworking.sendJumpscare(sp);
+            if (player instanceof ServerPlayerEntity sp) {
+                ModNetworking.sendJumpscare(sp);
+                if (Director.phase() == 1) Director.addTension(6.0); // PHASES §2: jumpscare +6, 1x na zdarzenie
+            }
             discard();
         } else if (modeTicks > 20 * 25 || distanceTo(player) > 24) {
             discard();
@@ -494,6 +564,53 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         double dist = toUs.length();
         double dot = look.dotProduct(toUs.normalize());
         return dot > 1.0 - 0.05 / Math.max(1.0, dist / 8.0) && player.canSee(this);
+    }
+
+    /**
+     * Telepici: PHASES §2 "gracz patrzy na It >= 2 s -> +1.0, 1x na 30 min". Fired exactly when
+     * {@code lookedAtTicks} crosses 2 s (40 ticks); the 30-minute cap lives in ItWasTallState's
+     * generic per-player timer map (value = the world time when it may fire again).
+     */
+    private void maybeAwardWatchTension(PlayerEntity player) {
+        if (lookedAtTicks != 40) return;              // exactly 2 s of continued staring
+        if (!(getWorld() instanceof ServerWorld sw)) return;
+        long now = getWorld().getTime();
+        ItWasTallState state = ItWasTallState.getOrCreate(sw.getServer());
+        Long nextAllowed = state.getPlayerTimer(player.getUuid());
+        if (nextAllowed != null && now < nextAllowed) return;
+        state.putPlayerTimer(player.getUuid(), now + 20L * 60 * 30); // 1x na 30 min (PHASES §2)
+        if (Director.phase() == 1) Director.addTension(1.0); // PHASES §2: patrzene >= 2 s +1.0
+    }
+
+    /**
+     * STAGE_5 glass breaking (PHASES §3 ETAP 5 "Szyby — It może rozbicie szyby do bazy gracza,
+     * tylko Stage 5"): while blocked, checks the column directly between It and the player and
+     * breaks one glass block with an attack-like animation + sound. Kept deliberately simple.
+     */
+    private void breakGlassTowards(PlayerEntity player) {
+        if (!ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) return; // only the player's base
+        Vec3d dir = new Vec3d(player.getX() - getX(), 0, player.getZ() - getZ());
+        if (dir.lengthSquared() < 1.0E-4) return;
+        Direction face = Direction.getFacing((float) dir.x, 0f, (float) dir.z);
+        BlockPos column = getBlockPos().offset(face);
+        for (int y = 0; y < 3; y++) {
+            BlockPos p = column.up(y);
+            BlockState state = getWorld().getBlockState(p);
+            if (!isGlass(state) || state.getHardness(getWorld(), p) < 0) continue;
+            triggerAnim("action", "attack");
+            swingHand(getActiveHand());
+            playSound(ModSounds.ATTACK, 1.0f, 1.0f);
+            getWorld().breakBlock(p, false, this);
+            return;
+        }
+    }
+
+    /** Glass the stage-5 window breaking may eat: the vanilla impermeable tag (glass, tinted
+     *  glass) plus stained glass blocks and glass panes (incl. stained panes). */
+    private static boolean isGlass(BlockState state) {
+        return state.isIn(net.minecraft.registry.tag.BlockTags.IMPERMEABLE)
+                || state.getBlock() instanceof net.minecraft.block.StainedGlassBlock
+                || state.getBlock() instanceof net.minecraft.block.PaneBlock;
     }
 
     private void faceTowards(PlayerEntity player) {
@@ -516,7 +633,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         if (getMode() == Mode.SINK || getMode() == Mode.PEEK) return false;
         boolean hurt = super.damage(source, amount);
         if (hurt && source.getAttacker() instanceof PlayerEntity p) {
-            if (getMode() == Mode.STARE || getMode() == Mode.DIG) startChase(p);
+            if (getMode() == Mode.STARE || getMode() == Mode.DIG) maybeStartChase(p); // stage-gated
             else if (getMode() == Mode.CHASE) setVictim(p); // whoever hits it becomes its target
         }
         return hurt;
