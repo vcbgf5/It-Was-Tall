@@ -1,0 +1,64 @@
+# Creates a GitHub Release with the built mod jar.
+# Trigger 1: push a tag like "0.3.1" (or any v-prefixed/numeric semver tag).
+# Trigger 2: run "workflow_dispatch" and enter the tag name manually.
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the release (e.g. 0.3.1). Created at current main if it does not exist.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Resolve tag
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: echo "TAG=${{ inputs.tag }}" >> "$GITHUB_ENV"
+
+      - name: Checkout at tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 1
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+
+      - name: Build jar (version from tag)
+        run: ./gradlew build --no-daemon -Pmod_version=${{ env.TAG }}
+
+      - name: Verify jar name matches tag
+        run: |
+          ls -l build/libs/
+          test -f "build/libs/it-was-tall-${{ env.TAG }}.jar"
+
+      - name: Create GitHub Release and upload jar
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: It Was Tall ${{ env.TAG }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: build/libs/it-was-tall-${{ env.TAG }}.jar
