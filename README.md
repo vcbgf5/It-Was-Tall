@@ -35,7 +35,7 @@ Horror mod do Minecrafta (**Fabric 1.21.1**). Coś wysokiego cię obserwuje. Nie
 - „To” patrzy na jednego gracza, ale jeśli **ktoś inny podejdzie za blisko**, rzuca się na niego. Kto go uderzy,
   ten staje się celem.
 - Samo z siebie pojawia się w nocy co 8–16 min na gracza (pierwszy raz po ~3 min); nigdy dwa przy jednym graczu;
-  limit na serwer: `maxActiveIts` (domyślnie 3).
+  limit na serwer: `maxActiveIts` (domyślnie 1).
 
 ## Komendy (OP, działają też z konsoli serwera)
 | Komenda | Co robi |
