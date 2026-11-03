@@ -108,7 +108,7 @@ public final class WindowKnocks {
             // ETAP 4 "+ cień/drzwi" (PHASES §3, wiersz WindowKnock): the figure stands one cell
             // off the glass, facing in. Routed through FalsePresences -> client-side fake entity,
             // so it is never a real It (MODPLAN §7.4).
-            BlockPos outside = outsideCell(player.getServerWorld(), window);
+            BlockPos outside = outsideCell(player.getServerWorld(), window, player);
             if (outside == null || !FalsePresences.sendFigure(player, outside, 10 * 20, true)) {
                 // no outside room for a figure: the sound still played, which is fine ("pukanie w
                 // szybę bez widocznej postaci" is a legit stage-2 variant in MODPLAN §12)
@@ -160,28 +160,32 @@ public final class WindowKnocks {
         ServerWorld world = player.getServerWorld();
         // 1) the mapped base is the smarter source: windows the scan actually saw
         BlockPos mapped = com.itwastall.base.BaseTracker.nearestMarker(world, player, com.itwastall.base.BaseMap.TYPE_WINDOW);
-        if (mapped != null && outsideCell(world, mapped) != null) return mapped;
+        if (mapped != null && outsideCell(world, mapped, player) != null) return mapped;
         // 2) fallback heuristic (base not scanned yet)
         BlockPos base = player.getBlockPos();
         for (BlockPos pos : BlockPos.iterateOutwards(base, 14, 5, 14)) {
             if (!isGlassy(world, pos)) continue;
-            if (outsideCell(world, pos) == null) continue;
+            if (outsideCell(world, pos, player) == null) continue;
             return pos.toImmutable();
         }
         return null;
     }
 
-    /** An air cell directly at the glass (the "outside" side the knocking comes from). */
+    /**
+     * Finds the outside face relative to the player. The previous implementation selected
+     * the first air block in Direction.values(), which could be above/below the glass or
+     * even on the room side. The silhouette must stand directly outside the window.
+     */
     @Nullable
-    private static BlockPos outsideCell(ServerWorld world, BlockPos glass) {
-        for (Direction direction : Direction.values()) {
-            BlockPos side = glass.offset(direction);
-            BlockState st = world.getBlockState(side);
-            if (st.isAir() && world.getBlockState(side.up()).isAir()) {
-                return side;
-            }
-        }
-        return null;
+    private static BlockPos outsideCell(ServerWorld world, BlockPos glass, ServerPlayerEntity player) {
+        double dx = player.getX() - (glass.getX() + 0.5);
+        double dz = player.getZ() - (glass.getZ() + 0.5);
+        if (Math.abs(dx) + Math.abs(dz) < 0.001) return null;
+
+        Direction towardPlayer = Direction.getFacing((float) dx, 0.0f, (float) dz);
+        BlockPos side = glass.offset(towardPlayer.getOpposite());
+        if (!world.isAir(side) || !world.isAir(side.up())) return null;
+        return side.toImmutable();
     }
 
     private static boolean isGlassy(ServerWorld world, BlockPos pos) {
