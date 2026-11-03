@@ -1,103 +1,96 @@
 <!--
 CurseForge project page text.
-Summary field (short description, max ~250 chars):
-Something tall stands in the distance and stares. Walk closer and it runs. Hide and it sinks into the ground... In the mines it digs through the rock to reach you. Don't hide. Just run.
+Summary:
+A Fabric horror mod featuring a tall creature that watches players, chases them, digs through underground tunnels, and triggers individual atmospheric scares.
 
 Suggested categories: Mobs, Adventure and RPG
-Description below: paste into the CurseForge description editor in Markdown mode.
 -->
 
 <p align="center"><img src="https://raw.githubusercontent.com/vcbgf5/it-was-tall/main/tools/icon/icon_1024.png" width="300" alt="It Was Tall"></p>
 
 # It Was Tall
 
-> *It stands in the distance. It watches. Don't let it follow you home.*
+**It Was Tall** is a horror mod for **Minecraft 1.21.1 using Fabric**. It adds a tall creature that appears at a distance, watches players, and can begin chasing them when approached or watched for too long.
 
-**It Was Tall** is a horror mod for **Fabric 1.21.1**. A thin figure, more than three blocks tall, with arms that hang past its knees and a pale, screaming face, starts showing up in your world. At first it only watches. Then it comes closer.
+## The creature
 
----
+- Appears at a distance at night and watches the player.
+- Can start chasing when a player approaches it or watches it for too long.
+- Can stop pursuing when the player reaches a sheltered area, then sink into the ground.
+- Has animations for standing, walking, chasing, sinking, digging, knocking and attacking.
+- Can change its target when another player approaches or attacks it.
 
-## 🌑 The encounter
+## Underground events
 
-- At night it appears **far away, in front of you**, and just **stares**.
-- Walk towards it, or keep looking at it for too long, and it **screams and runs at you**.
-- Make it to **shelter** (a roof over your head and walls around you) and it stops... raises its arms... and **sinks into the ground**.
-- A moment later you see **its face for a tenth of a second**.
-- Then the screen tells you: **`don't hide. just run.`**
+After players spend time underground, the mod can trigger mine events:
 
-## ⛏️ In the mines
+- The creature can appear in nearby stone and dig towards the player with an iron pickaxe.
+- Cracking block effects and digging sounds indicate its approach.
+- Torches can go out, starting with torches farther from the player.
+- The creature can appear behind the player with breathing sounds.
+- It cannot dig through obsidian or bedrock.
+- Digging respects the `mobGriefing` gamerule.
 
-Spend enough time underground and the mine stops being safe:
+## Sounds and screen effects
 
-- **It digs its way to you.** It appears inside the rock up to 30 blocks above you and **tunnels down with an iron pickaxe**. You can see the blocks cracking and hear it getting closer. It cannot break obsidian or bedrock.
-- **Digging sounds** come closer from above... then stop.
-- **Your torches go out**, one by one, from the farthest to the closest. Only the ones you are not looking at.
-- **It stands right behind you.** You hear breathing. Don't turn around.
+- Includes 82 custom sound files used for screams, growls, sniffing, whispers, breathing, footsteps, ambience, digging and other events.
+- Random small scares can play, such as branches cracking, stones falling, window knocks, creaking doors, footsteps and whispers.
+- Ambient sounds vary depending on whether the player is underground, outside at night, inside a base at night or in daytime.
+- A heartbeat can be heard when the creature is nearby.
+- Red on-screen messages can appear with flickering and glitch effects.
+- Jumpscares can display a brief image and play a loud sound.
 
-If it is chasing you and your tunnel is too low for it, it just starts digging again.
+## Multiplayer
 
-## 🔊 Sounds that follow you
+- The mod supports multiplayer when installed on the server and on every client.
+- Each player has separate haunting events, timers, sounds, messages and jumpscares.
+- Personal scare sounds and screen effects are sent only to the affected player.
+- Other players can see the creature in the world.
+- The server limits the number of active creatures. The default limit is 3.
 
-- **82 custom sounds**: screams with a breaking voice, growling, sniffing, a muffled heartbeat, whispers and breathing behind your back, drones, wind, creaks, distant screams, chains, falling rocks, dripping water, a reversed voice, and ringing in your ears after a jumpscare.
-- **Small scares every 20–60 seconds**: a twig snapping behind you, a pebble falling from the ceiling, a tap on your window, a door creaking, limping footsteps right behind you, a whisper of *"run..."* in your ear, a giggle, a music box...
-- **Ambience depends on where you are**: mines, outside at night, inside your base at night, daytime.
-- When it is close, you hear your **heartbeat**.
-- **Red, flickering, glitching messages** sometimes appear on your screen.
+## Commands
 
-## 👥 Multiplayer
+The following commands require operator permissions and can also be used from the server console.
 
-- **Every player is haunted separately**, with their own timers for appearances, scares, messages and mine events.
-- **Only you hear your scares** and only you see your messages and jumpscares. Your friends just see a very tall thing standing in the field.
-- It watches one player, but **whoever walks up to it, or hits it, becomes its target**.
-- On its own, it never shows up for a player who already has one nearby, and there is a server-wide limit (3 by default).
-- Admins can scare specific players with commands (see below), also from the server console.
-
-## ⌨️ Commands (OP)
-
-| Command | What it does |
+| Command | Description |
 |---|---|
-| `/itwastall spawn [distance] [player]` | It appears in front of the player and stares |
-| `/itwastall haunt [players]` | It appears the natural way, in the distance |
-| `/itwastall jumpscare [players]` | 0.1 s jumpscare |
-| `/itwastall scare [players]` | a small scare sound |
-| `/itwastall message [players] [text]` | red on-screen message (default: *don't hide. just run.*) |
-| `/itwastall mine dig\|sounds\|torches\|peek [player]` | force a mine event |
-| `/itwastall status` | how many of them exist on the server |
+| `/itwastall spawn [distance] [player]` | Spawns the creature in front of a player. |
+| `/itwastall haunt [players]` | Triggers a natural-style appearance in the distance. |
+| `/itwastall jumpscare [players]` | Triggers a jumpscare. |
+| `/itwastall scare [players]` | Plays a small scare sound. |
+| `/itwastall message [players] [text]` | Displays a red on-screen message. |
+| `/itwastall mine dig\|sounds\|torches\|peek [player]` | Triggers a selected underground event. |
+| `/itwastall status` | Shows the number of active creatures. |
 
 Example: `/itwastall message Steve it sees you.`
 
-## ⚙️ Config
+## Configuration
 
-`config/itwastall.json` lets you change almost everything, for example:
+The main configuration file is `config/itwastall.json`. It includes options for:
 
-- `jumpscares`, `jumpscareMillis`: turn the jumpscare image off (sound only) or change its length
-- `hauntEvents`, `hauntMinMinutes`, `hauntMaxMinutes`, `hauntOnlyAtNight`, `maxActiveIts`
-- `mineEvents`, `digging`, `digSlowdown`, `mineMinSecondsUnderground`
-- `scareSounds`, `scareMinSeconds`, `scareMaxSeconds`, `ambientSounds`
-- `scareMessages`, `scareText`, `messages`: write your own messages
+- Jumpscare images and duration.
+- Natural appearances, their intervals and night-only behavior.
+- The maximum number of active creatures.
+- Underground events and digging behavior.
+- Scare sounds and their intervals.
+- Ambient sounds.
+- On-screen scare messages and custom message text.
 
-Digging also respects the `mobGriefing` gamerule.
+The first-join warning screen also lets each player enable or disable scare effects.
 
-## 📦 Requirements
+## Requirements
 
-- **Minecraft 1.21.1**
-- **Fabric Loader 0.20.1** or newer
-- **Fabric API**
-- **GeckoLib** (Fabric, 1.21.1) **4.9.3** or newer
+- Minecraft **1.21.1**
+- Fabric Loader **0.20.1** or newer
+- Fabric API
+- GeckoLib for Fabric **4.9.3** or newer
 
-In multiplayer, install the mod **on the server and on every client**.
+For multiplayer, install the mod on the server and on every client.
 
-## ⚠️ Warning
+## Content warning
 
-This mod contains **jumpscares, a sudden flashing image and loud sounds**. If you are sensitive to flashing images, set `"jumpscares": false` in the config.
-
-## 🛠️ Planned
-
-- Fear stages that slowly escalate the haunting
-- It learns the layout of your base: knocking on your windows, opening doors, putting out your lights
-- Tasks like *"Don't go outside"* and *"Hide and seek"*
-- Creepy structures
+This mod contains jumpscares, brief flashing images, sudden loud sounds and horror effects. Players who do not want these effects can disable scares in the warning screen. The jumpscare image can also be disabled in the configuration.
 
 ---
 
-*Source code: [github.com/vcbgf5/it-was-tall](https://github.com/vcbgf5/it-was-tall)*
+Source code: https://github.com/vcbgf5/it-was-tall
