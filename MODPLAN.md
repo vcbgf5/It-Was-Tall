@@ -1614,3 +1614,13 @@ Doprecyzowanie do sekcji 8 (BaseTracker / BaseScanner / BaseMap):
 - Tall One ma korzystać z zapamiętanej lokalizacji bazy niezależnie od tego, czy baza jest schronieniem. Ocena bezpieczeństwa gracza (dach/ściany) pozostaje oddzielną informacją.
 
 **Stan implementacji:** wykrywanie kotwicy przez łóżko oraz wskazówkę z interakcji z blokiem infrastruktury jest zaimplementowane. Punktacja chunków na podstawie historii stawiania bloków i czasu przebywania, łączenie klastrów oraz precyzyjne skanowanie tylko zmienionych fragmentów pozostają do wykonania.
+
+ 
+## Poprawki WARNING i pukania w szybę (2026-11-03)
+
+- [x] Ekran WARNING nie wywołuje rozmycia tła świata; używa własnego, ostrego przyciemnienia.
+- [x] Przełącznik jumpscare i przycisk ACCEPT TERMS są ustawione obok siebie w jednym rzędzie przy dolnej krawędzi.
+- [x] Sylwetka przy oknie jest umieszczana po zewnętrznej stronie szyby, po przeciwnej stronie względem gracza.
+- [x] Pozycja pionowa fałszywej postaci jest obniżana tak, aby głowa znajdowała się na wysokości szyby.
+- [x] Sylwetka przy szybie uruchamia animację GeckoLib `knock` i obraca tułów oraz głowę w stronę gracza.
+- [ ] Jumpscare po pukaniu przez 1 sekundę oraz powiązane zadanie nie zostały dodane — wymaga doprecyzowania, czy mają występować po każdym pukaniu, czy tylko po określonym zdarzeniu.
