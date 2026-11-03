@@ -62,6 +62,12 @@ public final class FalsePresenceRenderer {
         // "moze stac nieruchomo / wygladac jak prawdziwy The Tall One" intent.
         fake.setPersistent(); // keep it from any despawn logic anything else might run on it
         fake.setId(id);       // private id range: never collides with real spawned entities
+        // Lower the window silhouette so its head, not its torso, lines up with the glass.
+        if (window) {
+            fake.setPosition(x, y - 2.5, z);
+            fake.playWindowKnockAnimation();
+            facePlayer(fake, client.player);
+        }
         world.addEntity(fake);
         ACTIVE.put(id, new Sighting(id, durationTicks, window));
         trackedWorld = world;
@@ -93,7 +99,10 @@ public final class FalsePresenceRenderer {
                 continue;
             }
             boolean lookedAt = false;
-        if (!sighting.window) { // window figure: it stays put, the stare at it is the point
+            if (sighting.window) {
+                // Keep the body and head aimed at the player as they move inside the room.
+                facePlayer(fake, player);
+            } else {
             double gross = player.squaredDistanceTo(fake);
             if (gross < 48.0 * 48.0 && isLookingAt(player, fake)) {
                 lookedAt = true;
@@ -104,6 +113,16 @@ public final class FalsePresenceRenderer {
             it.remove();
         }
         }
+    }
+
+    private static void facePlayer(TallOneEntity entity, PlayerEntity player) {
+        double dx = player.getX() - entity.getX();
+        double dz = player.getZ() - entity.getZ();
+        float yaw = (float) (net.minecraft.util.math.MathHelper.atan2(dz, dx)
+                * net.minecraft.util.math.MathHelper.DEGREES_PER_RADIAN) - 90.0f;
+        entity.setYaw(yaw);
+        entity.setBodyYaw(yaw);
+        entity.setHeadYaw(yaw);
     }
 
     /** Same idea as the real entity's isBeingWatchedBy: a vanish must correspond to something
