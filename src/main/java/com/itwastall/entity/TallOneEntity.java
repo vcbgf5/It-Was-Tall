@@ -5,6 +5,7 @@ import com.itwastall.director.Director;
 import com.itwastall.director.Stage;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModSounds;
+import com.itwastall.registry.ModItems;
 import com.itwastall.world.ItWasTallState;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
@@ -647,13 +648,12 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (getMode() == Mode.SINK || getMode() == Mode.PEEK) return false;
-        boolean hurt = super.damage(source, amount);
-        if (hurt && source.getAttacker() instanceof PlayerEntity p) {
-            if (getMode() == Mode.STARE || getMode() == Mode.DIG) maybeStartChase(p); // stage-gated
-            else if (getMode() == Mode.CHASE) setVictim(p); // whoever hits it becomes its target
+        // Ordinary weapons cannot defeat It. The Warding Crystal is the intended story solution.
+        if (!(source.getAttacker() instanceof PlayerEntity player)
+                || !player.getMainHandStack().isOf(ModItems.WARDING_CRYSTAL)) {
+            return false;
         }
-        return hurt;
+        return super.damage(source, Math.max(amount, 1000.0f));
     }
 
     @Override
