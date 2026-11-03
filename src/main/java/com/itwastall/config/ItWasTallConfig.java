@@ -35,8 +35,8 @@ public final class ItWasTallConfig {
         /** Minutes after joining before the first appearance. */
         public int hauntFirstMinutes = 3;
         /** Minutes between appearances for one player. */
-        public int hauntMinMinutes = 8;
-        public int hauntMaxMinutes = 16;
+        public int hauntMinMinutes = 5;
+        public int hauntMaxMinutes = 7;
         /** Only at night. */
         public boolean hauntOnlyAtNight = true;
         /** Server-wide limit of Its that exist at the same time. */
