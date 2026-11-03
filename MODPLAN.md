@@ -984,6 +984,25 @@ Zadania muszą być zapisywane i synchronizowane.
 
 # 16. GUI I HUD
 
+## Stan implementacji punktu 16
+
+### Zaimplementowane elementy
+- [x] Klawisz J otwiera ekran dziennika.
+- [x] JournalScreen ma zakładki statusu, książek, bazy i historii.
+- [x] Strona statusu pokazuje aktualną fazę, etap i napięcie synchronizowane z serwera.
+- [x] Strona książek pokazuje napisane książki znajdujące się w ekwipunku gracza.
+- [x] NoteScreen — wspólny ekran do czytania notatek, gotowy do wywołania przez system struktur.
+- [x] TaskToast — komponent powiadomień z animowanym wygaszaniem, gotowy do wywołania przez system zadań.
+- [x] FearHud — delikatna winieta zależna od napięcia, z możliwością wyłączenia przez API klienta.
+- [x] JumpscareOverlay — pełnoekranowy efekt był już obecny; pozostaje częścią HUD.
+- [x] Dostępne są tłumaczenia polskie i angielskie klawisza dziennika.
+
+### Integracja nadal wymagana
+- [ ] System zadań musi przekazywać nowe zadania, odliczanie, sukces i porażkę do TaskToast.
+- [ ] System struktur musi zapisywać znalezione notatki i otwierać NoteScreen.
+- [ ] JournalScreen wymaga synchronizacji odkrytych danych bazy i historii wydarzeń.
+- [ ] Ustawienie dostępności dla intensywnych efektów wymaga osobnego ekranu/opcji klienta; FearHud ma już przełącznik programistyczny.
+
 ## JournalScreen
 
 Otwierany klawiszem J.
