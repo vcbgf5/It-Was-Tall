@@ -16,6 +16,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(JumpscarePayload.ID, JumpscarePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
     }
 
     /** Broadcast of the one-shot "IT JOINED" sequence to every player currently on the server. */
@@ -40,5 +41,17 @@ public final class ModNetworking {
         if (ServerPlayNetworking.canSend(player, JumpscarePayload.ID)) {
             ServerPlayNetworking.send(player, new JumpscarePayload(cfg.jumpscareMillis, cfg.jumpscares));
         }
+    }
+
+    /**
+     * Server -> client: the False Presence figure (MODPLAN §7.4 — client-side only, never a
+     * real entity). Returns false when that client cannot receive the payload.
+     */
+    public static boolean sendFalsePresence(ServerPlayerEntity player, double x, double y, double z,
+                                            float yaw, int durationTicks, boolean window) {
+        if (!ServerPlayNetworking.canSend(player, FalsePresencePayload.ID)) return false;
+        ServerPlayNetworking.send(player, new FalsePresencePayload(x, y, z, yaw, durationTicks, window));
+        ItWasTall.LOGGER.debug("False presence -> {}", player.getName().getString());
+        return true;
     }
 }

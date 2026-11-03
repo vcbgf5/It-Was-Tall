@@ -2,10 +2,12 @@ package com.itwastall.command;
 
 import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
+import com.itwastall.entity.FalsePresences;
 import com.itwastall.entity.HauntDirector;
 import com.itwastall.entity.MineEvents;
 import com.itwastall.entity.ScareSounds;
 import com.itwastall.entity.TallOneEntity;
+import com.itwastall.entity.WindowKnocks;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModEntities;
 import com.mojang.brigadier.CommandDispatcher;
@@ -80,6 +82,7 @@ public final class ItWasTallCommand {
                                             return each(ctx, EntityArgumentType.getPlayers(ctx, "players"), "message", p -> ScareSounds.showMessage(p, text));
                                         }))))
                 .then(mineCommand())
+                .then(eventCommand())
                 .then(literal("stage")
                         .executes(ctx -> {
                             ctx.getSource().sendFeedback(() -> Text.literal(Director.statusLine()), false);
@@ -168,6 +171,30 @@ public final class ItWasTallCommand {
         int done = ok;
         ctx.getSource().sendFeedback(() -> Text.literal(what + ": " + done + " player(s)"), false);
         return ok;
+    }
+
+    /**
+     * "/itwastall event <kind>" — force an event on demand (MODPLAN §21 test list):
+     * falsepresence = the client-side False Presence figure, knock = three knocks on a window.
+     * Both bypass the per-night ledger; normal stage/day-time rules still gate the placement.
+     */
+    private static LiteralArgumentBuilder<ServerCommandSource> eventCommand() {
+        var root = literal("event");
+        root.then(eventKind("falsepresence", p -> {
+                    if (!FalsePresences.trigger(p)) throw new IllegalStateException("no spot for a false presence here");
+                }))
+                .then(eventKind("knock", p -> {
+                    if (!WindowKnocks.trigger(p)) throw new IllegalStateException("no window near the player's base");
+                }));
+        return root;
+    }
+
+    private static LiteralArgumentBuilder<ServerCommandSource> eventKind(String name, PlayerAction action) {
+        return literal(name)
+                .executes(ctx -> each(ctx, List.of(ctx.getSource().getPlayerOrThrow()), "event " + name, action))
+                .then(argument("player", EntityArgumentType.player())
+                        .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")),
+                                "event " + name, action)));
     }
 
     private static LiteralArgumentBuilder<ServerCommandSource> mineCommand() {

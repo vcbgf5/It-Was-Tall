@@ -4,9 +4,11 @@ import com.itwastall.command.ItWasTallCommand;
 import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
 import com.itwastall.entity.AmbientSounds;
+import com.itwastall.entity.FalsePresences;
 import com.itwastall.entity.HauntDirector;
 import com.itwastall.entity.MineEvents;
 import com.itwastall.entity.ScareSounds;
+import com.itwastall.entity.WindowKnocks;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModEntities;
 import com.itwastall.registry.ModItems;
@@ -39,6 +41,8 @@ public class ItWasTall implements ModInitializer {
         AmbientSounds.init();
         ScareSounds.init();
         HauntDirector.init();
+        FalsePresences.init();
+        WindowKnocks.init();
         // multiplayer: forget per-player timers when someone leaves
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             var uuid = handler.getPlayer().getUuid();
@@ -46,6 +50,8 @@ public class ItWasTall implements ModInitializer {
             ScareSounds.forget(uuid);
             MineEvents.forget(uuid);
             HauntDirector.forget(uuid);
+            FalsePresences.forget(uuid);
+            WindowKnocks.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

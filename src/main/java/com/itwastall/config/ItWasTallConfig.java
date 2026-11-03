@@ -50,6 +50,16 @@ public final class ItWasTallConfig {
         /** If it is not approached, it gives up staring after this many seconds. */
         public int stareTimeoutSeconds = 180;
 
+        // ---- window knocks (PHASES Poziom 5: MODPLAN §12) ----
+        /** The Tall One knocks three times on a window while you are inside your base at night. */
+        public boolean windowKnocks = true;
+        /** Chance rolled per check (~once per 20 s) while the conditions hold; 1 knock burst per night. */
+        public double windowKnockChance = 0.35;
+
+        // ---- false presence (PHASES Poziom 4: MODPLAN §7, client-side figure only) ----
+        /** A fake Tall One, rendered only on one client, gone when you look right at it. */
+        public boolean falsePresence = true;
+
         // ---- mine / cave events ----
         /** Enable events while the player is underground (digging towards you, sounds, torches, peeking). */
         public boolean mineEvents = true;
