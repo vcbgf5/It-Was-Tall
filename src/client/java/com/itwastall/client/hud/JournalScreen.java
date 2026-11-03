@@ -30,7 +30,14 @@ public final class JournalScreen extends Screen {
             addDrawableChild(ButtonWidget.builder(Text.literal(TABS[i]), b -> tab = selected)
                     .dimensions(left + i * 90, 42, 86, 20).build());
         }
-        fearButton = ButtonWidget.builder(fearLabel(), b -> {\n                    boolean next = !FearHud.isEnabled();\n                    FearHud.setEnabled(next);\n                    b.setMessage(fearLabel());\n                })\n                .dimensions(width / 2 - 85, 66, 170, 20).build();\n        addDrawableChild(fearButton);\n        addDrawableChild(ButtonWidget.builder(Text.literal("CLOSE"), b -> close())
+        fearButton = ButtonWidget.builder(fearLabel(), b -> {
+                    boolean next = !FearHud.isEnabled();
+                    FearHud.setEnabled(next);
+                    b.setMessage(fearLabel());
+                })
+                .dimensions(width / 2 - 85, 66, 170, 20).build();
+        addDrawableChild(fearButton);
+        addDrawableChild(ButtonWidget.builder(Text.literal("CLOSE"), b -> close())
                 .dimensions(width / 2 - 45, height - 34, 90, 20).build());
     }
 
@@ -54,7 +61,11 @@ public final class JournalScreen extends Screen {
         }
     }
 
-    private Text fearLabel() {\n        return Text.literal("Fear vignette: " + (FearHud.isEnabled() ? "ON" : "OFF"));\n    }\n\n    private List<String> content() {
+    private Text fearLabel() {
+        return Text.literal("Fear vignette: " + (FearHud.isEnabled() ? "ON" : "OFF"));
+    }
+
+    private List<String> content() {
         MinecraftClient client = MinecraftClient.getInstance();
         List<String> lines = new ArrayList<>();
         switch (tab) {
