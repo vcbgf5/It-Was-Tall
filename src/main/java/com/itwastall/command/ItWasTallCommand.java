@@ -256,6 +256,12 @@ public final class ItWasTallCommand {
     }
 
     private static int spawn(ServerCommandSource source, ServerPlayerEntity player, int distance) throws CommandSyntaxException {
+        int active = HauntDirector.countActive(source.getServer());
+        int limit = Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts);
+        if (active >= limit) {
+            source.sendError(Text.literal("Cannot spawn It: the server limit is already reached (" + active + "/" + limit + ")."));
+            return 0;
+        }
         ServerWorld world = player.getServerWorld();
         float yawRad = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
         double x = player.getX() - MathHelper.sin(yawRad) * distance;
