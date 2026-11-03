@@ -114,6 +114,7 @@ public final class CaveStructureLoot {
         }
 
         int free = firstEmpty(container);
+        boolean insertedNote = false;
         if (!hasNote && free >= 0) {
             Note note = NOTES.get(world.getRandom().nextInt(NOTES.size()));
             ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
@@ -125,10 +126,11 @@ public final class CaveStructureLoot {
             custom.putString("note_id", note.id());
             book.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(custom));
             container.setStack(free, book);
+            insertedNote = true;
         }
 
-        // One in five explored structure chests can contain the rare item.
-        if (!hasCrystal && world.getRandom().nextInt(5) == 0) {
+        // One in five explored structure chests can contain the rare item, rolled only once.
+        if (insertedNote && !hasCrystal && world.getRandom().nextInt(5) == 0) {
             free = firstEmpty(container);
             if (free >= 0) {
                 ItemStack crystal = new ItemStack(ModItems.WARDING_CRYSTAL);
