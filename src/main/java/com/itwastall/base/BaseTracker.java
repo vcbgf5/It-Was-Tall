@@ -80,12 +80,34 @@ public final class BaseTracker {
             setAnchor(sp, pos.toImmutable());
             return ActionResult.PASS;
         }
+
+        // A roof or four complete walls are NOT required to recognise a base.
+        // Interacting with a useful base block is an independent anchor clue:
+        // chests, workstations, furnaces, doors, glass and placed light sources.
+        Long knownAnchor = ANCHORS.get(sp.getUuid());
+        if (knownAnchor == null && isBaseClue(state)) {
+            setAnchor(sp, pos.toImmutable());
+            return ActionResult.PASS;
+        }
+
         // any other block interaction near a known anchor = the base changed -> debounced rescan
-        Long anchor = ANCHORS.get(sp.getUuid());
+        Long anchor = knownAnchor;
         if (anchor != null && pos.isWithinDistance(BlockPos.fromLong(anchor), 48)) {
             scheduleScan(sp, anchor, false);
         }
         return ActionResult.PASS;
+    }
+
+    /** Blocks commonly used as base infrastructure; deliberately independent of roof/wall checks. */
+    private static boolean isBaseClue(BlockState state) {
+        var block = state.getBlock();
+        return block instanceof net.minecraft.block.ChestBlock
+                || block instanceof net.minecraft.block.BarrelBlock
+                || block instanceof net.minecraft.block.AbstractFurnaceBlock
+                || block instanceof net.minecraft.block.CraftingTableBlock
+                || block instanceof net.minecraft.block.DoorBlock
+                || BaseMap.isGlassy(state)
+                || state.getLuminance() > 0;
     }
 
     private static void tick(MinecraftServer tickingServer) {
