@@ -141,7 +141,7 @@ public final class LoreBooks {
             if (inventory.getLootTable() != null) continue;
 
             // Crash-safe duplicate check: the unique item tag is checked before insertion.
-            if (containsBook(inventory, book.id())) return false;
+            if (containsBook(inventory, book.id())) return true;
 
             for (int slot = 0; slot < inventory.size(); slot++) {
                 if (!inventory.getStack(slot).isEmpty()) continue;
