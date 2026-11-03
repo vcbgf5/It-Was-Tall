@@ -14,6 +14,7 @@ import java.util.List;
 /** In-game journal opened with J. It only displays information currently available to the client. */
 public final class JournalScreen extends Screen {
     private int tab;
+    private ButtonWidget fearButton;
     private static final String[] TABS = {"STATUS", "BOOKS", "BASE", "EVENTS"};
 
     public JournalScreen() {
@@ -29,7 +30,7 @@ public final class JournalScreen extends Screen {
             addDrawableChild(ButtonWidget.builder(Text.literal(TABS[i]), b -> tab = selected)
                     .dimensions(left + i * 90, 42, 86, 20).build());
         }
-        addDrawableChild(ButtonWidget.builder(Text.literal("CLOSE"), b -> close())
+        fearButton = ButtonWidget.builder(fearLabel(), b -> {\n                    boolean next = !FearHud.isEnabled();\n                    FearHud.setEnabled(next);\n                    b.setMessage(fearLabel());\n                })\n                .dimensions(width / 2 - 85, 66, 170, 20).build();\n        addDrawableChild(fearButton);\n        addDrawableChild(ButtonWidget.builder(Text.literal("CLOSE"), b -> close())
                 .dimensions(width / 2 - 45, height - 34, 90, 20).build());
     }
 
@@ -41,7 +42,7 @@ public final class JournalScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
 
         List<String> lines = content();
-        int y = 78;
+        int y = 94;
         int maxWidth = 340;
         for (String line : lines) {
             for (OrderedText wrapped : textRenderer.wrapLines(Text.literal(line), maxWidth)) {
@@ -53,7 +54,7 @@ public final class JournalScreen extends Screen {
         }
     }
 
-    private List<String> content() {
+    private Text fearLabel() {\n        return Text.literal("Fear vignette: " + (FearHud.isEnabled() ? "ON" : "OFF"));\n    }\n\n    private List<String> content() {
         MinecraftClient client = MinecraftClient.getInstance();
         List<String> lines = new ArrayList<>();
         switch (tab) {
