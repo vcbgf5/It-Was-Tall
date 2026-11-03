@@ -197,8 +197,8 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private void tickStare(@Nullable PlayerEntity player) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         Stage st = Director.currentStage(); // live per tick (PHASES §0) — no snapshot from init
-        getNavigation().stop();
         if (player == null) {
+            getNavigation().stop();
             if (modeTicks > 200) discard();
             return;
         }
@@ -216,6 +216,20 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         lookedAtTicks = watched ? lookedAtTicks + 1 : Math.max(0, lookedAtTicks - 2);
         boolean approaching = lastVictimDistance > 0 && dist < lastVictimDistance - 0.02;
         lastVictimDistance = dist;
+
+        // STALK: from Stage 2 onward It slowly closes the distance while unseen,
+        // then freezes as soon as the player looks directly at it.
+        if (st.ordinal() >= 2 && cfg.stalking && !watched
+                && dist > Math.max(2.0, cfg.stalkStopDistance)
+                && dist <= Math.max(cfg.stalkStopDistance, cfg.stalkMaxDistance)
+                && canSee(player)) {
+            double stalkSpeed = MathHelper.clamp(cfg.stalkSpeed, 0.01, 0.35);
+            if (modeTicks % 10 == 0 || getNavigation().isIdle()) {
+                getNavigation().startMovingTo(player, stalkSpeed);
+            }
+        } else {
+            getNavigation().stop();
+        }
 
         if (modeTicks == 2 && player instanceof ServerPlayerEntity sp) {
             MineEvents.playTo(sp, ModSounds.AMBIENT_STING, getEyePos(), 1.2f, 1.0f);
