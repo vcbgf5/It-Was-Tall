@@ -1556,3 +1556,21 @@ Nie usuwaj istniejących funkcji ani danych.
 Nie twórz drugiego systemu baz, faz ani etapów, jeśli istniejące rozwiązania można rozbudować.
 
 **Cel końcowy:** stworzyć kompletny, oryginalny horror mod Minecrafta, w którym The Tall One obserwuje gracza, poznaje jego bazę, pojawia się w kopalniach, zostawia tajemnicze ślady i może pojawić się w najmniej oczekiwanym momencie.
+
+
+---
+
+# NOTATKI IMPLEMENTACYJNE — WYKRYWANIE BAZ BEZ PEŁNEJ ZABUDOWY
+
+Doprecyzowanie do sekcji 8 (BaseTracker / BaseScanner / BaseMap):
+
+- Baza **nie musi mieć dachu ani kompletu ścian**, żeby system ją rozpoznał.
+- Łóżko nadal jest najmocniejszym i bezpośrednim punktem kotwiczącym.
+- Gdy nie ma jeszcze kotwicy łóżka, interakcja z charakterystycznym blokiem infrastruktury może wskazać bazę: skrzynia, beczka, piec, stół rzemieślniczy, drzwi, szkło lub źródło światła.
+- Po rozpoznaniu kotwicy BaseScanner mapuje okolicę stopniowo, z limitem pracy na tick.
+- Brak dachu nie może blokować samego wykrycia lokalizacji bazy. Oznaczanie komórek jako wnętrza to osobna klasyfikacja — otwarte przestrzenie nie powinny być automatycznie uznawane za bezpieczne wnętrze.
+- Docelowo BaseTracker ma łączyć kilka sygnałów: bloki postawione przez gracza, czas spędzony w chunku, łóżka/spawn, skrzynie, piece, stoły rzemieślnicze, drzwi, szkło i światła. Chunk powinien otrzymywać wynik prawdopodobieństwa bycia bazą; sąsiednie mocne klastry należy łączyć.
+- Aktualizacje mapy powinny obejmować zmieniony fragment i używać debounce, zamiast bez potrzeby skanować cały obszar.
+- Tall One ma korzystać z zapamiętanej lokalizacji bazy niezależnie od tego, czy baza jest schronieniem. Ocena bezpieczeństwa gracza (dach/ściany) pozostaje oddzielną informacją.
+
+**Stan implementacji:** wykrywanie kotwicy przez łóżko oraz wskazówkę z interakcji z blokiem infrastruktury jest zaimplementowane. Punktacja chunków na podstawie historii stawiania bloków i czasu przebywania, łączenie klastrów oraz precyzyjne skanowanie tylko zmienionych fragmentów pozostają do wykonania.
