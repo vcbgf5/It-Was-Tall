@@ -1,6 +1,6 @@
+```java
 package com.itwastall.client;
 
-import com.itwastall.client.ClientAcceptedState;
 import com.itwastall.client.hud.ItJoinedOverlay;
 import com.itwastall.client.hud.JumpscareOverlay;
 import com.itwastall.client.hud.ScareTextOverlay;
@@ -14,38 +14,119 @@ import com.itwastall.net.ItJoinedPayload;
 import com.itwastall.net.JumpscarePayload;
 import com.itwastall.net.ScareTextPayload;
 import com.itwastall.registry.ModEntities;
+
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 
 public class ItWasTallClient implements ClientModInitializer {
+
     @Override
     public void onInitializeClient() {
-        EntityRendererRegistry.register(ModEntities.TALL_ONE, TallOneRenderer::new);
+
+        EntityRendererRegistry.register(
+                ModEntities.TALL_ONE,
+                TallOneRenderer::new
+        );
+
         FalsePresenceRenderer.init();
         BaseDebugRenderer.init();
-        ClientPlayNetworking.registerGlobalReceiver(JumpscarePayload.ID,
-                (payload, context) -> context.client().execute(() -> JumpscareOverlay.trigger(payload.durationMs(), payload.showImage())));
-        ClientPlayNetworking.registerGlobalReceiver(ScareTextPayload.ID,
-                (payload, context) -> context.client().execute(() -> ScareTextOverlay.trigger(payload.text(), payload.durationMs())));
-        ClientPlayNetworking.registerGlobalReceiver(ItJoinedPayload.ID,
-                (payload, context) -> context.client().execute(() -> ItJoinedOverlay.trigger(payload.durationMs())));
-        // False Presence: the figure lives only on this one client (MODPLAN §7.4)
-        ClientPlayNetworking.registerGlobalReceiver(FalsePresencePayload.ID,
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                JumpscarePayload.ID,
                 (payload, context) -> context.client().execute(() ->
-                        FalsePresenceRenderer.show(payload.x(), payload.y(), payload.z(), payload.yaw(),
-                                payload.durationTicks(), payload.window())));
-        // Debug 3D: the saved BaseMap as coloured frames in the world (MODPLAN §8.5)
-        ClientPlayNetworking.registerGlobalReceiver(BaseDebugPayload.ID,
+                        JumpscareOverlay.trigger(
+                                payload.durationMs(),
+                                payload.showImage()
+                        )
+                )
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                ScareTextPayload.ID,
                 (payload, context) -> context.client().execute(() ->
-                        BaseDebugRenderer.show(payload.anchor(), payload.markers(), payload.ttlSeconds())));
-        // WARNING screen: first entry into a world with the mod (answered once per machine)
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(() -> {
-            if (!ClientAcceptedState.accepted() && client.currentScreen == null) {
-                client.setScreen(new WarningScreen());
+                        ScareTextOverlay.trigger(
+                                payload.text(),
+                                payload.durationMs()
+                        )
+                )
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                ItJoinedPayload.ID,
+                (payload, context) -> context.client().execute(() ->
+                        ItJoinedOverlay.trigger(payload.durationMs())
+                )
+        );
+
+        // False Presence
+        ClientPlayNetworking.registerGlobalReceiver(
+                FalsePresencePayload.ID,
+                (payload, context) -> context.client().execute(() ->
+                        FalsePresenceRenderer.show(
+                                payload.x(),
+                                payload.y(),
+                                payload.z(),
+                                payload.yaw(),
+                                payload.durationTicks(),
+                                payload.window()
+                        )
+                )
+        );
+
+        // Base Debug
+        ClientPlayNetworking.registerGlobalReceiver(
+                BaseDebugPayload.ID,
+                (payload, context) -> context.client().execute(() ->
+                        BaseDebugRenderer.show(
+                                payload.anchor(),
+                                payload.markers(),
+                                payload.ttlSeconds()
+                        )
+                )
+        );
+
+        // WARNING SCREEN
+        // Retry opening the warning after joining a world.
+        final int[] warningDelay = {-1};
+
+        ClientPlayConnectionEvents.JOIN.register(
+                (handler, sender, client) ->
+                        client.execute(() -> warningDelay[0] = 40)
+        );
+
+        ClientPlayConnectionEvents.DISCONNECT.register(
+                (handler, client) ->
+                        client.execute(() -> warningDelay[0] = -1)
+        );
+
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+
+            if (warningDelay[0] < 0) {
+                return;
             }
-        }));
+
+            if (client.player == null || client.world == null) {
+                return;
+            }
+
+            if (ClientAcceptedState.accepted()) {
+                warningDelay[0] = -1;
+                return;
+            }
+
+            if (warningDelay[0] > 0) {
+                warningDelay[0]--;
+                return;
+            }
+
+            if (client.currentScreen == null) {
+                client.setScreen(new WarningScreen());
+                warningDelay[0] = -1;
+            }
+        });
     }
 }
+```
