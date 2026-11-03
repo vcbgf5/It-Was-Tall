@@ -101,6 +101,34 @@ jobs:
 
           echo "JAR successfully built!"
 
+      # Upload the same JAR to CurseForge.
+      - name: Publish to CurseForge
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ]; then
+            echo "CF_API_TOKEN secret is missing."
+            exit 1
+          fi
+
+          JAR="build/libs/it-was-tall-${TAG}.jar"
+          METADATA=$(jq -n \
+            --arg version "$TAG" \
+            '{
+              displayName: ("It Was Tall " + $version),
+              changelog: ("Automated release " + $version + ". See the GitHub release for details."),
+              changelogType: "text",
+              gameVersionNames: ["1.21.1", "Fabric"],
+              releaseType: "release"
+            }')
+
+          curl --fail-with-body --silent --show-error \
+            -H "X-Api-Token: $CF_API_TOKEN" \
+            -F "metadata=$METADATA;type=application/json" \
+            -F "file=@$JAR;type=application/java-archive" \
+            "https://minecraft.curseforge.com/api/projects/1778484/upload-file"
+
       # Publish GitHub Release.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
