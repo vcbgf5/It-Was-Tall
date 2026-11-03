@@ -116,6 +116,13 @@ public final class BaseMap {
         markers.clear();
     }
 
+    /** Copy of the encoded marker ints (debug 3D payload; state file uses the same array). */
+    public int[] encodedMarkers() {
+        int[] arr = new int[markers.size()];
+        for (int i = 0; i < arr.length; i++) arr[i] = markers.get(i);
+        return arr;
+    }
+
     /** Shared high-level test used by the scanner and WindowKnocks' fallback: does this
      *  block let the world see a figure at the window (glass, stained glass, panes)? */
     public static boolean isGlassy(net.minecraft.block.BlockState state) {

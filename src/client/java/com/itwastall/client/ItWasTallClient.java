@@ -3,8 +3,10 @@ package com.itwastall.client;
 import com.itwastall.client.hud.ItJoinedOverlay;
 import com.itwastall.client.hud.JumpscareOverlay;
 import com.itwastall.client.hud.ScareTextOverlay;
+import com.itwastall.client.render.BaseDebugRenderer;
 import com.itwastall.client.render.FalsePresenceRenderer;
 import com.itwastall.client.render.TallOneRenderer;
+import com.itwastall.net.BaseDebugPayload;
 import com.itwastall.net.FalsePresencePayload;
 import com.itwastall.net.ItJoinedPayload;
 import com.itwastall.net.JumpscarePayload;
@@ -19,6 +21,7 @@ public class ItWasTallClient implements ClientModInitializer {
     public void onInitializeClient() {
         EntityRendererRegistry.register(ModEntities.TALL_ONE, TallOneRenderer::new);
         FalsePresenceRenderer.init();
+        BaseDebugRenderer.init();
         ClientPlayNetworking.registerGlobalReceiver(JumpscarePayload.ID,
                 (payload, context) -> context.client().execute(() -> JumpscareOverlay.trigger(payload.durationMs(), payload.showImage())));
         ClientPlayNetworking.registerGlobalReceiver(ScareTextPayload.ID,
@@ -30,5 +33,9 @@ public class ItWasTallClient implements ClientModInitializer {
                 (payload, context) -> context.client().execute(() ->
                         FalsePresenceRenderer.show(payload.x(), payload.y(), payload.z(), payload.yaw(),
                                 payload.durationTicks(), payload.window())));
+        // Debug 3D: the saved BaseMap as coloured frames in the world (MODPLAN §8.5)
+        ClientPlayNetworking.registerGlobalReceiver(BaseDebugPayload.ID,
+                (payload, context) -> context.client().execute(() ->
+                        BaseDebugRenderer.show(payload.anchor(), payload.markers(), payload.ttlSeconds())));
     }
 }

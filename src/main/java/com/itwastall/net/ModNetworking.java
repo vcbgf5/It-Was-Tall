@@ -17,6 +17,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(BaseDebugPayload.ID, BaseDebugPayload.CODEC);
     }
 
     /** Broadcast of the one-shot "IT JOINED" sequence to every player currently on the server. */
@@ -52,6 +53,16 @@ public final class ModNetworking {
         if (!ServerPlayNetworking.canSend(player, FalsePresencePayload.ID)) return false;
         ServerPlayNetworking.send(player, new FalsePresencePayload(x, y, z, yaw, durationTicks, window));
         ItWasTall.LOGGER.debug("False presence -> {}", player.getName().getString());
+        return true;
+    }
+
+    /** Debug 3D (MODPLAN §8.5): the player's saved BaseMap as coloured world frames. */
+    public static boolean sendBaseDebug(ServerPlayerEntity player) {
+        if (!ServerPlayNetworking.canSend(player, BaseDebugPayload.ID)) return false;
+        var map = com.itwastall.base.BaseTracker.mapOf(player.getUuid());
+        if (map == null) return false;
+        ServerPlayNetworking.send(player, new BaseDebugPayload(map.anchor(), map.encodedMarkers(), 30));
+        ItWasTall.LOGGER.debug("Base debug view -> {}", player.getName().getString());
         return true;
     }
 }

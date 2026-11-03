@@ -213,7 +213,7 @@ public final class ItWasTallCommand {
                         }));
     }
 
-    /** "/itwastall debug base" — MODPLAN §8.5 readout: what It has mapped so far. */
+    /** "/itwastall debug base" + "/itwastall debug view" — MODPLAN §8.5 debug suite. */
     private static LiteralArgumentBuilder<ServerCommandSource> debugCommand() {
         return literal("debug")
                 .then(literal("base")
@@ -226,6 +226,16 @@ public final class ItWasTallCommand {
                             for (String line : com.itwastall.base.BaseTracker.markerSample(p.getUuid())) {
                                 ctx.getSource().sendFeedback(() -> Text.literal(line), false);
                             }
+                            return 1;
+                        }))
+                .then(literal("view")
+                        .executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            if (!ModNetworking.sendBaseDebug(p)) {
+                                throw new IllegalStateException("no mapped base yet (click a bed, wait for the scan)");
+                            }
+                            ctx.getSource().sendFeedback(() -> Text.literal(
+                                    "Base debug frames shown for 30 s: windows blue, doors green, lights yellow, chests orange, bed white."), false);
                             return 1;
                         }));
     }
