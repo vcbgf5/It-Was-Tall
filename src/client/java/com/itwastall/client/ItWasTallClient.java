@@ -1,8 +1,10 @@
 package com.itwastall.client;
 
+import com.itwastall.client.ClientAcceptedState;
 import com.itwastall.client.hud.ItJoinedOverlay;
 import com.itwastall.client.hud.JumpscareOverlay;
 import com.itwastall.client.hud.ScareTextOverlay;
+import com.itwastall.client.hud.WarningScreen;
 import com.itwastall.client.render.BaseDebugRenderer;
 import com.itwastall.client.render.FalsePresenceRenderer;
 import com.itwastall.client.render.TallOneRenderer;
@@ -13,8 +15,10 @@ import com.itwastall.net.JumpscarePayload;
 import com.itwastall.net.ScareTextPayload;
 import com.itwastall.registry.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 
 public class ItWasTallClient implements ClientModInitializer {
     @Override
@@ -37,5 +41,11 @@ public class ItWasTallClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(BaseDebugPayload.ID,
                 (payload, context) -> context.client().execute(() ->
                         BaseDebugRenderer.show(payload.anchor(), payload.markers(), payload.ttlSeconds())));
+        // WARNING screen: first entry into a world with the mod (answered once per machine)
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(() -> {
+            if (!ClientAcceptedState.accepted() && client.currentScreen == null) {
+                client.setScreen(new WarningScreen());
+            }
+        }));
     }
 }

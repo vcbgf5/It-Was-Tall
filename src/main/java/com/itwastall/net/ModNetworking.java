@@ -8,9 +8,16 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 public final class ModNetworking {
     private ModNetworking() {
     }
+
+    /** Per-player opt-out from the warning screen ("Jumpscares & scares" toggle, server-held). */
+    private static final Set<UUID> SCARES_OFF = new HashSet<>();
 
     public static void init() {
         PayloadTypeRegistry.playS2C().register(JumpscarePayload.ID, JumpscarePayload.CODEC);
@@ -18,6 +25,21 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BaseDebugPayload.ID, BaseDebugPayload.CODEC);
+        // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
+        PayloadTypeRegistry.playC2S().register(ScaresPrefPayload.ID, ScaresPrefPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(ScaresPrefPayload.ID, (payload, context) -> {
+            ServerPlayerEntity player = context.player();
+            if (player == null) return;
+            if (payload.scaresEnabled()) SCARES_OFF.remove(player.getUuid());
+            else SCARES_OFF.add(player.getUuid());
+            ItWasTall.LOGGER.info("{} {} scares (client toggle).",
+                    player.getName().getString(), payload.scaresEnabled() ? "re-enabled" : "disabled");
+        });
+    }
+
+    /** True when that player asked the server to hold the jumpscare / red-text scares back. */
+    public static boolean scaresDisabled(UUID player) {
+        return SCARES_OFF.contains(player);
     }
 
     /** Broadcast of the one-shot "IT JOINED" sequence to every player currently on the server. */
@@ -31,6 +53,7 @@ public final class ModNetworking {
 
     public static void sendScareText(ServerPlayerEntity player, String text) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        if (scaresDisabled(player.getUuid())) return; // the warning screen's toggle is absolute
         if (cfg.scareMessages && ServerPlayNetworking.canSend(player, ScareTextPayload.ID)) {
             ServerPlayNetworking.send(player, new ScareTextPayload(text, cfg.messageMillis));
         }
@@ -38,6 +61,7 @@ public final class ModNetworking {
 
     public static void sendJumpscare(ServerPlayerEntity player) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        if (scaresDisabled(player.getUuid())) return; // the warning screen's toggle is absolute
         ItWasTall.LOGGER.debug("Jumpscare -> {}", player.getName().getString());
         if (ServerPlayNetworking.canSend(player, JumpscarePayload.ID)) {
             ServerPlayNetworking.send(player, new JumpscarePayload(cfg.jumpscareMillis, cfg.jumpscares));
