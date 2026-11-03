@@ -1,6 +1,8 @@
 package com.itwastall.client.mixin;
 
 import com.itwastall.client.hud.ItJoinedOverlay;
+import com.itwastall.client.hud.FearHud;
+import com.itwastall.client.hud.TaskToast;
 import com.itwastall.client.hud.JumpscareOverlay;
 import com.itwastall.client.hud.ScareTextOverlay;
 import net.minecraft.client.gui.DrawContext;
@@ -19,5 +21,7 @@ public class InGameHudMixin {
         ScareTextOverlay.render(context, tickCounter);
         JumpscareOverlay.render(context, tickCounter);
         ItJoinedOverlay.render(context, tickCounter);
+        FearHud.render(context, tickCounter);
+        TaskToast.render(context, tickCounter);
     }
 }
