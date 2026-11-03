@@ -219,7 +219,8 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
         // STALK: from Stage 2 onward It slowly closes the distance while unseen,
         // then freezes as soon as the player looks directly at it.
-        if (st.ordinal() >= 2 && cfg.stalking && !watched
+        boolean playerSheltered = ShelterCheck.isSheltered(getWorld(), player.getBlockPos());
+        if (st.ordinal() >= 2 && cfg.stalking && !watched && !playerSheltered
                 && dist > Math.max(2.0, cfg.stalkStopDistance)
                 && dist <= Math.max(cfg.stalkStopDistance, cfg.stalkMaxDistance)
                 && canSee(player)) {
@@ -228,7 +229,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
                 getNavigation().startMovingTo(player, stalkSpeed);
             }
         } else {
+            // Cancel residual horizontal motion too: being spotted must freeze It immediately.
             getNavigation().stop();
+            setVelocity(0.0, getVelocity().y, 0.0);
         }
 
         if (modeTicks == 2 && player instanceof ServerPlayerEntity sp) {
