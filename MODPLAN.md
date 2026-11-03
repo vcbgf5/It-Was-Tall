@@ -737,6 +737,18 @@ It was never outside."
 
 **Ważne:** `IT KNOWS` jest wyłącznie treścią książki. Nie twórz wydarzenia `IT KNOWS`, nie przypisuj jej do Phase 5 i nie dodawaj osobnej fazy związanej z tą książką.
 
+### Stan implementacji punktu 9
+
+- [x] 12 napisanych książek z tytułami i tekstami zgodnymi z tą sekcją.
+- [x] Książki są tworzone jako podpisane książki Minecrafta, po angielsku.
+- [x] System korzysta z lokalizacji skrzyń zapisanych przez `BaseMap`; obsługuje skrzynie i beczki, w tym obie połówki podwójnej skrzyni.
+- [x] Wstawia książkę wyłącznie do pustego slotu. Nie nadpisuje przedmiotów gracza.
+- [x] Pomija pojemniki z nierozpakowaną tabelą łupów, żeby nie ingerować w vanilla loot.
+- [x] Unikalny identyfikator jest zapisany w danych przedmiotu; rozdane identyfikatory i cooldown są zapisywane w `ItWasTallState`.
+- [x] Losowa szansa i cooldown są konfigurowalne w `config/itwastall.json`.
+- [x] `THE LIST` tworzy listę nazw graczy z serwera w chwili przygotowania książki.
+- [x] `IT KNOWS` pojawia się dopiero po rozdaniu pozostałych 11 książek. To wyłącznie książka — nie dodaje wydarzenia ani nowej fazy.
+
 ## 9.3 Dodatkowe warianty lore
 
 Możliwe późniejsze dodatki:
