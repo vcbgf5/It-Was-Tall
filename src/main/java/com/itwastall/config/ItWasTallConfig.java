@@ -68,6 +68,14 @@ public final class ItWasTallConfig {
         /** A fake Tall One, rendered only on one client, gone when you look right at it. */
         public boolean falsePresence = true;
 
+        // ---- lore books (MODPLAN §9) ----
+        /** Secret lore books may be placed in free slots of the player's mapped storage. */
+        public boolean loreBooks = true;
+        /** Chance per eligible check (every 10 seconds) to place one new book. */
+        public double loreBookChance = 0.35;
+        /** Minimum minutes between books for one player. */
+        public int loreBookCooldownMinutes = 5;
+
         // ---- base tracking (PHASES Poziom 6: MODPLAN §8) ----
         /** How many blocks the base scanner may classify per tick (shared between players). */
         public int scanBlocksPerTick = 64;
