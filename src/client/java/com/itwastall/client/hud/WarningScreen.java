@@ -25,13 +25,13 @@ public class WarningScreen extends Screen {
 
     private static final Text TITLE = Text.literal("WARNING");
     private static final Text SUBTITLE = Text.literal("JUMPSCARES");
-    private static final Text BODY_1 = Text.literal("It Was Tall adds a tall creature that watches players at night.");
-    private static final Text BODY_2 = Text.literal("Approach it or watch it too long and it may chase you.");
-    private static final Text BODY_3 = Text.literal("Underground, it can dig through stone and extinguish torches.");
-    private static final Text BODY_4 = Text.literal("Random sounds, whispers and on-screen messages can occur.");
-    private static final Text BODY_5 = Text.literal("In multiplayer, scares are heard and seen only by affected players.");
-    private static final Text BODY_6 = Text.literal("This mod contains jumpscares, flashing images and loud sounds.");
-    private static final Text BODY_7 = Text.literal("Turn scares off below if you do not want these effects.");
+    private static final Text BODY_1 = Text.literal("It Was Tall adds a creature that watches at night.");
+    private static final Text BODY_2 = Text.literal("Approach it or stare too long and it may chase you.");
+    private static final Text BODY_3 = Text.literal("Underground, it digs through stone and puts out torches.");
+    private static final Text BODY_4 = Text.literal("Random sounds, whispers and screen messages can occur.");
+    private static final Text BODY_5 = Text.literal("In multiplayer, personal scares affect one player at a time.");
+    private static final Text BODY_6 = Text.literal("Jumpscares include flashing images and loud sounds.");
+    private static final Text BODY_7 = Text.literal("Disable scare effects below if you do not want them.");
 
     public WarningScreen() {
         super(Text.literal("It Was Tall"));
