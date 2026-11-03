@@ -13,6 +13,15 @@ on:
         description: 'Release version (e.g. 0.3.1)'
         required: true
         type: string
+      release_type:
+        description: 'CurseForge release channel'
+        required: true
+        type: choice
+        options:
+          - release
+          - beta
+          - alpha
+        default: release
 
 permissions:
   contents: write
@@ -106,6 +115,7 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           TAG: ${{ steps.resolve.outputs.tag }}
+          RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'release' }}
         run: |
           if [ -z "$CF_API_TOKEN" ]; then
             echo "CF_API_TOKEN secret is missing."
@@ -115,12 +125,13 @@ jobs:
           JAR="build/libs/it-was-tall-${TAG}.jar"
           METADATA=$(jq -n \
             --arg version "$TAG" \
+            --arg releaseType "$RELEASE_TYPE" \
             '{
               displayName: ("It Was Tall " + $version),
               changelog: ("Automated release " + $version + ". See the GitHub release for details."),
               changelogType: "text",
               gameVersionNames: ["1.21.1", "Fabric"],
-              releaseType: "release"
+              releaseType: $releaseType
             }')
 
           curl --fail-with-body --silent --show-error \
@@ -137,5 +148,5 @@ jobs:
           name: It Was Tall ${{ steps.resolve.outputs.tag }}
           generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'release' }}
           files: build/libs/it-was-tall-${{ steps.resolve.outputs.tag }}.jar
