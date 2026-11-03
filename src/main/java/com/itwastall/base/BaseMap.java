@@ -30,6 +30,9 @@ public final class BaseMap {
     private static final int TYPE_BITS = 4;
     private static final int COORD_MASK = 0x1FF; // signed 9 bits: -255..255
 
+    public static final int TYPE_ROOM = 4;
+    public static final int TYPE_CORNER = 5;
+
     private long anchor;
     /** Encoded markers, unordered. */
     private final List<Integer> markers = new ArrayList<>();
@@ -153,6 +156,7 @@ public final class BaseMap {
     @Override
     public @NotNull String toString() {
         return "BaseMap{windows=" + count(TYPE_WINDOW) + ", doors=" + count(TYPE_DOOR)
-                + ", lights=" + count(TYPE_LIGHT) + ", chests=" + count(TYPE_CHEST) + "}";
+                + ", lights=" + count(TYPE_LIGHT) + ", chests=" + count(TYPE_CHEST)
+                + ", rooms " + count(TYPE_ROOM) + ", dark corners " + count(TYPE_CORNER) + "}";
     }
 }

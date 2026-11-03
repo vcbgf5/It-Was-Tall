@@ -202,6 +202,8 @@ public final class BaseTracker {
         lines.add("doors:   " + sample(map, BaseMap.TYPE_DOOR));
         lines.add("lights:  " + sample(map, BaseMap.TYPE_LIGHT));
         lines.add("chests:  " + sample(map, BaseMap.TYPE_CHEST));
+        lines.add("rooms:   " + map.count(BaseMap.TYPE_ROOM)
+                + " interior cells, dark corners " + map.count(BaseMap.TYPE_CORNER));
         return lines;
     }
 

@@ -65,6 +65,10 @@ public final class ItWasTallConfig {
         public int scanBlocksPerTick = 64;
         /** Horizontal radius (anchor +-radius) of one base scan. */
         public int baseScanRadius = 16;
+        /** Hard cap of interior cells flood-fill may mark (MODPLAN §8.3 "ograniczenie objętości"). */
+        public int baseInteriorCap = 2400;
+        /** Dark interior corners (block light < 4) worth recording for search goals. */
+        public int baseCornerCap = 48;
 
         // ---- mine / cave events ----
         /** Enable events while the player is underground (digging towards you, sounds, torches, peeking). */
