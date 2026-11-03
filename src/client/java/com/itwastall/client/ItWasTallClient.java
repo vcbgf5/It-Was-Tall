@@ -10,6 +10,7 @@ import com.itwastall.client.render.FalsePresenceRenderer;
 import com.itwastall.client.render.TallOneRenderer;
 import com.itwastall.net.BaseDebugPayload;
 import com.itwastall.net.FalsePresencePayload;
+import com.itwastall.net.FearStatePayload;
 import com.itwastall.net.ItJoinedPayload;
 import com.itwastall.net.JumpscarePayload;
 import com.itwastall.net.ScareTextPayload;
@@ -42,6 +43,10 @@ public class ItWasTallClient implements ClientModInitializer {
 
         FalsePresenceRenderer.init();
         BaseDebugRenderer.init();
+
+        ClientPlayNetworking.registerGlobalReceiver(FearStatePayload.ID, (payload, context) ->
+                context.client().execute(() -> JournalData.update(
+                        payload.phase(), payload.stage(), payload.tension())));
 
         ClientPlayNetworking.registerGlobalReceiver(
                 JumpscarePayload.ID,
