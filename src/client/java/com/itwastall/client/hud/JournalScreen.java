@@ -65,6 +65,9 @@ public final class JournalScreen extends Screen {
                     lines.add("Position: " + client.player.getBlockPos().toShortString());
                     lines.add("Health: " + Math.round(client.player.getHealth()) + " / "
                             + Math.round(client.player.getMaxHealth()));
+                    lines.add("Phase: " + (com.itwastall.client.JournalData.phase() == 0 ? "PRE" : "ACTIVE"));
+                    lines.add("Stage: " + com.itwastall.client.JournalData.stage() + " / 5");
+                    lines.add("Tension: " + Math.round(com.itwastall.client.JournalData.tension()) + " / 100");
                 } else lines.add("No world is currently loaded.");
                 lines.add("");
                 lines.add("The journal updates as the mod provides more discoveries.");
