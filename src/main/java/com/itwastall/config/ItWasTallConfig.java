@@ -41,6 +41,14 @@ public final class ItWasTallConfig {
         public boolean hauntOnlyAtNight = true;
         /** Server-wide limit of Its that exist at the same time. */
         public int maxActiveIts = 1;
+        /** From Stage 2 onward, It slowly approaches while the player is not looking directly at it. */
+        public boolean stalking = true;
+        /** Movement speed used while stalking (separate from the chase speed). */
+        public double stalkSpeed = 0.12;
+        /** It stops approaching at or below this distance from the player. */
+        public double stalkStopDistance = 8.0;
+        /** It will not begin stalking when farther away than this distance. */
+        public double stalkMaxDistance = 36.0;
 
         /** Speed multiplier while chasing. */
         public double chaseSpeed = 1.45;
