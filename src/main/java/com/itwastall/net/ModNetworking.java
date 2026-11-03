@@ -2,6 +2,8 @@ package com.itwastall.net;
 
 import com.itwastall.ItWasTall;
 import com.itwastall.config.ItWasTallConfig;
+import com.itwastall.director.Director;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -21,12 +23,23 @@ public final class ModNetworking {
 
     public static void init() {
         PayloadTypeRegistry.playS2C().register(JumpscarePayload.ID, JumpscarePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(FearStatePayload.ID, FearStatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BaseDebugPayload.ID, BaseDebugPayload.CODEC);
         // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
         PayloadTypeRegistry.playC2S().register(ScaresPrefPayload.ID, ScaresPrefPayload.CODEC);
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTicks() % 20 != 0) return;
+            FearStatePayload snapshot = new FearStatePayload(Director.phase(), Director.stageIndex(),
+                    (float) Director.tension());
+            for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+                if (ServerPlayNetworking.canSend(player, FearStatePayload.ID)) {
+                    ServerPlayNetworking.send(player, snapshot);
+                }
+            }
+        });
         ServerPlayNetworking.registerGlobalReceiver(ScaresPrefPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
             if (player == null) return;
