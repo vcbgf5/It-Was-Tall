@@ -46,7 +46,7 @@ After players spend time underground, the mod can trigger mine events:
 - Each player has separate haunting events, timers, sounds, messages and jumpscares.
 - Personal scare sounds and screen effects are sent only to the affected player.
 - Other players can see the creature in the world.
-- The server limits the number of active creatures. The default limit is 3.
+- The server allows only one active Tall One at a time by default (`maxActiveIts: 1`).
 
 ## Commands
 
