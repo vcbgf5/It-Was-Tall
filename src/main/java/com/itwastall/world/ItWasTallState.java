@@ -11,6 +11,8 @@ import net.minecraft.world.PersistentStateManager;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -44,6 +46,10 @@ public final class ItWasTallState extends PersistentState {
     private final Map<UUID, Integer> playerCounters = new HashMap<>();
     /** Per-player base maps (BaseTracker -> BaseMap.toNbt), MODPLAN §8.3/§20: saved with the world. */
     private final Map<UUID, NbtCompound> playerBases = new HashMap<>();
+    /** Lore books already placed in this player's base; prevents repeats across restarts. */
+    private final Map<UUID, Set<String>> deliveredLoreBooks = new HashMap<>();
+    /** Next world-time tick when another lore book may be placed for this player. */
+    private final Map<UUID, Long> loreBookCooldowns = new HashMap<>();
 
     public ItWasTallState() {
     }
@@ -67,6 +73,14 @@ public final class ItWasTallState extends PersistentState {
         for (String key : counters.getKeys()) state.playerCounters.put(UUID.fromString(key), counters.getInt(key));
         NbtCompound bases = nbt.getCompound("playerBases");
         for (String key : bases.getKeys()) state.playerBases.put(UUID.fromString(key), bases.getCompound(key));
+        NbtCompound lore = nbt.getCompound("deliveredLoreBooks");
+        for (String key : lore.getKeys()) {
+            Set<String> ids = new HashSet<>();
+            for (String id : lore.getCompound(key).getKeys()) if (lore.getCompound(key).getBoolean(id)) ids.add(id);
+            state.deliveredLoreBooks.put(UUID.fromString(key), ids);
+        }
+        NbtCompound loreCooldowns = nbt.getCompound("loreBookCooldowns");
+        for (String key : loreCooldowns.getKeys()) state.loreBookCooldowns.put(UUID.fromString(key), loreCooldowns.getLong(key));
         return state;
     }
 
@@ -86,6 +100,16 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound bases = new NbtCompound();
         playerBases.forEach((uuid, value) -> bases.put(uuid.toString(), value));
         nbt.put("playerBases", bases);
+        NbtCompound lore = new NbtCompound();
+        deliveredLoreBooks.forEach((uuid, ids) -> {
+            NbtCompound entries = new NbtCompound();
+            for (String id : ids) entries.putBoolean(id, true);
+            lore.put(uuid.toString(), entries);
+        });
+        nbt.put("deliveredLoreBooks", lore);
+        NbtCompound loreCooldowns = new NbtCompound();
+        loreBookCooldowns.forEach((uuid, value) -> loreCooldowns.putLong(uuid.toString(), value));
+        nbt.put("loreBookCooldowns", loreCooldowns);
         return nbt;
     }
 
@@ -172,6 +196,29 @@ public final class ItWasTallState extends PersistentState {
 
     public void removePlayerCounter(UUID player) {
         if (playerCounters.remove(player) != null) markDirty();
+    }
+
+    // ---- lore books (MODPLAN §9) ----
+
+    public boolean hasLoreBook(UUID player, String id) {
+        return deliveredLoreBooks.getOrDefault(player, Set.of()).contains(id);
+    }
+
+    public void markLoreBookDelivered(UUID player, String id) {
+        if (deliveredLoreBooks.computeIfAbsent(player, ignored -> new HashSet<>()).add(id)) markDirty();
+    }
+
+    public int deliveredLoreBookCount(UUID player) {
+        return deliveredLoreBooks.getOrDefault(player, Set.of()).size();
+    }
+
+    public long loreBookCooldown(UUID player) {
+        return loreBookCooldowns.getOrDefault(player, 0L);
+    }
+
+    public void setLoreBookCooldown(UUID player, long until) {
+        loreBookCooldowns.put(player, until);
+        markDirty();
     }
 
     // ---- per-player base maps (BaseTracker, MODPLAN §8) ----
