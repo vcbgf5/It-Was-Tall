@@ -63,12 +63,13 @@ public final class FalsePresenceRenderer {
         fake.setPersistent(); // keep it from any despawn logic anything else might run on it
         fake.setId(id);       // private id range: never collides with real spawned entities
         // Lower the window silhouette so its head, not its torso, lines up with the glass.
-        if (window) {
-            fake.setPosition(x, y - 2.5, z);
-            fake.playWindowKnockAnimation();
-            facePlayer(fake, client.player);
-        }
+        if (window) fake.setPosition(x, y - 2.5, z);
         world.addEntity(fake);
+        if (window) {
+            // Start after insertion so GeckoLib has a live client-side entity to animate.
+            fake.playWindowKnockAnimation();
+            if (client.player != null) facePlayer(fake, client.player);
+        }
         ACTIVE.put(id, new Sighting(id, durationTicks, window));
         trackedWorld = world;
     }
@@ -103,12 +104,12 @@ public final class FalsePresenceRenderer {
                 // Keep the body and head aimed at the player as they move inside the room.
                 facePlayer(fake, player);
             } else {
-            double gross = player.squaredDistanceTo(fake);
-            if (gross < 48.0 * 48.0 && isLookingAt(player, fake)) {
-                lookedAt = true;
+                double gross = player.squaredDistanceTo(fake);
+                if (gross < 48.0 * 48.0 && isLookingAt(player, fake)) {
+                    lookedAt = true;
+                }
             }
-        }
-        if (lookedAt || --sighting.ticksLeft <= 0) {
+            if (lookedAt || --sighting.ticksLeft <= 0) {
             world.removeEntity(sighting.id, net.minecraft.entity.Entity.RemovalReason.DISCARDED);
             it.remove();
         }
