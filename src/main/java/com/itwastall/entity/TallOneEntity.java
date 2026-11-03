@@ -138,6 +138,11 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         this.victim = player == null ? null : player.getUuid();
     }
 
+    /** Starts the window-only knock animation on a client-side False Presence. */
+    public void playWindowKnockAnimation() {
+        triggerAnim("action", "knock");
+    }
+
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
