@@ -137,8 +137,9 @@ public final class HauntDirector {
                     net.minecraft.world.RaycastContext.ShapeType.COLLIDER, net.minecraft.world.RaycastContext.FluidHandling.NONE, player))
                     .getType().equals(net.minecraft.util.hit.HitResult.Type.MISS)) continue;
             it.setVictim(player);
-            world.spawnEntity(it);
-            return true;
+            // Only report success when the world actually accepts the entity.
+            // Otherwise the caller schedules a short retry instead of a full cooldown.
+            return world.spawnEntity(it);
         }
         return false;
     }
