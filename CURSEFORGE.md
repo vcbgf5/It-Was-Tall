@@ -50,19 +50,50 @@ After players spend time underground, the mod can trigger mine events:
 
 ## Commands
 
-The following commands require operator permissions and can also be used from the server console.
+All `/itwastall` commands require operator permission level 2 (OP). Commands that target another player accept a player name or selector where indicated. Commands marked “self” require an in-game player and cannot be run from the server console.
 
 | Command | Description |
 |---|---|
-| `/itwastall spawn [distance] [player]` | Spawns the creature in front of a player. |
-| `/itwastall haunt [players]` | Triggers a natural-style appearance in the distance. |
-| `/itwastall jumpscare [players]` | Triggers a jumpscare. |
-| `/itwastall scare [players]` | Plays a small scare sound. |
-| `/itwastall message [players] [text]` | Displays a red on-screen message. |
-| `/itwastall mine dig\|sounds\|torches\|peek [player]` | Triggers a selected underground event. |
-| `/itwastall status` | Shows the number of active creatures. |
+| `/itwastall spawn` | Spawns the creature 30 blocks in front of you. (Self only.) |
+| `/itwastall spawn <distance>` | Spawns the creature at the specified distance (4–96 blocks). (Self only.) |
+| `/itwastall spawn <distance> <player>` | Spawns the creature at the specified distance in front of the selected player. |
+| `/itwastall haunt` | Triggers a natural-style appearance for you. (Self only.) |
+| `/itwastall haunt <players>` | Triggers a natural-style appearance for the selected players. |
+| `/itwastall jumpscare` | Triggers a jumpscare for you. (Self only.) |
+| `/itwastall jumpscare <players>` | Triggers a jumpscare for the selected players. |
+| `/itwastall scare` | Plays a random scare sound for you. (Self only.) |
+| `/itwastall scare <players>` | Plays a random scare sound for the selected players. |
+| `/itwastall message` | Displays the configured scare message to you. (Self only.) |
+| `/itwastall message <players>` | Displays the configured scare message to the selected players. |
+| `/itwastall message <players> <text>` | Displays the specified text to the selected players. |
+| `/itwastall mine dig` | Triggers the digging event for you. (Self only.) |
+| `/itwastall mine dig <player>` | Triggers the digging event for the selected player. |
+| `/itwastall mine sounds [player]` | Triggers the approaching digging-sounds event for you or the selected player. |
+| `/itwastall mine torches [player]` | Triggers the torch-extinguishing event for you or the selected player. |
+| `/itwastall mine peek [player]` | Triggers the creature-behind-the-player event for you or the selected player. |
+| `/itwastall event falsepresence` | Triggers a False Presence event for you. (Self only.) |
+| `/itwastall event falsepresence <player>` | Triggers a False Presence event for the selected player. |
+| `/itwastall event knock` | Triggers three window knocks for you. (Self only.) |
+| `/itwastall event knock <player>` | Triggers three window knocks for the selected player. |
+| `/itwastall debug base` | Shows the saved base scan summary and sample markers. (Self only.) |
+| `/itwastall debug view` | Displays debug frames for the mapped base for 30 seconds. (Self only.) |
+| `/itwastall base rescan` | Queues a new gradual scan of your known base. Sleep in a bed first. (Self only.) |
+| `/itwastall stage` | Shows the current phase, stage, tension and IT JOINED state. |
+| `/itwastall stage <0-5>` | Immediately sets the current stage. No restart is required. |
+| `/itwastall tension` | Shows the current tension value and stage. |
+| `/itwastall tension <amount>` | Adds or removes tension. Accepts values such as `10`, `+10` or `-7.5`. |
+| `/itwastall phase activate` | Activates the phase and sends the IT JOINED sequence to everyone. |
+| `/itwastall status` | Shows the number of active creatures and the current phase/stage information. |
 
-Example: `/itwastall message Steve it sees you.`
+Examples:
+
+- `/itwastall spawn 30 Steve`
+- `/itwastall haunt @a`
+- `/itwastall message @a It sees you.`
+- `/itwastall mine dig Steve`
+- `/itwastall event knock Steve`
+- `/itwastall tension +15`
+
 
 ## Configuration
 
