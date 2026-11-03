@@ -83,6 +83,8 @@ public final class ItWasTallCommand {
                                         }))))
                 .then(mineCommand())
                 .then(eventCommand())
+                .then(debugCommand())
+                .then(baseCommand())
                 .then(literal("stage")
                         .executes(ctx -> {
                             ctx.getSource().sendFeedback(() -> Text.literal(Director.statusLine()), false);
@@ -195,6 +197,37 @@ public final class ItWasTallCommand {
                 .then(argument("player", EntityArgumentType.player())
                         .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")),
                                 "event " + name, action)));
+    }
+
+    /** "/itwastall base rescan" — force a fresh scan of your base (needs a known anchor). */
+    private static LiteralArgumentBuilder<ServerCommandSource> baseCommand() {
+        return literal("base")
+                .then(literal("rescan")
+                        .executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            if (!com.itwastall.base.BaseTracker.triggerRescan(p)) {
+                                throw new IllegalStateException("no known base anchor (sleep in a bed first)");
+                            }
+                            ctx.getSource().sendFeedback(() -> Text.literal("Base rescan queued (runs gradually)."), false);
+                            return 1;
+                        }));
+    }
+
+    /** "/itwastall debug base" — MODPLAN §8.5 readout: what It has mapped so far. */
+    private static LiteralArgumentBuilder<ServerCommandSource> debugCommand() {
+        return literal("debug")
+                .then(literal("base")
+                        .executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            ctx.getSource().sendFeedback(() -> Text.literal(
+                                    com.itwastall.base.BaseTracker.summary(p.getUuid())), false);
+                            ctx.getSource().sendFeedback(() -> Text.literal(
+                                    "pending scan columns: " + com.itwastall.base.BaseTracker.pendingWork(p.getUuid())), false);
+                            for (String line : com.itwastall.base.BaseTracker.markerSample(p.getUuid())) {
+                                ctx.getSource().sendFeedback(() -> Text.literal(line), false);
+                            }
+                            return 1;
+                        }));
     }
 
     private static LiteralArgumentBuilder<ServerCommandSource> mineCommand() {

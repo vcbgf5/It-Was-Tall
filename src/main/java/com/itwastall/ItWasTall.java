@@ -9,6 +9,7 @@ import com.itwastall.entity.HauntDirector;
 import com.itwastall.entity.MineEvents;
 import com.itwastall.entity.ScareSounds;
 import com.itwastall.entity.WindowKnocks;
+import com.itwastall.base.BaseTracker;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModEntities;
 import com.itwastall.registry.ModItems;
@@ -43,6 +44,8 @@ public class ItWasTall implements ModInitializer {
         HauntDirector.init();
         FalsePresences.init();
         WindowKnocks.init();
+        // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
+        BaseTracker.init();
         // multiplayer: forget per-player timers when someone leaves
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             var uuid = handler.getPlayer().getUuid();
@@ -52,6 +55,7 @@ public class ItWasTall implements ModInitializer {
             HauntDirector.forget(uuid);
             FalsePresences.forget(uuid);
             WindowKnocks.forget(uuid);
+            BaseTracker.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

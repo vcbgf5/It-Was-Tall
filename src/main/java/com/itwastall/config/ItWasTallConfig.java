@@ -60,6 +60,12 @@ public final class ItWasTallConfig {
         /** A fake Tall One, rendered only on one client, gone when you look right at it. */
         public boolean falsePresence = true;
 
+        // ---- base tracking (PHASES Poziom 6: MODPLAN §8) ----
+        /** How many blocks the base scanner may classify per tick (shared between players). */
+        public int scanBlocksPerTick = 64;
+        /** Horizontal radius (anchor +-radius) of one base scan. */
+        public int baseScanRadius = 16;
+
         // ---- mine / cave events ----
         /** Enable events while the player is underground (digging towards you, sounds, torches, peeking). */
         public boolean mineEvents = true;

@@ -42,6 +42,8 @@ public final class ItWasTallState extends PersistentState {
     private final Map<UUID, Long> playerTimers = new HashMap<>();
     /** Generic per-player int values (future: counters like "nudged twice", "closed eyes"...). */
     private final Map<UUID, Integer> playerCounters = new HashMap<>();
+    /** Per-player base maps (BaseTracker -> BaseMap.toNbt), MODPLAN §8.3/§20: saved with the world. */
+    private final Map<UUID, NbtCompound> playerBases = new HashMap<>();
 
     public ItWasTallState() {
     }
@@ -63,6 +65,8 @@ public final class ItWasTallState extends PersistentState {
         for (String key : timers.getKeys()) state.playerTimers.put(UUID.fromString(key), timers.getLong(key));
         NbtCompound counters = nbt.getCompound("playerCounters");
         for (String key : counters.getKeys()) state.playerCounters.put(UUID.fromString(key), counters.getInt(key));
+        NbtCompound bases = nbt.getCompound("playerBases");
+        for (String key : bases.getKeys()) state.playerBases.put(UUID.fromString(key), bases.getCompound(key));
         return state;
     }
 
@@ -79,6 +83,9 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound counters = new NbtCompound();
         playerCounters.forEach((uuid, value) -> counters.putInt(uuid.toString(), value));
         nbt.put("playerCounters", counters);
+        NbtCompound bases = new NbtCompound();
+        playerBases.forEach((uuid, value) -> bases.put(uuid.toString(), value));
+        nbt.put("playerBases", bases);
         return nbt;
     }
 
@@ -165,5 +172,20 @@ public final class ItWasTallState extends PersistentState {
 
     public void removePlayerCounter(UUID player) {
         if (playerCounters.remove(player) != null) markDirty();
+    }
+
+    // ---- per-player base maps (BaseTracker, MODPLAN §8) ----
+
+    public NbtCompound getPlayerBase(UUID player) {
+        return playerBases.get(player);
+    }
+
+    public void putPlayerBase(UUID player, NbtCompound baseNbt) {
+        playerBases.put(player, baseNbt);
+        markDirty();
+    }
+
+    public void removePlayerBase(UUID player) {
+        if (playerBases.remove(player) != null) markDirty();
     }
 }

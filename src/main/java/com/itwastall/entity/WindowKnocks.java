@@ -151,14 +151,17 @@ public final class WindowKnocks {
     }
 
     /**
-     * Finds a glass window near the player: any glass block (vanilla impermeable glass, tinted
-     * glass, stained glass, panes) within 14 blocks that has a passable outside cell ("on the
-     * street side"). Feels right without BaseMap yet; when BaseMap lands (PHASES Poziom 6)
-     * this becomes the first consumer of the stored window markers.
+     * Finds a glass window near the player — first from the saved BaseMap (Poziom 6: what It
+     * already mapped), falling back to the geometric search while the base is still unmapped.
+     * Both require a passable outside cell ("on the street side") so the knock has a real place.
      */
     @Nullable
     private static BlockPos findWindow(ServerPlayerEntity player) {
         ServerWorld world = player.getServerWorld();
+        // 1) the mapped base is the smarter source: windows the scan actually saw
+        BlockPos mapped = com.itwastall.base.BaseTracker.nearestMarker(world, player, com.itwastall.base.BaseMap.TYPE_WINDOW);
+        if (mapped != null && outsideCell(world, mapped) != null) return mapped;
+        // 2) fallback heuristic (base not scanned yet)
         BlockPos base = player.getBlockPos();
         for (BlockPos pos : BlockPos.iterateOutwards(base, 14, 5, 14)) {
             if (!isGlassy(world, pos)) continue;
