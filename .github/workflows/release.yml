@@ -130,7 +130,7 @@ jobs:
               displayName: ("It Was Tall " + $version),
               changelog: ("Automated release " + $version + ". See the GitHub release for details."),
               changelogType: "text",
-              gameVersionNames: ["1.21.1", "Fabric"],
+              gameVersionNames: ["Client", "Server", "1.21.1", "Fabric"],
               releaseType: $releaseType
             }')
 
