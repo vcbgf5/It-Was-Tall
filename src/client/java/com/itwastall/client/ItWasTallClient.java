@@ -1,4 +1,3 @@
-```java
 package com.itwastall.client;
 
 import com.itwastall.client.hud.ItJoinedOverlay;
@@ -129,4 +128,3 @@ public class ItWasTallClient implements ClientModInitializer {
         });
     }
 }
-```
