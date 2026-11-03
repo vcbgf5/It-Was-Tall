@@ -71,7 +71,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     public static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.tall_one.run");
     public static final RawAnimation SINK = RawAnimation.begin().thenPlayAndHold("animation.tall_one.sink");
     public static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.tall_one.attack");
-    public static final RawAnimation KNOCK = RawAnimation.begin().thenPlay("animation.tall_one.knock");
+    public static final RawAnimation KNOCK = RawAnimation.begin().thenLoop("animation.tall_one.knock");
     public static final RawAnimation DIG = RawAnimation.begin().thenLoop("animation.tall_one.dig");
 
     private static final int SINK_ANIM_TICKS = 24;          // animation length 1.2 s
