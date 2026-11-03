@@ -41,19 +41,25 @@ public class WarningScreen extends Screen {
     protected void init() {
         int centerX = this.width / 2;
 
-        // the toggle: ON/OFF on click, preference sent to the server directly upon press
+        // Both controls stay together in one row at the bottom of the screen.
+        int buttonWidth = Math.min(200, Math.max(120, (this.width - 48) / 2));
+        int gap = 8;
+        int rowWidth = buttonWidth * 2 + gap;
+        int left = (this.width - rowWidth) / 2;
+        int buttonY = this.height - 42;
+
         toggleButton = ButtonWidget.builder(toggleLabel(), b -> {
                     scaresEnabled = !scaresEnabled;
                     b.setMessage(toggleLabel());
                     ClientPlayNetworking.send(new ScaresPrefPayload(scaresEnabled));
                 })
-                .dimensions(centerX - 100, this.height / 2 - 10, 200, 20)
+                .dimensions(left, buttonY, buttonWidth, 20)
                 .build();
         this.addDrawableChild(toggleButton);
 
         // ACCEPT TERMS: the only door out; remembers the answer per machine
         this.addDrawableChild(ButtonWidget.builder(Text.literal("ACCEPT TERMS"), b -> accept())
-                .dimensions(centerX - 100, this.height - 40, 200, 20)
+                .dimensions(left + buttonWidth + gap, buttonY, buttonWidth, 20)
                 .build());
     }
 
@@ -72,6 +78,12 @@ public class WarningScreen extends Screen {
         // ESC or the button both count as an answer; never reopen this session
         ClientAcceptedState.setAccepted(true);
         super.close();
+    }
+
+    /** This screen draws its own dark curtain; do not blur the world behind it. */
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Intentionally empty: the custom WARNING background below is crisp, not blurred.
     }
 
     @Override
