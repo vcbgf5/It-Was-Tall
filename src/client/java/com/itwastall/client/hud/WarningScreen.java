@@ -25,9 +25,13 @@ public class WarningScreen extends Screen {
 
     private static final Text TITLE = Text.literal("WARNING");
     private static final Text SUBTITLE = Text.literal("JUMPSCARES");
-    private static final Text BODY_1 = Text.literal("This mod throws sudden JUMPSCARES at you:");
-    private static final Text BODY_2 = Text.literal("full-screen images, sharp sounds, red messages.");
-    private static final Text BODY_3 = Text.literal("You can toggling them off below at any time.");
+    private static final Text BODY_1 = Text.literal("It Was Tall adds a tall creature that watches players at night.");
+    private static final Text BODY_2 = Text.literal("Approach it or watch it too long and it may chase you.");
+    private static final Text BODY_3 = Text.literal("Underground, it can dig through stone and extinguish torches.");
+    private static final Text BODY_4 = Text.literal("Random sounds, whispers and on-screen messages can occur.");
+    private static final Text BODY_5 = Text.literal("In multiplayer, scares are heard and seen only by affected players.");
+    private static final Text BODY_6 = Text.literal("This mod contains jumpscares, flashing images and loud sounds.");
+    private static final Text BODY_7 = Text.literal("Turn scares off below if you do not want these effects.");
 
     public WarningScreen() {
         super(Text.literal("It Was Tall"));
@@ -99,6 +103,14 @@ public class WarningScreen extends Screen {
         drawCentered(context, BODY_2, y, 0xFFAAAAAA);
         y += 10;
         drawCentered(context, BODY_3, y, 0xFFAAAAAA);
+        y += 10;
+        drawCentered(context, BODY_4, y, 0xFFAAAAAA);
+        y += 10;
+        drawCentered(context, BODY_5, y, 0xFFAAAAAA);
+        y += 10;
+        drawCentered(context, BODY_6, y, 0xFFFF7777);
+        y += 10;
+        drawCentered(context, BODY_7, y, 0xFFAAAAAA);
 
         super.render(context, mouseX, mouseY, delta);
     }
