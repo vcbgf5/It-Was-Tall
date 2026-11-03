@@ -53,7 +53,8 @@ public final class CaveStructureLoot {
             if (!(world.getBlockEntity(pos) instanceof LootableContainerBlockEntity container)) {
                 return ActionResult.PASS;
             }
-            Identifier lootTable = container.getLootTable();
+            RegistryKey<net.minecraft.loot.LootTable> lootTableKey = container.getLootTable();
+            Identifier lootTable = lootTableKey == null ? null : lootTableKey.getValue();
             if (lootTable == null || !isCaveLootTable(lootTable)) return ActionResult.PASS;
 
             String key = world.getRegistryKey().getValue() + "|" + pos.asLong();
