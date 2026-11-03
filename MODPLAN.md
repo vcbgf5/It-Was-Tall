@@ -1042,6 +1042,15 @@ Wszystkie intensywne efekty powinny mieć odpowiednie ustawienia dostępności.
 
 ---
 
+## Stan implementacji: notatki w strukturach i Kryształ Odpędzający
+
+- [x] Skrzynie w podziemnych strukturach vanilla (opuszczone kopalnie, lochy, korytarze twierdz i starożytne miasta) po wygenerowaniu zwykłego łupu otrzymują dodatkową notatkę, jeśli jest wolne miejsce.
+- [x] Dodano trzy warianty notatek: MINER'S REPORT, THE BLUE CRYSTAL i LAST EXPEDITION.
+- [x] Kryształ Odpędzający może pojawić się w tych skrzyniach z szansą 1/5.
+- [x] Dodano przedmiot `itwastall:warding_crystal`, dostępny przez `/give @p itwastall:warding_crystal 1`.
+- [x] To jest odporne na zwykłe ataki; trafienie Kryształem Odpędzającym pokonuje je.
+- [ ] Własna struktura jaskiniowa z dedykowaną skrzynią i gwarantowanym rozmieszczeniem kryształu wymaga jeszcze implementacji worldgenu i plików struktury.
+
 # 17. STRUKTURY ŚWIATA
 
 Dodaj własne struktury generowane w świecie.
