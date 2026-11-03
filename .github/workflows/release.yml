@@ -73,12 +73,20 @@ jobs:
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+          # Manual releases build the current main branch. Existing tags may
+          # point to an older commit and must not silently build stale source.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "checkout_ref=main" >> "$GITHUB_OUTPUT"
+          else
+            echo "checkout_ref=$TAG" >> "$GITHUB_OUTPUT"
+          fi
+
       # Checkout the actual release tag.
       - name: Checkout at tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.resolve.outputs.tag }}
-          fetch-depth: 1
+          ref: ${{ steps.resolve.outputs.checkout_ref }}
+          fetch-depth: 0
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
