@@ -113,7 +113,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> warningDelay[0] = -1)
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
