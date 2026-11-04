@@ -26,6 +26,7 @@
     "geckolib": ">=4.6"
   },
   "mixins": [
+    "itwastall.mixins.json",
     {
       "config": "itwastall.client.mixins.json",
       "environment": "client"
