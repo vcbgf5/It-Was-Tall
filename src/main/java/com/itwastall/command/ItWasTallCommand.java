@@ -10,6 +10,7 @@ import com.itwastall.entity.TallOneEntity;
 import com.itwastall.entity.WindowKnocks;
 import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModEntities;
+import com.itwastall.task.TaskManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -83,6 +84,7 @@ public final class ItWasTallCommand {
                                         }))))
                 .then(mineCommand())
                 .then(eventCommand())
+                .then(taskCommand())
                 .then(debugCommand())
                 .then(baseCommand())
                 .then(literal("stage")
@@ -197,6 +199,53 @@ public final class ItWasTallCommand {
                 .then(argument("player", EntityArgumentType.player())
                         .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")),
                                 "event " + name, action)));
+    }
+
+    /**
+     * "/itwastall task" — status of your current task slot;
+     * "/itwastall task stayinside|lights [player]" — force-assign one of the stage-3 tasks.
+     * Still respects the stage gate (tasksFlag) so /task never bypasses the balance table.
+     */
+    private static LiteralArgumentBuilder<ServerCommandSource> taskCommand() {
+        var root = literal("task")
+                .executes(ctx -> {
+                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                    ctx.getSource().sendFeedback(() -> Text.literal(
+                            "Task: " + TaskManager.status(p.getUuid())), false);
+                    return 1;
+                })
+                .then(literal("stayinside")
+                        .executes(ctx -> forceTask(ctx, List.of(ctx.getSource().getPlayerOrThrow()),
+                                TaskManager.Kind.STAY_INSIDE))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> forceTask(ctx,
+                                        List.of(EntityArgumentType.getPlayer(ctx, "player")),
+                                        TaskManager.Kind.STAY_INSIDE))))
+                .then(literal("lights")
+                        .executes(ctx -> forceTask(ctx, List.of(ctx.getSource().getPlayerOrThrow()),
+                                TaskManager.Kind.DOUSE_LIGHTS))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> forceTask(ctx,
+                                        List.of(EntityArgumentType.getPlayer(ctx, "player")),
+                                        TaskManager.Kind.DOUSE_LIGHTS))));
+        return root;
+    }
+
+    private static int forceTask(CommandContext<ServerCommandSource> ctx,
+                                 Collection<ServerPlayerEntity> players, TaskManager.Kind kind) {
+        int ok = 0;
+        for (ServerPlayerEntity p : players) {
+            if (TaskManager.forceAssign(p, kind)) {
+                ok++;
+            } else {
+                ctx.getSource().sendError(Text.literal("task refused for " + p.getName().getString()
+                        + " (stage < 3, or no mapped lights nearby)"));
+            }
+        }
+        int done = ok;
+        ctx.getSource().sendFeedback(() -> Text.literal("task " + kind.name().toLowerCase(Locale.ROOT)
+                + ": assigned to " + done + "/" + players.size() + " player(s)"), false);
+        return ok;
     }
 
     /** "/itwastall base rescan" — force a fresh scan of your base (needs a known anchor). */

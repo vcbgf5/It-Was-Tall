@@ -28,6 +28,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BaseDebugPayload.ID, BaseDebugPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(TaskToastPayload.ID, TaskToastPayload.CODEC);
         // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
         PayloadTypeRegistry.playC2S().register(ScaresPrefPayload.ID, ScaresPrefPayload.CODEC);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -101,5 +102,11 @@ public final class ModNetworking {
         ServerPlayNetworking.send(player, new BaseDebugPayload(map.anchor(), map.encodedMarkers(), 30));
         ItWasTall.LOGGER.debug("Base debug view -> {}", player.getName().getString());
         return true;
+    }
+
+    /** TaskToast (MODPLAN §16): new / completed / failed, drawn by the client's TaskToast HUD. */
+    public static void sendTaskToast(ServerPlayerEntity player, int kind, String title, String text) {
+        if (!ServerPlayNetworking.canSend(player, TaskToastPayload.ID)) return;
+        ServerPlayNetworking.send(player, new TaskToastPayload(kind, title, text));
     }
 }

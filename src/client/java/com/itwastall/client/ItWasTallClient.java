@@ -4,6 +4,7 @@ import com.itwastall.client.hud.ItJoinedOverlay;
 import com.itwastall.client.hud.JournalScreen;
 import com.itwastall.client.hud.JumpscareOverlay;
 import com.itwastall.client.hud.ScareTextOverlay;
+import com.itwastall.client.hud.TaskToast;
 import com.itwastall.client.hud.WarningScreen;
 import com.itwastall.client.render.BaseDebugRenderer;
 import com.itwastall.client.render.FalsePresenceRenderer;
@@ -14,6 +15,8 @@ import com.itwastall.net.FearStatePayload;
 import com.itwastall.net.ItJoinedPayload;
 import com.itwastall.net.JumpscarePayload;
 import com.itwastall.net.ScareTextPayload;
+import com.itwastall.net.TaskToastPayload;
+import com.itwastall.net.TaskToastPayload;
 import com.itwastall.registry.ModEntities;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -147,5 +150,11 @@ public class ItWasTallClient implements ClientModInitializer {
                 warningDelay[0] = -1;
             }
         });
+
+        // TaskToast (MODPLAN §15/§16): the server's TaskManager feeds the HUD box; rendering
+        // itself lives in InGameHudMixin (HEAD), here only the S2C receiver is wired.
+        ClientPlayNetworking.registerGlobalReceiver(TaskToastPayload.ID, (payload, context) ->
+                context.client().execute(() ->
+                        TaskToast.show(payload.kind(), payload.title(), payload.text())));
     }
 }

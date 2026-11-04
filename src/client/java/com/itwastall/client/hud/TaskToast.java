@@ -1,21 +1,40 @@
 package com.itwastall.client.hud;
 
+import com.itwastall.net.TaskToastPayload;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.util.math.MathHelper;
 
-/** Small, non-blocking notification used by task and objective systems. */
+/** Small, non-blocking notification used by task and objective systems (MODPLAN §16). */
 public final class TaskToast {
     private static String title = "";
     private static String message = "";
     private static long untilNanos;
     private static final long DISPLAY_NANOS = 3_500_000_000L;
 
+    /** Accent bar colour of the current toast: new = tall red, done = green, failed = bright red. */
+    private static int accent = 0xA33B35;
+
+    private static final int ACCENT_NEW = 0xA33B35;
+    private static final int ACCENT_DONE = 0x3AA35A;
+    private static final int ACCENT_FAILED = 0xB02020;
+
     private TaskToast() {}
 
     public static void show(String newTitle, String newMessage) {
+        show(TaskToastPayload.KIND_NEW, newTitle, newMessage);
+    }
+
+    /** Kind-aware entry point for the server's TaskToastPayload (§15: new / completed / failed). */
+    public static void show(int kind, String newTitle, String newMessage) {
         title = newTitle == null ? "" : newTitle;
         message = newMessage == null ? "" : newMessage;
+        accent = switch (kind) {
+            case TaskToastPayload.KIND_COMPLETED -> ACCENT_DONE;
+            case TaskToastPayload.KIND_FAILED -> ACCENT_FAILED;
+            default -> ACCENT_NEW;
+        };
         untilNanos = System.nanoTime() + DISPLAY_NANOS;
     }
 
@@ -35,10 +54,10 @@ public final class TaskToast {
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, 0, 1800);
         ctx.fill(left, top, sw - 12, top + 48, (alpha << 24) | 0x11141B);
-        ctx.fill(left, top, left + 3, top + 48, (alpha << 24) | 0xA33B35);
-        ctx.drawTextWithShadow(net.minecraft.client.MinecraftClient.getInstance().textRenderer,
+        ctx.fill(left, top, left + 3, top + 48, (alpha << 24) | accent);
+        ctx.drawTextWithShadow(MinecraftClient.getInstance().textRenderer,
                 title, left + 11, top + 8, (alpha << 24) | 0xFFFFFF);
-        ctx.drawText(net.minecraft.client.MinecraftClient.getInstance().textRenderer,
+        ctx.drawText(MinecraftClient.getInstance().textRenderer,
                 message, left + 11, top + 25, (alpha << 24) | 0xC7CBD2, false);
         ctx.getMatrices().pop();
     }

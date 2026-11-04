@@ -77,6 +77,7 @@ public final class ItWasTallConfig {
         public int loreBookCooldownMinutes = 5;
 
         // ---- base tracking (PHASES Poziom 6: MODPLAN §8) ----
+        // ---- base tracking (PHASES Poziom 6: MODPLAN §8) ----
         /** How many blocks the base scanner may classify per tick (shared between players). */
         public int scanBlocksPerTick = 64;
         /** Horizontal radius (anchor +-radius) of one base scan. */
@@ -85,6 +86,18 @@ public final class ItWasTallConfig {
         public int baseInteriorCap = 2400;
         /** Dark interior corners (block light < 4) worth recording for search goals. */
         public int baseCornerCap = 48;
+
+        // ---- tasks (PHASES Poziom 8: MODPLAN §15) ----
+        /** Chance per second (at night, sheltered, stage 3+) that a task gets assigned. */
+        public double taskChancePerSecond = 0.02;
+        /** Seconds one player sits on the task cooldown after completing/failing one. */
+        public int taskCooldownSeconds = 300;
+        /** "Don't go outside": seconds the player has to stay sheltered (MODPLAN 15.1). */
+        public int taskStayInsideSeconds = 120;
+        /** "Douse the lights": how many light markers It picks (up to). */
+        public int taskLightsCount = 3;
+        /** "Douse the lights": seconds until the assignment expires (dawn also kills it). */
+        public int taskLightsDeadlineSeconds = 300;
 
         // ---- mine / cave events ----
         /** Enable events while the player is underground (digging towards you, sounds, torches, peeking). */

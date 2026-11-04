@@ -13,6 +13,7 @@ import com.itwastall.entity.LoreBooks;
 import com.itwastall.entity.CaveStructureLoot;
 import com.itwastall.base.BaseTracker;
 import com.itwastall.net.ModNetworking;
+import com.itwastall.task.TaskManager;
 import com.itwastall.registry.ModEntities;
 import com.itwastall.registry.ModItems;
 import com.itwastall.registry.ModSounds;
@@ -50,6 +51,8 @@ public class ItWasTall implements ModInitializer {
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
+        // tasks (PHASES Poziom 8: MODPLAN §15) — stage 3 unlocks the stay-inside / douse pairs
+        TaskManager.init();
         // multiplayer: forget per-player timers when someone leaves
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             var uuid = handler.getPlayer().getUuid();
@@ -61,6 +64,7 @@ public class ItWasTall implements ModInitializer {
             WindowKnocks.forget(uuid);
             LoreBooks.forget(uuid);
             BaseTracker.forget(uuid);
+            TaskManager.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...
