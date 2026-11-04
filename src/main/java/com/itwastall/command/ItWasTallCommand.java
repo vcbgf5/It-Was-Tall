@@ -189,7 +189,12 @@ public final class ItWasTallCommand {
                 }))
                 .then(eventKind("knock", p -> {
                     if (!WindowKnocks.trigger(p)) throw new IllegalStateException("no window near the player's base");
-                }));
+                }))
+                .then(literal("structure")
+                        .then(structureKind("cemetery", com.itwastall.entity.DynamicStructures.Kind.CEMETERY))
+                        .then(structureKind("shrine", com.itwastall.entity.DynamicStructures.Kind.SHRINE))
+                        .then(structureKind("cottage", com.itwastall.entity.DynamicStructures.Kind.COTTAGE))
+                        .then(structureKind("blackcopy", com.itwastall.entity.DynamicStructures.Kind.BLACKCOPY)));
         return root;
     }
 
@@ -199,6 +204,23 @@ public final class ItWasTallCommand {
                 .then(argument("player", EntityArgumentType.player())
                         .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")),
                                 "event " + name, action)));
+    }
+
+    /** /itwastall event structure X [player] — force-build one of the §17.1 structures. */
+    private static LiteralArgumentBuilder<ServerCommandSource> structureKind(
+            String name, com.itwastall.entity.DynamicStructures.Kind kind) {
+        String what = "event structure " + name;
+        return literal(name)
+                .executes(ctx -> each(ctx, List.of(ctx.getSource().getPlayerOrThrow()), what,
+                        p -> {
+                            if (!com.itwastall.entity.DynamicStructures.trigger(p, kind)
+                                    && kind == com.itwastall.entity.DynamicStructures.Kind.BLACKCOPY) {
+                                throw new IllegalStateException("no mapped base or no room behind the player");
+                            }
+                        }))
+                .then(argument("player", EntityArgumentType.player())
+                        .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")), what,
+                                p -> com.itwastall.entity.DynamicStructures.trigger(p, kind))));
     }
 
     /**

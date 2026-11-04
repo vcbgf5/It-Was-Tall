@@ -115,6 +115,14 @@ public final class ItWasTallConfig {
         public boolean baseDousing = true;
         /** Chance per second (night, sheltered, ETAP 4+) that the burst starts. */
         public double baseDouseChance = 0.25;
+
+        // ---- dynamic structures (§17.1) ----
+        /** Enables rare server-built structures (cemetery, shrine, cottage, black copy). */
+        public boolean dynamicStructures = true;
+        /** Chance per second (night, behind the player, one per night) that a build starts. */
+        public double structureChance = 0.02;
+        /** Of those builds, the chance it is the base's black copy (needs a mapped base). */
+        public double blackCopyChance = 0.25;
         /** How long It walks the rooms searching before it gives up (survive this long). */
         public int taskSeekSeconds = 90;
         /** Seconds between two checked dark corners (step/breath cues play at that spot). */
