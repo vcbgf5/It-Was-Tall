@@ -3,6 +3,7 @@ package com.itwastall.world;
 import com.itwastall.ItWasTall;
 import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtLongArray;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.MathHelper;
@@ -46,6 +47,8 @@ public final class ItWasTallState extends PersistentState {
     private final Map<UUID, Integer> playerCounters = new HashMap<>();
     /** Per-player base maps (BaseTracker -> BaseMap.toNbt), MODPLAN §8.3/§20: saved with the world. */
     private final Map<UUID, NbtCompound> playerBases = new HashMap<>();
+    /** Every block position placed by each player, recorded regardless of phase or stage. */
+    private final Map<UUID, Set<Long>> playerPlacedBlocks = new HashMap<>();
     /** Lore books already placed in this player's base; prevents repeats across restarts. */
     private final Map<UUID, Set<String>> deliveredLoreBooks = new HashMap<>();
     /** Next world-time tick when another lore book may be placed for this player. */
@@ -73,6 +76,12 @@ public final class ItWasTallState extends PersistentState {
         for (String key : counters.getKeys()) state.playerCounters.put(UUID.fromString(key), counters.getInt(key));
         NbtCompound bases = nbt.getCompound("playerBases");
         for (String key : bases.getKeys()) state.playerBases.put(UUID.fromString(key), bases.getCompound(key));
+        NbtCompound placedBlocks = nbt.getCompound("playerPlacedBlocks");
+        for (String key : placedBlocks.getKeys()) {
+            Set<Long> positions = new HashSet<>();
+            for (long packed : placedBlocks.getLongArray(key)) positions.add(packed);
+            state.playerPlacedBlocks.put(UUID.fromString(key), positions);
+        }
         NbtCompound lore = nbt.getCompound("deliveredLoreBooks");
         for (String key : lore.getKeys()) {
             Set<String> ids = new HashSet<>();
@@ -100,6 +109,11 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound bases = new NbtCompound();
         playerBases.forEach((uuid, value) -> bases.put(uuid.toString(), value));
         nbt.put("playerBases", bases);
+        NbtCompound placedBlocks = new NbtCompound();
+        playerPlacedBlocks.forEach((uuid, positions) ->
+                placedBlocks.put(uuid.toString(), new NbtLongArray(
+                        positions.stream().mapToLong(Long::longValue).toArray())));
+        nbt.put("playerPlacedBlocks", placedBlocks);
         NbtCompound lore = new NbtCompound();
         deliveredLoreBooks.forEach((uuid, ids) -> {
             NbtCompound entries = new NbtCompound();
@@ -196,6 +210,20 @@ public final class ItWasTallState extends PersistentState {
 
     public void removePlayerCounter(UUID player) {
         if (playerCounters.remove(player) != null) markDirty();
+    }
+
+    // ---- player-placed block history (BaseTracker) ----
+
+    /** Returns true only for a newly recorded position. */
+    public boolean recordPlacedBlock(UUID player, long packedPos) {
+        boolean added = playerPlacedBlocks.computeIfAbsent(player, ignored -> new HashSet<>()).add(packedPos);
+        if (added) markDirty();
+        return added;
+    }
+
+    /** Snapshot of every position this player has placed, including before phase/stage activation. */
+    public Set<Long> placedBlocks(UUID player) {
+        return Set.copyOf(playerPlacedBlocks.getOrDefault(player, Set.of()));
     }
 
     // ---- lore books (MODPLAN §9) ----
