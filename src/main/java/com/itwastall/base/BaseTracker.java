@@ -70,6 +70,30 @@ public final class BaseTracker {
 
     // ---------------------------------------------------------------- hooks ----
 
+    /**
+     * Called after a successful block placement. This history starts immediately and is
+     * deliberately independent of Director phase, stage, and tension.
+     */
+    public static void onBlockPlaced(ServerPlayerEntity player, World world, BlockPos placedPos) {
+        if (world.isClient || world.getRegistryKey() != World.OVERWORLD || server == null) return;
+        BlockPos pos = placedPos.toImmutable();
+        ItWasTallState state = ItWasTallState.getOrCreate(server);
+        if (!state.recordPlacedBlock(player.getUuid(), pos.asLong())) return;
+
+        Long anchor = anchorOf(player.getUuid());
+        if (anchor == null && isBaseClue(world.getBlockState(pos))) {
+            setAnchor(player, pos);
+            return;
+        }
+
+        if (anchor != null) {
+            BaseMap map = MAPS.computeIfAbsent(player.getUuid(), ignored -> new BaseMap(anchor));
+            map.add(BlockPos.fromLong(anchor), BaseMap.TYPE_PLACED, pos);
+            if (pos.isWithinDistance(BlockPos.fromLong(anchor), 48)) scheduleScan(player, anchor, false);
+            persist(player, map);
+        }
+    }
+
     /** The bed click sets the anchor immediately — cheap, reliable, exactly what it looks like. */
     private static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hit) {
         if (world.isClient || !(player instanceof ServerPlayerEntity sp)) return ActionResult.PASS;
@@ -186,7 +210,12 @@ public final class BaseTracker {
         if (anchor == null) return false;
         BaseScanner scanner = SCANS.computeIfAbsent(player.getUuid(),
                 u -> new BaseScanner(ItWasTallConfig.INSTANCE.baseScanRadius));
-        if (!scanner.active()) scanner.start(anchor);
+        if (!scanner.active()) {
+            BaseMap map = MAPS.computeIfAbsent(player.getUuid(), u -> new BaseMap(anchor));
+            map.clearScanMarkers();
+            restorePlacedMarkers(player.getUuid(), map);
+            scanner.start(anchor);
+        }
         return true;
     }
 
@@ -249,7 +278,14 @@ public final class BaseTracker {
         Long previous = ANCHORS.put(uuid, anchor);
         BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
         map.setAnchor(anchor);
-        map.clearMarkers();                 // old markers are offsets around the old anchor
+        map.clearMarkers();                 // old offsets used the previous anchor
+        // Restore every earlier player placement relative to this anchor, even if it predates
+        // the bed, the scan, or activation of the mod's phase/stage system.
+        if (server != null) {
+            for (long packed : ItWasTallState.getOrCreate(server).placedBlocks(uuid)) {
+                map.add(anchorPos, BaseMap.TYPE_PLACED, BlockPos.fromLong(packed));
+            }
+        }
         scheduleScan(player, anchor, true);
         if (!Long.valueOf(anchor).equals(previous)) {
             persist(player, map);
@@ -267,7 +303,12 @@ public final class BaseTracker {
         RESCAN_AT.put(uuid, now + 15 * 20L);
         BaseScanner scanner = SCANS.computeIfAbsent(uuid,
                 u -> new BaseScanner(ItWasTallConfig.INSTANCE.baseScanRadius));
-        if (!scanner.active()) scanner.start(anchor);
+        if (!scanner.active()) {
+            BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
+            map.clearScanMarkers();
+            restorePlacedMarkers(uuid, map);
+            scanner.start(anchor);
+        }
     }
 
     private static void runScans(MinecraftServer runningServer) {
@@ -284,15 +325,27 @@ public final class BaseTracker {
             ServerPlayerEntity player = runningServer.getPlayerManager().getPlayer(uuid);
             Long anchor = ANCHORS.get(uuid);
             if (player == null || anchor == null) continue; // owner away: the scan waits for him
-            int myBudget = Math.max(4, budgetLeft / activeScans);
+            int myBudget = Math.max(1, budgetLeft / activeScans);
+            BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
             boolean done = scanner.tick(player.getServerWorld(),
-                    BlockPos.fromLong(anchor), MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor)), myBudget);
+                    BlockPos.fromLong(anchor), map, myBudget);
+            budgetLeft -= myBudget;
+            activeScans--;
+            if (budgetLeft <= 0) break;
             if (done) {
                 persist(player, MAPS.get(uuid));
                 ItWasTall.LOGGER.info("Base scan finished for {} ({}).",
                         player.getName().getString(), MAPS.get(uuid));
                 SCANS.remove(uuid);
             }
+        }
+    }
+
+    private static void restorePlacedMarkers(UUID uuid, BaseMap map) {
+        if (server == null) return;
+        BlockPos anchor = map.anchorPos();
+        for (long packed : ItWasTallState.getOrCreate(server).placedBlocks(uuid)) {
+            map.add(anchor, BaseMap.TYPE_PLACED, BlockPos.fromLong(packed));
         }
     }
 
