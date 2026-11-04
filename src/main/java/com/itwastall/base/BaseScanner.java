@@ -36,7 +36,7 @@ public final class BaseScanner {
     /** Horizontal radius (anchor +-radius), clamped to 4..32. */
     private final int radius;
     private final Queue<BlockPos> columns = new ArrayDeque<>();
-    /** Row offset of the NEXT classified block; -4..+9 (UP_ROWS + 1 = column done). */
+    /** Row offset of the NEXT classified block; -DOWN_ROWS..UP_ROWS (then column done). */
     private int rowCursor = -DOWN_ROWS;
     private boolean columnsDone;
 
@@ -116,7 +116,7 @@ public final class BaseScanner {
             int y = anchorPos.getY() + rowCursor;
             classify(world, map, anchorPos, column, y);
             budget--;
-            if (rowCursor >= UP_ROWS) {     // +8 was the last row -> column done
+            if (rowCursor >= UP_ROWS) {     // UP_ROWS was the last row -> column done
                 columns.poll();
                 rowCursor = -DOWN_ROWS;
             } else {
@@ -166,29 +166,31 @@ public final class BaseScanner {
             BlockPos outside = chooseOutsideCell(world, glass, anchorPos);
             // A sealed/tinted window can have no open neighbour. Still register the
             // window itself instead of silently losing it from the map.
-            map.add(anchorPos, BaseMap.TYPE_WINDOW, outside == null ? glass : outside);
+            map.add(anchorPos, BaseMap.TYPE_WINDOW, outside);
             budget--;
         }
         return budget;
     }
 
-    @Nullable
     private BlockPos chooseOutsideCell(ServerWorld world, BlockPos glass, BlockPos anchorPos) {
-        BlockPos best = null;
+        BlockPos best = glass.north();
         double bestScore = -Double.MAX_VALUE;
         for (Direction dir : HORIZONTAL) {
             BlockPos side = glass.offset(dir);
             var state = world.getBlockState(side);
-            if (!state.getFluidState().isEmpty()) continue;
-            if (!state.isAir() && !state.getCollisionShape(world, side).isEmpty()) continue;
+            boolean open = state.getFluidState().isEmpty()
+                    && (state.isAir() || state.getCollisionShape(world, side).isEmpty());
             BlockPos above = side.up();
             var aboveState = world.getBlockState(above);
-            if (!aboveState.isAir() && !aboveState.getCollisionShape(world, above).isEmpty()) continue;
-
+            boolean headroom = aboveState.isAir() || aboveState.getCollisionShape(world, above).isEmpty();
             boolean roomSide = visited.contains(side.asLong());
             int sky = world.getLightLevel(LightType.SKY, side);
             double distance = side.getSquaredDistance(anchorPos);
-            double score = (roomSide ? -1000.0 : 1000.0)
+
+            // Prefer an open cell outside the flood-filled room. If the window is sealed,
+            // still put its red marker on the most likely exterior face, never on the glass.
+            double score = (open && headroom ? 2000.0 : 0.0)
+                    + (roomSide ? -1000.0 : 1000.0)
                     + sky * 4.0
                     + distance * 0.01;
             if (score > bestScore) {
