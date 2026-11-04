@@ -3,6 +3,8 @@ name: Release
 
 on:
   push:
+    branches:
+      - beta
     tags:
       - '[0-9]*.[0-9]*.[0-9]*'
       - 'v[0-9]*.[0-9]*.[0-9]*'
@@ -42,8 +44,9 @@ jobs:
       - name: Resolve and create tag
         id: resolve
         env:
-          INPUT_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          INPUT_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || (github.ref_type == 'branch' && github.ref_name == 'beta' && '0.3.10') || github.ref_name }}
           EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
           TAG="$INPUT_TAG"
 
@@ -57,7 +60,7 @@ jobs:
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists."
           else
-            if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+            if [ "$EVENT_NAME" != "workflow_dispatch" ] && [ "$REF_TYPE" != "branch" ]; then
               echo "Error: tag $TAG does not exist."
               exit 1
             fi
@@ -75,7 +78,7 @@ jobs:
 
           # Manual releases build the current main branch. Existing tags may
           # point to an older commit and must not silently build stale source.
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$REF_TYPE" = "branch" ]; then
             echo "checkout_ref=main" >> "$GITHUB_OUTPUT"
           else
             echo "checkout_ref=$TAG" >> "$GITHUB_OUTPUT"
@@ -123,7 +126,7 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           TAG: ${{ steps.resolve.outputs.tag }}
-          RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'release' }}
+          RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || (github.ref_type == 'branch' && github.ref_name == 'beta' && 'beta') || 'release' }}
         run: |
           if [ -z "$CF_API_TOKEN" ]; then
             echo "CF_API_TOKEN secret is missing."
@@ -156,5 +159,5 @@ jobs:
           name: It Was Tall ${{ steps.resolve.outputs.tag }}
           generate_release_notes: true
           draft: false
-          prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'release' }}
+          prerelease: ${{ (github.event_name == 'workflow_dispatch' && inputs.release_type != 'release') || (github.ref_type == 'branch' && github.ref_name == 'beta') }}
           files: build/libs/it-was-tall-${{ steps.resolve.outputs.tag }}.jar
