@@ -101,6 +101,8 @@ public final class ItWasTallConfig {
 
         /** "Hide and seek" (§15.2, ETAP 5): seconds of the initial hide countdown. */
         public int taskHideCountdownSeconds = 30;
+        /** NIE PATRZ (§15.4, ETAP 4): seconds the watcher stands behind the player. */
+        public int taskDontLookSeconds = 30;
         /** How long It walks the rooms searching before it gives up (survive this long). */
         public int taskSeekSeconds = 90;
         /** Seconds between two checked dark corners (step/breath cues play at that spot). */

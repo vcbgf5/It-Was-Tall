@@ -7,6 +7,7 @@ import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
 import com.itwastall.director.Stage;
 import com.itwastall.entity.HauntDirector;
+import com.itwastall.entity.FalsePresences;
 import com.itwastall.entity.MineEvents;
 import com.itwastall.entity.ShelterCheck;
 import com.itwastall.net.ModNetworking;
@@ -53,7 +54,7 @@ import java.util.UUID;
  * failure/completion puts the player on a cooldown ({@code taskCooldownSeconds}).
  */
 public final class TaskManager {
-    public enum Kind {STAY_INSIDE, DOUSE_LIGHTS, HIDE_AND_SEEK}
+    public enum Kind {STAY_INSIDE, DOUSE_LIGHTS, HIDE_AND_SEEK, DONT_LOOK}
 
     /** The active task of one player (server-memory; tasks reset on restart). */
     private static final class Task {
@@ -169,7 +170,27 @@ public final class TaskManager {
                 if (now >= task.expiresAt) fail(player, task, server);
             }
             case HIDE_AND_SEEK -> tickHideAndSeek(player, task, now, world, sheltered, server);
+            case DONT_LOOK -> {
+                // §15.4: the watcher stands behind the player for the fixed duration. Surviving
+                // it completes the task; turning around is reported by the client renderer and
+                // routes through onDontLookCaught -> fail below.
+                if (now >= task.expiresAt) complete(player, task);
+            }
         }
+    }
+
+    /**
+     * §15.4 NIE PATRZ: the client renderer saw the player rotate onto the behind-figure.
+     * Only meaningful when that player's active task really is DONT_LOOK (the window-look
+     * gaze of §12 arrives through the same payload with {@code behind = false}).
+     */
+    public static void onDontLookCaught(ServerPlayerEntity player) {
+        UUID uuid = player.getUuid();
+        Task task = ACTIVE.get(uuid);
+        if (task == null || task.kind != Kind.DONT_LOOK) return;
+        ItWasTall.LOGGER.info("{} looked at the watcher. It saw that.", player.getName().getString());
+        fail(player, task, player.getServer());
+        ModNetworking.sendJumpscare(player);   // it was RIGHT there when you turned around
     }
 
     /**
@@ -268,19 +289,28 @@ public final class TaskManager {
         if (cooldownUntil != null && now < cooldownUntil) return;
 
         World world = player.getWorld();
-        // tasks live at night, from the shelter (MODPLAN 15.1); day is for mining fear
+        // tasks live at night (MODPLAN §15); day is for mining fear
         if (!world.isNight()) return;
-        if (!ShelterCheck.isSheltered(world, player.getBlockPos())) return;
 
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (player.getRandom().nextDouble() >= cfg.taskChancePerSecond) return;
-        // fair pick from everything the stage enables (ETAP 5 adds HIDE_AND_SEEK to the pair);
-        // lights/corners need a mapped base, STAY_INSIDE always fits — so fall back to it
-        Kind wanted = switch (player.getRandom().nextInt(st.tasksFlag() >= 3 ? 3 : 2)) {
-            case 0 -> Kind.STAY_INSIDE;
-            case 2 -> Kind.HIDE_AND_SEEK;
-            default -> Kind.DOUSE_LIGHTS;
-        };
+
+        Kind wanted;
+        boolean sheltered = ShelterCheck.isSheltered(world, player.getBlockPos());
+        if (!sheltered) {
+            // NIE PATRZ (§15.4) works outdoors too — the watcher simply steps in behind you
+            wanted = Kind.DONT_LOOK;
+        } else {
+            // fair pick from everything the stage enables (ETAP 4 adds NIE PATRZ, ETAP 5 HIDE);
+            // lights/corners need a mapped base, STAY_INSIDE always fits — so fall back to it
+            int pool = flag >= 3 ? 4 : flag >= 2 ? 3 : 2;
+            wanted = switch (player.getRandom().nextInt(pool)) {
+                case 0 -> Kind.STAY_INSIDE;
+                case 2 -> flag >= 2 ? Kind.DONT_LOOK : Kind.DOUSE_LIGHTS;
+                case 3 -> Kind.HIDE_AND_SEEK;
+                default -> Kind.DOUSE_LIGHTS;
+            };
+        }
         Kind kind = pickKind(player, wanted, cfg);
         if (kind != null) {
             assign(player, kind);
@@ -303,6 +333,10 @@ public final class TaskManager {
             if (flag < 3) return null;
             List<BlockPos> corners = pickCorners(player);
             return corners == null ? null : Kind.HIDE_AND_SEEK;
+        }
+        if (requested == Kind.DONT_LOOK) {
+            // ETAP 4 unlocks the watcher (§15.4); the behind-spot is validated in assign()
+            return flag < 2 ? null : Kind.DONT_LOOK;
         }
         if (requested == Kind.STAY_INSIDE) return Kind.STAY_INSIDE;
         return Kind.STAY_INSIDE; // stage-3 default: the safest first task
@@ -358,6 +392,20 @@ public final class TaskManager {
             if (corners == null) return false;
             // expiresAt starts as the 30 s hide countdown (§15.2), later redefined to the seek end
             task = new Task(Kind.HIDE_AND_SEEK, now + 20L * cfg.taskHideCountdownSeconds, List.of(), corners);
+        } else if (kind == Kind.DONT_LOOK) {
+            BlockPos behind = FalsePresences.findSpotBehind(player, player.getRandom());
+            if (behind == null) return false;   // no open room at your back: no watcher now
+            // the watcher appears INSTANTLY and watches for the duration (§15.4: "np. 30 sekund")
+            if (!FalsePresences.sendFigure(player, behind, (int) (20L * cfg.taskDontLookSeconds), false, true)) {
+                return false;
+            }
+            MineEvents.playTo(player, ModSounds.STARE, new Vec3d(
+                            behind.getX() + 0.5, behind.getY() + 1.0, behind.getZ() + 0.5),
+                    0.9f, 1.0f);
+            MineEvents.playTo(player, ModSounds.AMBIENT_BREATH, new Vec3d(
+                            behind.getX() + 0.5, behind.getY() + 1.0, behind.getZ() + 0.5),
+                    0.8f, 1.0f);
+            task = new Task(Kind.DONT_LOOK, now + 20L * cfg.taskDontLookSeconds, List.of(), List.of());
         } else {
             task = new Task(Kind.STAY_INSIDE, now + 20L * cfg.taskStayInsideSeconds, List.of(), List.of());
         }
@@ -410,6 +458,7 @@ public final class TaskManager {
             case STAY_INSIDE -> "don't go outside";
             case DOUSE_LIGHTS -> "douse the lights";
             case HIDE_AND_SEEK -> "hide and seek";
+            case DONT_LOOK -> "don't look back";
         };
     }
 
@@ -420,6 +469,8 @@ public final class TaskManager {
             case DOUSE_LIGHTS -> "Douse the lights (" + task.lights.size() + ").";
             case HIDE_AND_SEEK -> "HIDE. " + cfg.taskHideCountdownSeconds
                     + "s. It will walk every dark corner.";
+            case DONT_LOOK -> "Something watches your back. Do NOT turn for "
+                    + cfg.taskDontLookSeconds + "s.";
         };
     }
 
@@ -429,6 +480,7 @@ public final class TaskManager {
             case DOUSE_LIGHTS -> "DOUSE_LIGHTS (" + task.lights.size() + " lights left)";
             case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "HIDE_AND_SEEK (hiding)"
                     : "HIDE_AND_SEEK (It checked " + task.checked + " corner(s))";
+            case DONT_LOOK -> "DONT_LOOK (survive without turning)";
         };
     }
 }

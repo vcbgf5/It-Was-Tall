@@ -99,13 +99,19 @@ public final class FalsePresences {
      * must stand in a valid gap behind the glass, so the knock system chooses the spot itself.
      */
     public static boolean sendFigure(ServerPlayerEntity player, BlockPos spot, int durationTicks, boolean window) {
+        return sendFigure(player, spot, durationTicks, window, false);
+    }
+
+    /** Full variant: the NIE PATRZ watcher (§15.4) is sent with {@code dontlook = true}. */
+    public static boolean sendFigure(ServerPlayerEntity player, BlockPos spot, int durationTicks,
+                                     boolean window, boolean dontlook) {
         if (player == null || durationTicks <= 0) return false;
         // face the player, whatever direction that is
         double dx = player.getX() - (spot.getX() + 0.5);
         double dz = player.getZ() - (spot.getZ() + 0.5);
         float yaw = (float) (MathHelper.atan2(dz, dx) * MathHelper.DEGREES_PER_RADIAN) - 90f;
         return ModNetworking.sendFalsePresence(player, spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5,
-                yaw, durationTicks, window);
+                yaw, durationTicks, window, dontlook);
     }
 
     /** A figure may only be sent to this player's client when he is in the right spot for one. */
@@ -134,14 +140,38 @@ public final class FalsePresences {
     }
 
     /**
+     * A spot BEHIND the player (MODPLAN §15.4): opposite the view direction, 3..6 blocks away,
+     * small side jitter, same standability rules as any false presence. Null when the neck's
+     * back has no room (walls) — the task is then refused rather than misplaced.
+     */
+    @Nullable
+    public static BlockPos findSpotBehind(ServerPlayerEntity player, Random random) {
+        ServerWorld world = player.getServerWorld();
+        float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE; // player's view yaw
+        for (int attempt = 0; attempt < 24; attempt++) {
+            float behindYaw = yaw + 180f + (random.nextFloat() * 0.5f - 0.25f) * 40f;
+            double dist = 3.0 + random.nextDouble() * 3.0;
+            double x = player.getX() - MathHelper.sin(behindYaw) * dist;
+            double z = player.getZ() + MathHelper.cos(behindYaw) * dist;
+            BlockPos spot = BlockPos.ofFloored(x, player.getBlockY(), z);
+            if (Math.abs(spot.getY() - player.getBlockY()) > 1) {
+                spot = new BlockPos(spot.getX(), player.getBlockY(), spot.getZ());
+            }
+            if (!fitsFigure(world, spot)) continue;
+            if (spotTaken(world, spot, player)) continue;
+            return spot.toImmutable();
+        }
+        return null;
+    }
+
+    /**
      * Looks for a spot between {@code minDist} and {@code maxDist} in front of the player (its
      * vision cone widened to +-70 degrees — the "kacim okiem"/periphery placements from MODPLAN
      * §7.1), on ground needing no digging, at most 8 blocks below or above the player's feet.
      * Returns the spot or null.
      */
     @Nullable
-    private static BlockPos findSpot(ServerPlayerEntity player, Random random, int minDist, int maxDist) {
-        ServerWorld world = player.getServerWorld();
+    private static BlockPos findSpot(ServerPlayerEntity player, Random random, int minDist, int maxDist) {        ServerWorld world = player.getServerWorld();
         float baseYaw = player.getYaw();
 
         for (int attempt = 0; attempt < 30; attempt++) {

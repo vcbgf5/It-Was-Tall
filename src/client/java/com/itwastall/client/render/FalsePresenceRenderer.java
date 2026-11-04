@@ -31,15 +31,18 @@ public final class FalsePresenceRenderer {
     /** Per-sighting state;mutable alongside ticks — a plain class, not a record. */
     private static final class Sighting {
         final int id;
-        final boolean window;
         int ticksLeft;
+        final boolean window;
+        /** §15.4 NIE PATRZ watcher: turning around at it fails the task (reported once). */
+        final boolean dontlook;
         /** Window sightings report one deliberate look-back to the server (one task each). */
         boolean reported;
 
-        Sighting(int id, int ticksLeft, boolean window) {
+        Sighting(int id, int ticksLeft, boolean window, boolean dontlook) {
             this.id = id;
             this.ticksLeft = ticksLeft;
             this.window = window;
+            this.dontlook = dontlook;
         }
     }
 
@@ -52,6 +55,12 @@ public final class FalsePresenceRenderer {
 
     /** Entry point from the payload receiver. */
     public static void show(double x, double y, double z, float yaw, int durationTicks, boolean window) {
+        show(x, y, z, yaw, durationTicks, window, false);
+    }
+
+    /** Full variant: the §15.4 NIE PATRZ watcher arrives with {@code dontlook = true}. */
+    public static void show(double x, double y, double z, float yaw, int durationTicks,
+                            boolean window, boolean dontlook) {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientWorld world = client.world;
         if (world == null || durationTicks <= 0) return;
@@ -71,12 +80,20 @@ public final class FalsePresenceRenderer {
             fake.setPosition(x, y - fake.getBodyY(0.75), z);
         }
         world.addEntity(fake);
-        if (window) {
-            // Start after insertion so GeckoLib has a live client-side entity to animate.
-            fake.playWindowKnockAnimation();
+        if (window || dontlook) {
+            if (dontlook) {
+                // the watcher was born BEHIND the player — introduce itself with a sting
+                MinecraftClient.getInstance().getSoundManager().play(
+                        net.minecraft.client.sound.PositionedSoundInstance.master(
+                                com.itwastall.registry.ModSounds.AMBIENT_STING, 1.0f, 0.8f));
+            }
+
+            // Start after insertion so GeckoLib has a live client-side entity to animate
+            // (window knock anim; the watcher just stands and tracks the player's head).
+            if (window) fake.playWindowKnockAnimation();
             if (client.player != null) facePlayer(fake, client.player);
         }
-        ACTIVE.put(id, new Sighting(id, durationTicks, window));
+        ACTIVE.put(id, new Sighting(id, durationTicks, window, dontlook));
         trackedWorld = world;
     }
 
@@ -115,7 +132,18 @@ public final class FalsePresenceRenderer {
                 if (!sighting.reported && isLookingAt(player, fake)) {
                     sighting.reported = true;
                     net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
-                            new com.itwastall.net.WindowSeenPayload());
+                            new com.itwastall.net.WindowSeenPayload(false));
+                }
+            } else if (sighting.dontlook) {
+                // §15.4: the watcher tracks you quietly (it observes, it does not knock) —
+                // but the moment you rotate onto it, the failure report goes out and the
+                // figure vanishes on the spot (nothing left to stare at after that).
+                facePlayer(fake, player);
+                if (isLookingAt(player, fake)) {
+                    sighting.reported = true;
+                    net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                            new com.itwastall.net.WindowSeenPayload(true));
+                    lookedAt = true;   // remove locally alongside the report
                 }
             } else {
                 double gross = player.squaredDistanceTo(fake);

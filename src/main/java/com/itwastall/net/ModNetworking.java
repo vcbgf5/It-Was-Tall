@@ -48,8 +48,14 @@ public final class ModNetworking {
         ServerPlayNetworking.registerGlobalReceiver(WindowSeenPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
             if (player == null) return;
-            ItWasTall.LOGGER.debug("{} met its gaze through the window.", player.getName().getString());
-            com.itwastall.task.TaskManager.onWindowLooked(player);
+            if (payload.behind()) {
+                // NIE PATRZ (§15.4): the player turned around at the watcher — task fails
+                ItWasTall.LOGGER.debug("{} turned around. It saw that.", player.getName().getString());
+                com.itwastall.task.TaskManager.onDontLookCaught(player);
+            } else {
+                ItWasTall.LOGGER.debug("{} met its gaze through the window.", player.getName().getString());
+                com.itwastall.task.TaskManager.onWindowLooked(player);
+            }
         });
         ServerPlayNetworking.registerGlobalReceiver(ScaresPrefPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
@@ -98,8 +104,13 @@ public final class ModNetworking {
      */
     public static boolean sendFalsePresence(ServerPlayerEntity player, double x, double y, double z,
                                             float yaw, int durationTicks, boolean window) {
+        return sendFalsePresence(player, x, y, z, yaw, durationTicks, window, false);
+    }
+
+    public static boolean sendFalsePresence(ServerPlayerEntity player, double x, double y, double z,
+                                            float yaw, int durationTicks, boolean window, boolean dontlook) {
         if (!ServerPlayNetworking.canSend(player, FalsePresencePayload.ID)) return false;
-        ServerPlayNetworking.send(player, new FalsePresencePayload(x, y, z, yaw, durationTicks, window));
+        ServerPlayNetworking.send(player, new FalsePresencePayload(x, y, z, yaw, durationTicks, window, dontlook));
         ItWasTall.LOGGER.debug("False presence -> {}", player.getName().getString());
         return true;
     }
