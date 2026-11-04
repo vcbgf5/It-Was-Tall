@@ -143,7 +143,7 @@ public final class BaseMap {
     /** Shared high-level test used by the scanner and WindowKnocks' fallback: does this
      *  block let the world see a figure at the window (glass, stained glass, panes)? */
     public static boolean isGlassy(net.minecraft.block.BlockState state) {
-        return state.getBlock() instanceof net.minecraft.block.GlassBlock
+        return state.isOf(net.minecraft.block.Blocks.GLASS)
                 || state.getBlock() instanceof net.minecraft.block.StainedGlassBlock
                 || state.getBlock() instanceof net.minecraft.block.PaneBlock
                 || state.getBlock() instanceof net.minecraft.block.TintedGlassBlock;
