@@ -54,7 +54,7 @@ import java.util.UUID;
  * failure/completion puts the player on a cooldown ({@code taskCooldownSeconds}).
  */
 public final class TaskManager {
-    public enum Kind {STAY_INSIDE, DOUSE_LIGHTS, HIDE_AND_SEEK, DONT_LOOK}
+    public enum Kind {STAY_INSIDE, DOUSE_LIGHTS, HIDE_AND_SEEK, DONT_LOOK, SACRIFICE}
 
     /** The active task of one player (server-memory; tasks reset on restart). */
     private static final class Task {
@@ -72,12 +72,24 @@ public final class TaskManager {
         long nextCheckAt;
         /** HIDE_AND_SEEK: how many corners have been checked so far. */
         int checked;
+        /** SACRIFICE (§15.5): what must be offered and where. */
+        final net.minecraft.item.Item offerItem;
+        final int offerCount;
+        final net.minecraft.util.math.BlockPos offerChest;
 
         Task(Kind kind, long expiresAt, List<BlockPos> lights, List<BlockPos> corners) {
+            this(kind, expiresAt, lights, corners, null, 0, null);
+        }
+
+        Task(Kind kind, long expiresAt, List<BlockPos> lights, List<BlockPos> corners,
+             net.minecraft.item.Item offerItem, int offerCount, net.minecraft.util.math.BlockPos offerChest) {
             this.kind = kind;
             this.expiresAt = expiresAt;
             this.lights = lights;
             this.corners = corners;
+            this.offerItem = offerItem;
+            this.offerCount = offerCount;
+            this.offerChest = offerChest;
         }
     }
 
@@ -176,7 +188,43 @@ public final class TaskManager {
                 // routes through onDontLookCaught -> fail below.
                 if (now >= task.expiresAt) complete(player, task);
             }
+            case SACRIFICE -> tickSacrifice(player, task, now, world, server);
         }
+    }
+
+    /**
+     * §15.5 OFIARA: the designated chest must CONTAIN the required offering. It collects its
+     * due (removes the stack) and falls silent; a broken casket robs the deal. The chest is
+     * one of the player's mapped TYPE_CHEST markers — §8 feeding §15 again.
+     */
+    private static void tickSacrifice(ServerPlayerEntity player, Task task, long now,
+                                      World world, MinecraftServer server) {
+        if (world.getBlockState(task.offerChest).isAir()
+                || !(world.getBlockEntity(task.offerChest) instanceof net.minecraft.block.entity.LootableContainerBlockEntity chest)) {
+            fail(player, task, server);   // the agreed altar is gone
+            return;
+        }
+        // count the required items (comparing the offered item id, ignoring components)
+        int found = 0;
+        for (int slot = 0; slot < chest.size(); slot++) {
+            var stack = chest.getStack(slot);
+            if (!stack.isEmpty() && stack.getItem() == task.offerItem) found += stack.getCount();
+        }
+        if (found < task.offerCount) {
+            if (now >= task.expiresAt) fail(player, task, server);  // not in time
+            return;
+        }
+        // It takes its due; the player keeps everything else untouched
+        int left = task.offerCount;
+        for (int slot = 0; slot < chest.size() && left > 0; slot++) {
+            var stack = chest.getStack(slot);
+            if (stack.isEmpty() || stack.getItem() != task.offerItem) continue;
+            int take = Math.min(left, stack.getCount());
+            stack.decrement(take);
+            left -= take;
+        }
+        chest.markDirty();
+        complete(player, task);
     }
 
     /**
@@ -303,11 +351,12 @@ public final class TaskManager {
         } else {
             // fair pick from everything the stage enables (ETAP 4 adds NIE PATRZ, ETAP 5 HIDE);
             // lights/corners need a mapped base, STAY_INSIDE always fits — so fall back to it
-            int pool = flag >= 3 ? 4 : flag >= 2 ? 3 : 2;
+            int pool = flag >= 3 ? 5 : flag >= 2 ? 4 : 2;
             wanted = switch (player.getRandom().nextInt(pool)) {
                 case 0 -> Kind.STAY_INSIDE;
-                case 2 -> flag >= 2 ? Kind.DONT_LOOK : Kind.DOUSE_LIGHTS;
-                case 3 -> Kind.HIDE_AND_SEEK;
+                case 2 -> Kind.DONT_LOOK;
+                case 3 -> flag >= 3 ? Kind.HIDE_AND_SEEK : Kind.DOUSE_LIGHTS;
+                case 4 -> Kind.SACRIFICE;
                 default -> Kind.DOUSE_LIGHTS;
             };
         }
@@ -337,6 +386,9 @@ public final class TaskManager {
         if (requested == Kind.DONT_LOOK) {
             // ETAP 4 unlocks the watcher (§15.4); the behind-spot is validated in assign()
             return flag < 2 ? null : Kind.DONT_LOOK;
+        }
+        if (requested == Kind.SACRIFICE) {
+            return flag < 2 ? null : Kind.SACRIFICE;   // ETAP 4+; the altar is chosen in assign()
         }
         if (requested == Kind.STAY_INSIDE) return Kind.STAY_INSIDE;
         return Kind.STAY_INSIDE; // stage-3 default: the safest first task
@@ -378,6 +430,36 @@ public final class TaskManager {
         return new ArrayList<>(candidates.subList(0, count));
     }
 
+    /** The designated altar (§15.5): the mapped chest/barelle nearest the player. */
+    @Nullable
+    private static net.minecraft.util.math.BlockPos pickChest(ServerPlayerEntity player) {
+        ServerWorld world = player.getServerWorld();
+        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        if (map == null) return null;
+        List<BlockPos> chests = new ArrayList<>(map.all(BaseMap.TYPE_CHEST));
+        chests.removeIf(pos -> !(world.getBlockEntity(pos) instanceof net.minecraft.block.entity.LootableContainerBlockEntity));
+        chests.sort((a, b) -> Double.compare(
+                a.getSquaredDistance(player.getBlockPos()),
+                b.getSquaredDistance(player.getBlockPos())));
+        return chests.isEmpty() ? null : chests.get(player.getRandom().nextInt(Math.min(2, chests.size())));
+    }
+
+    /** The required offering — the first valid item from config (falling back to bread). */
+    private static net.minecraft.item.Item pickOfferItem(ItWasTallConfig.Values cfg, ServerPlayerEntity player) {
+        for (String raw : cfg.taskSacrificeItems.split(",")) {
+            String name = raw.trim().toLowerCase(java.util.Locale.ROOT);
+            if (name.isEmpty()) continue;
+            net.minecraft.util.Identifier id = name.contains(":")
+                    ? net.minecraft.util.Identifier.of(name)
+                    : net.minecraft.util.Identifier.ofVanilla(name);
+            if (id == null) continue;
+            net.minecraft.item.Item item = net.minecraft.registry.Registries.ITEM.get(id);
+            if (item != null && item != net.minecraft.item.Items.AIR) return item;
+        }
+        ItWasTall.LOGGER.warn("taskSacrificeItems had no valid item — defaulting to bread.");
+        return net.minecraft.item.Items.BREAD;
+    }
+
     private static boolean assign(ServerPlayerEntity player, Kind kind) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         World world = player.getWorld();
@@ -406,8 +488,17 @@ public final class TaskManager {
                             behind.getX() + 0.5, behind.getY() + 1.0, behind.getZ() + 0.5),
                     0.8f, 1.0f);
             task = new Task(Kind.DONT_LOOK, now + 20L * cfg.taskDontLookSeconds, List.of(), List.of());
+        } else if (kind == Kind.SACRIFICE) {
+            net.minecraft.util.math.BlockPos chest = pickChest(player);
+            if (chest == null) return false;              // no mapped storage to mark an altar in
+            net.minecraft.item.Item item = pickOfferItem(cfg, player);
+            task = new Task(Kind.SACRIFICE,
+                    now + 20L * cfg.taskSacrificeSeconds, List.of(), List.of(),
+                    item, Math.max(1, cfg.taskSacrificeCount), chest);
+            ItWasTall.LOGGER.info("Sacrifice altar at {} for {} x{}.",
+                    chest.toShortString(), item, task.offerCount);
         } else {
-            task = new Task(Kind.STAY_INSIDE, now + 20L * cfg.taskStayInsideSeconds, List.of(), List.of());
+            task = new Task(Kind.STAY_INSIDE, now + 20L * cfg.taskStayInsideSeconds, List.of(), List.of(), null, 0, null);
         }
         ACTIVE.put(player.getUuid(), task);
         sendToast(player, TaskToastPayload.KIND_NEW, TITLE_NEW, newToastText(kind, task));
@@ -459,6 +550,7 @@ public final class TaskManager {
             case DOUSE_LIGHTS -> "douse the lights";
             case HIDE_AND_SEEK -> "hide and seek";
             case DONT_LOOK -> "don't look back";
+            case SACRIFICE -> "the offering";
         };
     }
 
@@ -471,6 +563,8 @@ public final class TaskManager {
                     + "s. It will walk every dark corner.";
             case DONT_LOOK -> "Something watches your back. Do NOT turn for "
                     + cfg.taskDontLookSeconds + "s.";
+            case SACRIFICE -> "Offer " + task.offerCount + "x "
+                    + task.offerItem.getName().getString() + " in the chest near your base.";
         };
     }
 
@@ -481,6 +575,8 @@ public final class TaskManager {
             case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "HIDE_AND_SEEK (hiding)"
                     : "HIDE_AND_SEEK (It checked " + task.checked + " corner(s))";
             case DONT_LOOK -> "DONT_LOOK (survive without turning)";
+            case SACRIFICE -> "SACRIFICE (" + task.offerCount + "x "
+                    + task.offerItem.getName().getString() + ")";
         };
     }
 }

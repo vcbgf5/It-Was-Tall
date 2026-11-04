@@ -241,7 +241,14 @@ public final class ItWasTallCommand {
                         .then(argument("player", EntityArgumentType.player())
                                 .executes(ctx -> forceTask(ctx,
                                         List.of(EntityArgumentType.getPlayer(ctx, "player")),
-                                        TaskManager.Kind.DONT_LOOK))));
+                                        TaskManager.Kind.DONT_LOOK))))
+                .then(literal("sacrifice")
+                        .executes(ctx -> forceTask(ctx, List.of(ctx.getSource().getPlayerOrThrow()),
+                                TaskManager.Kind.SACRIFICE))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> forceTask(ctx,
+                                        List.of(EntityArgumentType.getPlayer(ctx, "player")),
+                                        TaskManager.Kind.SACRIFICE))));
         return root;
     }
 

@@ -103,6 +103,12 @@ public final class ItWasTallConfig {
         public int taskHideCountdownSeconds = 30;
         /** NIE PATRZ (§15.4, ETAP 4): seconds the watcher stands behind the player. */
         public int taskDontLookSeconds = 30;
+        /** OFIARA (§15.5, ETAP 4+): comma-separated possible offering items (vanilla or mod ids). */
+        public String taskSacrificeItems = "bread,coal,apple";
+        /** OFIARA: how many of the offering item are demanded. */
+        public int taskSacrificeCount = 1;
+        /** OFIARA: seconds until the unkept offering deal collapses. */
+        public int taskSacrificeSeconds = 180;
         /** How long It walks the rooms searching before it gives up (survive this long). */
         public int taskSeekSeconds = 90;
         /** Seconds between two checked dark corners (step/breath cues play at that spot). */
