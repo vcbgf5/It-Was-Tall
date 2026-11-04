@@ -156,6 +156,31 @@ public final class TaskManager {
 
     // ------------------------------------------------------------- assigning ----
 
+    /**
+     * WINDOW GAZE (§12 figure variant): the player deliberately looked at the knock figure —
+     * It noticed. Random task from the pair, as long as phase/stage allow and no task/cooldown
+     * is active (an active task stays untouched; the gaze does not stack extra work).
+     */
+    public static void onWindowLooked(ServerPlayerEntity player) {
+        if (Director.phase() == 0) return;      // PHASE PRE: total silence
+        if (Director.currentStage().tasksFlag() <= 0) return;
+        UUID uuid = player.getUuid();
+        if (ACTIVE.containsKey(uuid)) return;   // already working: no double assignment
+        long now = player.getWorld().getTime();
+        Long cooldownUntil = COOLDOWN.get(uuid);
+        if (cooldownUntil != null && now < cooldownUntil) return;
+        if (player.isCreative() || player.isSpectator() || !player.isAlive()) return;
+
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        // "some random one from the list": fair coin, dousing falls back when no lights are mapped
+        Kind wanted = player.getRandom().nextBoolean() ? Kind.DOUSE_LIGHTS : Kind.STAY_INSIDE;
+        Kind kind = pickKind(player, wanted, cfg);
+        if (kind == null) return;
+        if (assign(player, kind)) {
+            COOLDOWN.put(uuid, now + cfg.taskCooldownSeconds * 20L);
+        }
+    }
+
     private static void maybeAssign(ServerPlayerEntity player, Stage st, int flag, long now) {
         UUID uuid = player.getUuid();
         Long cooldownUntil = COOLDOWN.get(uuid);

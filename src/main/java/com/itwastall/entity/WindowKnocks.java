@@ -98,26 +98,52 @@ public final class WindowKnocks {
 
     /** Decides the window, schedules 3 knocks and (level >= 2) places the figure behind the glass. */
     private static boolean startKnock(ServerPlayerEntity player, int level) {
-        BlockPos window = findWindow(player);
-        if (window == null) return false;
+        ServerWorld world = player.getServerWorld();
+        BlockPos dot = findWindow(player);
+        if (dot == null) return false;
+
+        // Two cases arrive from findWindow(): a mapped exterior dot (the red BaseMap marker,
+        // already an OUTSIDE cell with the pane facing the player) or the unmapped geometric
+        // fallback, which returns the glass itself. Resolve the knock target and the figure
+        // spawn spot for both.
+        BlockPos glass;
+        BlockPos figureSpot;
+        if (exteriorDotUsable(world, dot, player)) {
+            glass = glassFacing(world, dot, player);
+            figureSpot = dot.toImmutable();
+        } else {
+            glass = dot;                                        // fallback: the glass itself
+            figureSpot = outsideCell(world, glass, player);     // may be null: sound-only knock
+        }
+        if (glass == null) return false;
+
         long now = player.getWorld().getTime();
         for (int i = 0; i < ABER_COUNT; i++) {
-            SCHEDULED.add(new Knock(now + (long) i * KNOCK_GAP_TICKS, player.getUuid(), window));
+            SCHEDULED.add(new Knock(now + (long) i * KNOCK_GAP_TICKS, player.getUuid(), glass));
         }
-        if (level >= 2) {
-            // ETAP 4 "+ cień/drzwi" (PHASES §3, wiersz WindowKnock): the figure stands one cell
-            // off the glass, facing in. Routed through FalsePresences -> client-side fake entity,
-            // so it is never a real It (MODPLAN §7.4).
-            BlockPos outside = outsideCell(player.getServerWorld(), window, player);
-            if (outside == null || !FalsePresences.sendFigure(player, outside, 10 * 20, true)) {
-                // no outside room for a figure: the sound still played, which is fine ("pukanie w
-                // szybę bez widocznej postaci" is a legit stage-2 variant in MODPLAN §12)
+        if (level >= 2 && figureSpot != null) {
+            // ETAP 4 "+ cień/drzwi" (PHASES §3, wiersz WindowKnock): the figure stands exactly
+            // on the red exterior dot, one cell off the glass. FALSE-presences route -> client
+            // side fake entity, so it is never a real It (MODPLAN §7.4); the client renderer
+            // aligns its head with the pane ("head perfect on the window height").
+            if (!FalsePresences.sendFigure(player, figureSpot, 10 * 20, true)) {
                 ItWasTall.LOGGER.debug("Window knock without figure (no open cell behind glass).");
             } else {
                 ItWasTall.LOGGER.debug("Window figure -> {}", player.getName().getString());
             }
         }
         return true;
+    }
+
+    /** The pane between an exterior dot and the player (validated by exteriorDotUsable). */
+    @Nullable
+    private static BlockPos glassFacing(ServerWorld world, BlockPos dot, ServerPlayerEntity player) {
+        double dx = player.getX() - (dot.getX() + 0.5);
+        double dz = player.getZ() - (dot.getZ() + 0.5);
+        if (Math.abs(dx) + Math.abs(dz) < 0.001) return null;
+        Direction towardPlayer = Direction.getFacing((float) dx, 0.0f, (float) dz);
+        BlockPos glass = dot.offset(towardPlayer);
+        return isGlassy(world, glass) ? glass.toImmutable() : null;
     }
 
     /** Fires the three scheduled knocks exactly on time (works while the player stands in the base). */
@@ -153,15 +179,20 @@ public final class WindowKnocks {
     /**
      * Finds a glass window near the player — first from the saved BaseMap (Poziom 6: what It
      * already mapped), falling back to the geometric search while the base is still unmapped.
-     * Both require a passable outside cell ("on the street side") so the knock has a real place.
+     *
+     * <p>SINCE the exterior-marker change, a mapped WINDOW marker IS the outside cell (the
+     * "red dot" the scanner records beside every pane). That dot is the exact figure spawn
+     * spot: revalidated here (still open, still glass behind it), and the knock sounds are
+     * aimed at the glass next to it so they ring in the right place.
      */
     @Nullable
     private static BlockPos findWindow(ServerPlayerEntity player) {
         ServerWorld world = player.getServerWorld();
-        // 1) the mapped base is the smarter source: windows the scan actually saw
-        BlockPos mapped = com.itwastall.base.BaseTracker.nearestMarker(world, player, com.itwastall.base.BaseMap.TYPE_WINDOW);
-        if (mapped != null && outsideCell(world, mapped, player) != null) return mapped;
-        // 2) fallback heuristic (base not scanned yet)
+        // 1) the mapped base is the smarter source: exterior dots the scan actually recorded
+        BlockPos dot = com.itwastall.base.BaseTracker.nearestMarker(world, player, com.itwastall.base.BaseMap.TYPE_WINDOW);
+        if (dot != null && exteriorDotUsable(world, dot, player)) return dot;
+        // 2) fallback heuristic (base not scanned yet): marker not available, knock sound only
+        //    spot-level figure comes from outsideCell() in startKnock
         BlockPos base = player.getBlockPos();
         for (BlockPos pos : BlockPos.iterateOutwards(base, 14, 5, 14)) {
             if (!isGlassy(world, pos)) continue;
@@ -169,6 +200,23 @@ public final class WindowKnocks {
             return pos.toImmutable();
         }
         return null;
+    }
+
+    /**
+     * Revalidates a mapped exterior dot right before use: it must still be an open,
+     * standable cell with air above AND a glass pane facing back toward the player's side
+     * (the base may have changed since the scan; a dot with no glass left is worthless).
+     *
+     * @return true when the dot is usable; knocks are then aimed at the found pane
+     */
+    private static boolean exteriorDotUsable(ServerWorld world, BlockPos dot, ServerPlayerEntity player) {
+        if (!world.isAir(dot) || !world.isAir(dot.up())) return false;
+        // the pane has to sit between the dot and the player's side of the wall
+        double dx = player.getX() - (dot.getX() + 0.5);
+        double dz = player.getZ() - (dot.getZ() + 0.5);
+        if (Math.abs(dx) + Math.abs(dz) < 0.001) return false;
+        Direction towardPlayer = Direction.getFacing((float) dx, 0.0f, (float) dz);
+        return isGlassy(world, dot.offset(towardPlayer));
     }
 
     /**

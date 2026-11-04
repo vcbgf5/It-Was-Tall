@@ -7,6 +7,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.LightType;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
@@ -124,7 +126,8 @@ public final class BaseScanner {
         if (state.isAir()) return;
 
         if (BaseMap.isGlassy(state)) {
-            if (isWindowSide(world, pos)) map.add(anchorPos, BaseMap.TYPE_WINDOW, pos);
+            BlockPos outside = windowOutsideCell(world, pos);
+            if (outside != null) map.add(anchorPos, BaseMap.TYPE_WINDOW, outside);
             return;
         }
         if (state.getBlock() instanceof net.minecraft.block.DoorBlock) {
@@ -144,13 +147,23 @@ public final class BaseScanner {
         }
     }
 
-    /** A window only counts when one could actually stand next to it on the outside. */
-    private static boolean isWindowSide(ServerWorld world, BlockPos pos) {
+    /**
+     * WINDOW markers point at the OUTSIDE of the glass (the "red dot"): the first open
+     * outside cell (air with air above) next to the pane. That dot is exactly where the
+     * window-knock figure stands (its head aligned to the glass) and where the debug 3D
+     * renderer draws the red spawn marker. Null when the pane has no open outside side.
+     */
+    @Nullable
+    private static BlockPos windowOutsideCell(ServerWorld world, BlockPos pos) {
         for (Direction dir : HORIZONTAL) {
-            var side = world.getBlockState(pos.offset(dir));
-            if (side.isAir() && world.getBlockState(pos.offset(dir).up()).isAir()) return true;
+            BlockPos side = pos.offset(dir);
+            var sideState = world.getBlockState(side);
+            if (!sideState.isAir()) continue;
+            if (sideState.getFluidState().isEmpty() && world.getBlockState(side.up()).isAir()) {
+                return side.toImmutable();
+            }
         }
-        return false;
+        return null;
     }
 
     private static final List<Direction> HORIZONTAL =

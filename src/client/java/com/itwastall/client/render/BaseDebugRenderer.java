@@ -18,7 +18,7 @@ import java.util.List;
 
 /**
  * Debug 3D (MODPLAN §8.5) — the server's saved {@link BaseMap} as coloured frames in the
- * world: windows blue, doors green, lights yellow, chests orange; the anchor (the bed)
+ * world: window OUTSIDE dots red (where the knock figure stands), doors green, lights yellow, chests orange; the anchor (the bed)
  * gets a white gently pulsing double frame. Data arrives through
  * {@link com.itwastall.net.BaseDebugPayload} (the same encoded marker ints the state file
  * stores), stays up for the payload ttl counting down on the client, then clears quietly.
@@ -32,7 +32,7 @@ public final class BaseDebugRenderer {
     private record Marker(int type, BlockPos pos) {
     }
 
-    private static final float[] BLUE = {0.20f, 0.55f, 1.0f};
+    private static final float[] RED = {1.0f, 0.22f, 0.18f};
     private static final float[] GREEN = {0.25f, 1.0f, 0.35f};
     private static final float[] YELLOW = {1.0f, 0.85f, 0.15f};
     private static final float[] ORANGE = {1.0f, 0.45f, 0.10f};
@@ -171,7 +171,7 @@ public final class BaseDebugRenderer {
 
     private static float[] colorFor(int type) {
         return switch (type) {
-            case BaseMap.TYPE_WINDOW -> BLUE;
+            case BaseMap.TYPE_WINDOW -> RED;
             case BaseMap.TYPE_DOOR -> GREEN;
             case BaseMap.TYPE_LIGHT -> YELLOW;
             case BaseMap.TYPE_CHEST -> ORANGE;

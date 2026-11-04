@@ -31,6 +31,8 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(TaskToastPayload.ID, TaskToastPayload.CODEC);
         // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
         PayloadTypeRegistry.playC2S().register(ScaresPrefPayload.ID, ScaresPrefPayload.CODEC);
+        // C2S: a deliberate look at a window figure earns a random task (MODPLAN §12 figure look)
+        PayloadTypeRegistry.playC2S().register(WindowSeenPayload.ID, WindowSeenPayload.CODEC);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (server.getTicks() % 20 != 0) return;
             FearStatePayload snapshot = new FearStatePayload(Director.phase(), Director.stageIndex(),
@@ -40,6 +42,12 @@ public final class ModNetworking {
                     ServerPlayNetworking.send(player, snapshot);
                 }
             }
+        });
+        ServerPlayNetworking.registerGlobalReceiver(WindowSeenPayload.ID, (payload, context) -> {
+            ServerPlayerEntity player = context.player();
+            if (player == null) return;
+            ItWasTall.LOGGER.debug("{} met its gaze through the window.", player.getName().getString());
+            com.itwastall.task.TaskManager.onWindowLooked(player);
         });
         ServerPlayNetworking.registerGlobalReceiver(ScaresPrefPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();

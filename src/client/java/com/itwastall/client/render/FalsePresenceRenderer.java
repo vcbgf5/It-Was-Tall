@@ -33,6 +33,8 @@ public final class FalsePresenceRenderer {
         final int id;
         final boolean window;
         int ticksLeft;
+        /** Window sightings report one deliberate look-back to the server (one task each). */
+        boolean reported;
 
         Sighting(int id, int ticksLeft, boolean window) {
             this.id = id;
@@ -62,8 +64,12 @@ public final class FalsePresenceRenderer {
         // "moze stac nieruchomo / wygladac jak prawdziwy The Tall One" intent.
         fake.setPersistent(); // keep it from any despawn logic anything else might run on it
         fake.setId(id);       // private id range: never collides with real spawned entities
-        // Lower the window silhouette so its head, not its torso, lines up with the glass.
-        if (window) fake.setPosition(x, y - 2.5, z);
+        if (window) {
+            // Lower the silhouette so its visible head/eye point lines up exactly with the
+            // pane the payload targets (bodyY(0.75) == payload y, model-height agnostic —
+            // never the old fixed -2.5 that detached when the house was taller or lower).
+            fake.setPosition(x, y - fake.getBodyY(0.75), z);
+        }
         world.addEntity(fake);
         if (window) {
             // Start after insertion so GeckoLib has a live client-side entity to animate.
@@ -103,6 +109,14 @@ public final class FalsePresenceRenderer {
             if (sighting.window) {
                 // Keep the body and head aimed at the player as they move inside the room.
                 facePlayer(fake, player);
+                // Window figures are MEANT to be seen (they never vanish on look). What a
+                // deliberate look-back does: the server learns you saw It — and hands you a
+                // task ("torch outage"-style pair). Reported once per sighting.
+                if (!sighting.reported && isLookingAt(player, fake)) {
+                    sighting.reported = true;
+                    net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                            new com.itwastall.net.WindowSeenPayload());
+                }
             } else {
                 double gross = player.squaredDistanceTo(fake);
                 if (gross < 48.0 * 48.0 && isLookingAt(player, fake)) {
