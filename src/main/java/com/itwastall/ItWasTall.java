@@ -4,6 +4,7 @@ import com.itwastall.command.ItWasTallCommand;
 import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
 import com.itwastall.entity.AmbientSounds;
+import com.itwastall.entity.DouseLights;
 import com.itwastall.entity.FalsePresences;
 import com.itwastall.entity.HauntDirector;
 import com.itwastall.entity.MineEvents;
@@ -47,6 +48,8 @@ public class ItWasTall implements ModInitializer {
         HauntDirector.init();
         FalsePresences.init();
         WindowKnocks.init();
+        // base lights dousing (MODPLAN §14) — ETAP 4+, fed by the base scan's light markers
+        DouseLights.init();
         LoreBooks.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
@@ -65,6 +68,7 @@ public class ItWasTall implements ModInitializer {
             LoreBooks.forget(uuid);
             BaseTracker.forget(uuid);
             TaskManager.forget(uuid);
+            DouseLights.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

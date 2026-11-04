@@ -109,6 +109,12 @@ public final class ItWasTallConfig {
         public int taskSacrificeCount = 1;
         /** OFIARA: seconds until the unkept offering deal collapses. */
         public int taskSacrificeSeconds = 180;
+
+        // ---- base dousing (§14 "gaszenie pochodni", ETAP 4+) ----
+        /** Enables the DouseLightsEvent snuffing mapped base lights at night. */
+        public boolean baseDousing = true;
+        /** Chance per second (night, sheltered, ETAP 4+) that the burst starts. */
+        public double baseDouseChance = 0.25;
         /** How long It walks the rooms searching before it gives up (survive this long). */
         public int taskSeekSeconds = 90;
         /** Seconds between two checked dark corners (step/breath cues play at that spot). */
