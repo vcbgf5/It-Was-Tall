@@ -6,6 +6,7 @@ import com.itwastall.world.ItWasTallState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -58,6 +59,14 @@ public final class BaseTracker {
         ServerLifecycleEvents.SERVER_STARTING.register(starting -> server = starting);
         ServerTickEvents.END_SERVER_TICK.register(BaseTracker::tick);
         UseBlockCallback.EVENT.register(BaseTracker::onUseBlock);
+        // Restore and refresh a known base as soon as its owner joins the Overworld.
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, joinedServer) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            if (player.getServerWorld() == joinedServer.getOverworld()) {
+                Long anchor = anchorOf(player.getUuid());
+                if (anchor != null) triggerRescan(player);
+            }
+        });
     }
 
     public static void forget(UUID player) {
@@ -238,7 +247,8 @@ public final class BaseTracker {
         if (map == null) return "no base mapped yet";
         return "anchor " + BlockPos.fromLong(map.anchor()).toShortString()
                 + ", markers " + map.count()
-                + " (windows " + map.count(BaseMap.TYPE_WINDOW)
+                + " (placed " + map.count(BaseMap.TYPE_PLACED)
+                + ", windows " + map.count(BaseMap.TYPE_WINDOW)
                 + ", doors " + map.count(BaseMap.TYPE_DOOR)
                 + ", lights " + map.count(BaseMap.TYPE_LIGHT)
                 + ", chests " + map.count(BaseMap.TYPE_CHEST) + ")";
@@ -253,6 +263,7 @@ public final class BaseTracker {
         lines.add("doors:   " + sample(map, BaseMap.TYPE_DOOR));
         lines.add("lights:  " + sample(map, BaseMap.TYPE_LIGHT));
         lines.add("chests:  " + sample(map, BaseMap.TYPE_CHEST));
+        lines.add("placed:  " + sample(map, BaseMap.TYPE_PLACED));
         lines.add("rooms:   " + map.count(BaseMap.TYPE_ROOM)
                 + " interior cells, dark corners " + map.count(BaseMap.TYPE_CORNER));
         return lines;
@@ -303,7 +314,7 @@ public final class BaseTracker {
         RESCAN_AT.put(uuid, now + 15 * 20L);
         BaseScanner scanner = SCANS.computeIfAbsent(uuid,
                 u -> new BaseScanner(ItWasTallConfig.INSTANCE.baseScanRadius));
-        if (!scanner.active()) {
+        if (force || !scanner.active()) {
             BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
             map.clearScanMarkers();
             restorePlacedMarkers(uuid, map);
@@ -314,30 +325,37 @@ public final class BaseTracker {
     private static void runScans(MinecraftServer runningServer) {
         if (SCANS.isEmpty()) return;
         int budgetLeft = Math.max(8, ItWasTallConfig.INSTANCE.scanBlocksPerTick);
+        List<UUID> uuids = new ArrayList<>(SCANS.keySet());
         int activeScans = 0;
-        for (BaseScanner scan : SCANS.values()) if (scan.active()) activeScans++;
+        for (UUID uuid : uuids) {
+            BaseScanner scan = SCANS.get(uuid);
+            ServerPlayerEntity player = runningServer.getPlayerManager().getPlayer(uuid);
+            if (scan != null && scan.active() && player != null
+                    && player.getServerWorld() == runningServer.getOverworld()) activeScans++;
+        }
         if (activeScans == 0) return;
 
-        List<UUID> uuids = new ArrayList<>(SCANS.keySet());
         for (UUID uuid : uuids) {
             BaseScanner scanner = SCANS.get(uuid);
-            if (!scanner.active()) continue;
+            if (scanner == null || !scanner.active()) continue;
             ServerPlayerEntity player = runningServer.getPlayerManager().getPlayer(uuid);
             Long anchor = ANCHORS.get(uuid);
-            if (player == null || anchor == null) continue; // owner away: the scan waits for him
+            // Anchors belong to the Overworld; never scan the same coordinates in another dimension.
+            if (player == null || anchor == null
+                    || player.getServerWorld() != runningServer.getOverworld()) continue;
             int myBudget = Math.max(1, budgetLeft / activeScans);
             BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
-            boolean done = scanner.tick(player.getServerWorld(),
+            boolean done = scanner.tick(runningServer.getOverworld(),
                     BlockPos.fromLong(anchor), map, myBudget);
             budgetLeft -= myBudget;
             activeScans--;
-            if (budgetLeft <= 0) break;
             if (done) {
-                persist(player, MAPS.get(uuid));
+                persist(player, map);
                 ItWasTall.LOGGER.info("Base scan finished for {} ({}).",
-                        player.getName().getString(), MAPS.get(uuid));
+                        player.getName().getString(), map);
                 SCANS.remove(uuid);
             }
+            if (budgetLeft <= 0) break;
         }
     }
 
