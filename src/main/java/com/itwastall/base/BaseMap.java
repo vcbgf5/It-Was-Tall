@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * What It knows about the player's base (MODPLAN §8.3): windows, doors, lights, chests —
@@ -32,10 +34,13 @@ public final class BaseMap {
 
     public static final int TYPE_ROOM = 4;
     public static final int TYPE_CORNER = 5;
+    /** Every player-placed block, independent of its functional marker type. */
+    public static final int TYPE_PLACED = 6;
 
     private long anchor;
     /** Encoded markers, unordered. */
     private final List<Integer> markers = new ArrayList<>();
+    private final Set<Integer> markerSet = new HashSet<>();
 
     public BaseMap(long anchor) {
         this.anchor = anchor;
@@ -59,7 +64,8 @@ public final class BaseMap {
         int ly = pos.getY() - anchorPos.getY();
         int lz = pos.getZ() - anchorPos.getZ();
         if (Math.abs(lx) > 255 || Math.abs(ly) > 255 || Math.abs(lz) > 255) return;
-        markers.add(encode(type, lx, ly, lz));
+        int encoded = encode(type, lx, ly, lz);
+        if (markerSet.add(encoded)) markers.add(encoded);
     }
 
     public static int encode(int type, int lx, int ly, int lz) {
@@ -117,6 +123,14 @@ public final class BaseMap {
     /** Clear all markers (keep the anchor) — a fresh rescan starts arriving. */
     public void clearMarkers() {
         markers.clear();
+        markerSet.clear();
+    }
+
+    /** Clear scanner-derived markers but retain the authoritative placed-block history. */
+    public void clearScanMarkers() {
+        markers.removeIf(marker -> (marker & 0x7) != TYPE_PLACED);
+        markerSet.clear();
+        markerSet.addAll(markers);
     }
 
     /** Copy of the encoded marker ints (debug 3D payload; state file uses the same array). */
@@ -129,10 +143,10 @@ public final class BaseMap {
     /** Shared high-level test used by the scanner and WindowKnocks' fallback: does this
      *  block let the world see a figure at the window (glass, stained glass, panes)? */
     public static boolean isGlassy(net.minecraft.block.BlockState state) {
-        if (state.getBlock() instanceof net.minecraft.block.StainedGlassBlock
+        return state.getBlock() instanceof net.minecraft.block.GlassBlock
+                || state.getBlock() instanceof net.minecraft.block.StainedGlassBlock
                 || state.getBlock() instanceof net.minecraft.block.PaneBlock
-                || state.getBlock() instanceof net.minecraft.block.TintedGlassBlock) return true;
-        return state.isIn(net.minecraft.registry.tag.BlockTags.IMPERMEABLE);
+                || state.getBlock() instanceof net.minecraft.block.TintedGlassBlock;
     }
 
     // -------------------------------------------------------------- NBT ----
@@ -149,7 +163,7 @@ public final class BaseMap {
     public static BaseMap fromNbt(NbtCompound nbt) {
         BaseMap map = new BaseMap(nbt.getLong("anchor"));
         int[] arr = nbt.getIntArray("markers");
-        for (int v : arr) map.markers.add(v);
+        for (int v : arr) { if (map.markerSet.add(v)) map.markers.add(v); }
         return map;
     }
 
