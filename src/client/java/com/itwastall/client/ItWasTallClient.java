@@ -136,11 +136,6 @@ public class ItWasTallClient implements ClientModInitializer {
                 return;
             }
 
-            if (ClientAcceptedState.accepted()) {
-                warningDelay[0] = -1;
-                return;
-            }
-
             if (warningDelay[0] > 0) {
                 warningDelay[0]--;
                 return;
