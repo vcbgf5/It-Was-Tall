@@ -28,8 +28,8 @@ import java.util.Set;
  * fairly by BaseTracker when several players scan at once. Nothing here touches chunks.
  */
 public final class BaseScanner {
-    private static final int UP_ROWS = 8;    // above the anchor's floor row (walls, roof)
-    private static final int DOWN_ROWS = 4;  // below (porches, basements)
+    private static final int UP_ROWS = 16;   // include taller walls and upper window rows
+    private static final int DOWN_ROWS = 8; // include lower walls, foundations and basements
     /** Rows one column costs (debug readouts, budget math). */
     public static final int ROWS_TOTAL = UP_ROWS + DOWN_ROWS + 1;
 
@@ -43,6 +43,9 @@ public final class BaseScanner {
     /** Flood-fill state (§8.3): BFS frontier + visited cells (cap keeps memory sane). */
     private final Queue<BlockPos> frontier = new ArrayDeque<>();
     private final Set<Long> visited = new HashSet<>();
+    /** Glass blocks are classified after the interior flood so inside/outside can be distinguished. */
+    private final Queue<BlockPos> pendingWindows = new ArrayDeque<>();
+    private final Set<Long> windowSeen = new HashSet<>();
     private int roomCells;
     private int cornerMarkers;
     private boolean seeded;
@@ -69,6 +72,8 @@ public final class BaseScanner {
         columnsDone = false;
         frontier.clear();
         visited.clear();
+        pendingWindows.clear();
+        windowSeen.clear();
         roomCells = 0;
         cornerMarkers = 0;
         seeded = false;
@@ -94,8 +99,9 @@ public final class BaseScanner {
             seedFlood(world, anchorPos);
         }
         if (columnsDone) budget = sweepFlood(world, anchorPos, map, budget);
+        if (columnsDone && frontier.isEmpty()) budget = sweepWindows(world, anchorPos, map, budget);
 
-        if (columns.isEmpty() && frontier.isEmpty()) {
+        if (columns.isEmpty() && frontier.isEmpty() && pendingWindows.isEmpty()) {
             active = false;
             return true;
         }
@@ -126,8 +132,9 @@ public final class BaseScanner {
         if (state.isAir()) return;
 
         if (BaseMap.isGlassy(state)) {
-            BlockPos outside = windowOutsideCell(world, pos);
-            if (outside != null) map.add(anchorPos, BaseMap.TYPE_WINDOW, outside);
+            // Do not guess the side during the column pass. The flood-fill below tells
+            // us which adjacent air cells belong to the room and which face outward.
+            if (windowSeen.add(pos.asLong())) pendingWindows.add(pos.toImmutable());
             return;
         }
         if (state.getBlock() instanceof net.minecraft.block.DoorBlock) {
@@ -148,22 +155,48 @@ public final class BaseScanner {
     }
 
     /**
-     * WINDOW markers point at the OUTSIDE of the glass (the "red dot"): the first open
-     * outside cell (air with air above) next to the pane. That dot is exactly where the
-     * window-knock figure stands (its head aligned to the glass) and where the debug 3D
-     * renderer draws the red spawn marker. Null when the pane has no open outside side.
+     * Process every discovered glass block only after the room flood-fill. A neighbour
+     * reached from the bed is treated as interior; an open neighbour not reached by that
+     * flood is preferred as the exterior side. Sky light and distance from the anchor are
+     * tie-breakers for open-plan bases or when no interior seed could be found.
      */
+    private int sweepWindows(ServerWorld world, BlockPos anchorPos, BaseMap map, int budget) {
+        while (budget > 0 && !pendingWindows.isEmpty()) {
+            BlockPos glass = pendingWindows.poll();
+            BlockPos outside = chooseOutsideCell(world, glass, anchorPos);
+            // A sealed/tinted window can have no open neighbour. Still register the
+            // window itself instead of silently losing it from the map.
+            map.add(anchorPos, BaseMap.TYPE_WINDOW, outside == null ? glass : outside);
+            budget--;
+        }
+        return budget;
+    }
+
     @Nullable
-    private static BlockPos windowOutsideCell(ServerWorld world, BlockPos pos) {
+    private BlockPos chooseOutsideCell(ServerWorld world, BlockPos glass, BlockPos anchorPos) {
+        BlockPos best = null;
+        double bestScore = -Double.MAX_VALUE;
         for (Direction dir : HORIZONTAL) {
-            BlockPos side = pos.offset(dir);
-            var sideState = world.getBlockState(side);
-            if (!sideState.isAir()) continue;
-            if (sideState.getFluidState().isEmpty() && world.getBlockState(side.up()).isAir()) {
-                return side.toImmutable();
+            BlockPos side = glass.offset(dir);
+            var state = world.getBlockState(side);
+            if (!state.getFluidState().isEmpty()) continue;
+            if (!state.isAir() && !state.getCollisionShape(world, side).isEmpty()) continue;
+            BlockPos above = side.up();
+            var aboveState = world.getBlockState(above);
+            if (!aboveState.isAir() && !aboveState.getCollisionShape(world, above).isEmpty()) continue;
+
+            boolean roomSide = visited.contains(side.asLong());
+            int sky = world.getLightLevel(LightType.SKY, side);
+            double distance = side.getSquaredDistance(anchorPos);
+            double score = (roomSide ? -1000.0 : 1000.0)
+                    + sky * 4.0
+                    + distance * 0.01;
+            if (score > bestScore) {
+                bestScore = score;
+                best = side.toImmutable();
             }
         }
-        return null;
+        return best;
     }
 
     private static final List<Direction> HORIZONTAL =
