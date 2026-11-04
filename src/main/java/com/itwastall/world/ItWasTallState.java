@@ -212,6 +212,11 @@ public final class ItWasTallState extends PersistentState {
         return deliveredLoreBooks.getOrDefault(player, Set.of()).size();
     }
 
+    /** The lore book ids already handed to this player (the journal's "found" list). */
+    public Set<String> loreBookIds(UUID player) {
+        return deliveredLoreBooks.getOrDefault(player, Set.of());
+    }
+
     public long loreBookCooldown(UUID player) {
         return loreBookCooldowns.getOrDefault(player, 0L);
     }

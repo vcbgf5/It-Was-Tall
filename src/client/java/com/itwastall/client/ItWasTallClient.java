@@ -49,7 +49,8 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(FearStatePayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.update(
-                        payload.phase(), payload.stage(), payload.tension())));
+                        payload.phase(), payload.stage(), payload.tension(),
+                        payload.task(), payload.loreIds())));
 
         ClientPlayNetworking.registerGlobalReceiver(
                 JumpscarePayload.ID,

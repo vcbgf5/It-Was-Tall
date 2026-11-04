@@ -1,10 +1,10 @@
 package com.itwastall.client.hud;
 
+import com.itwastall.client.JournalData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.item.Items;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
@@ -16,6 +16,18 @@ public final class JournalScreen extends Screen {
     private int tab;
     private ButtonWidget fearButton;
     private static final String[] TABS = {"STATUS", "BOOKS", "BASE", "EVENTS"};
+
+    /** Mirror of the server's LoreBooks.BOOKS order (§9.2) — one source of truth per side. */
+    private static final String[] KNOWN_BOOK_IDS = {
+            "01_someone_was_here", "02_the_window", "03_the_mine", "04_dont_open",
+            "05_the_player_list", "06_it_joined", "07_observation", "08_the_chest",
+            "09_coordinates", "10_the_last_entry", "11_the_list", "12_it_knows"
+    };
+    private static final String[] KNOWN_BOOKS = {
+            "SOMEONE WAS HERE", "THE WINDOW", "THE MINE", "DON'T OPEN",
+            "THE PLAYER LIST", "IT JOINED", "OBSERVATION", "THE CHEST",
+            "COORDINATES", "THE LAST ENTRY", "THE LIST", "IT KNOWS"
+    };
 
     public JournalScreen() {
         super(Text.literal("It Was Tall — Journal"));
@@ -77,31 +89,43 @@ public final class JournalScreen extends Screen {
                     lines.add("Position: " + client.player.getBlockPos().toShortString());
                     lines.add("Health: " + Math.round(client.player.getHealth()) + " / "
                             + Math.round(client.player.getMaxHealth()));
-                    lines.add("Phase: " + (com.itwastall.client.JournalData.phase() == 0 ? "PRE" : "ACTIVE"));
-                    lines.add("Stage: " + com.itwastall.client.JournalData.stage() + " / 5");
-                    lines.add("Tension: " + Math.round(com.itwastall.client.JournalData.tension()) + " / 100");
-                } else lines.add("No world is currently loaded.");
-                lines.add("");
-                lines.add("The journal updates as the mod provides more discoveries.");
-            }
-            case 1 -> {
-                lines.add("BOOKS IN YOUR INVENTORY");
-                lines.add("");
-                if (client.player == null) {
-                    lines.add("No player is available.");
-                } else {
-                    int found = 0;
+                    lines.add("Phase: " + (JournalData.phase() == 0 ? "PRE" : "ACTIVE"));
+                    lines.add("Stage: " + JournalData.stage() + " / 5");
+                    lines.add("Tension: " + Math.round(JournalData.tension()) + " / 100");
+                    // the live task line — what It asked of you right now
+                    lines.add("Task: " + com.itwastall.client.JournalData.task());
+                    int crystals = 0;
                     for (int slot = 0; slot < client.player.getInventory().size(); slot++) {
                         var stack = client.player.getInventory().getStack(slot);
-                        if (stack.isOf(Items.WRITTEN_BOOK) || stack.isOf(Items.WRITABLE_BOOK)) {
-                            lines.add("• " + stack.getName().getString());
-                            found++;
-                        }
+                        if (stack.getItem().toString().contains("warding_crystal")) crystals += stack.getCount();
                     }
-                    if (found == 0) lines.add("No books carried. Check the chests around your base.");
+                    lines.add("Warding crystals: " + (crystals == 0 ? "none (find the blue glow)" : crystals));
+                } else lines.add("No world is currently loaded.");
+                lines.add("");
+                lines.add("The journal updates every second from the server.");
+            }
+            case 1 -> {
+                lines.add("LORE — BOOKS " + JournalData.loreIds().size() + " / 12");
+                lines.add("");
+                if (com.itwastall.client.JournalData.loreIds().isEmpty()) {
+                    lines.add("Nothing yet. Books appear by themselves");
+                    lines.add("in the chests of your base.");
+                    lines.add("?");
+                    lines.add("");
+                    lines.add("(check chests after a scan runs)");
+                } else {
+                    for (int i = 0; i < KNOWN_BOOKS.length; i++) {
+                        String id = KNOWN_BOOK_IDS[i];
+                        lines.add((JournalData.hasLore(id) ? "• " : "  ???  ")
+                                + (JournalData.hasLore(id) ? KNOWN_BOOKS[i] : "?"));
+                    }
+                    lines.add("");
+                    lines.add(JournalData.loreIds().size() >= 11
+                            ? "One more book keeps appearing only now."
+                            : "The last entries stay hidden until the rest are found.");
                 }
                 lines.add("");
-                lines.add("Books stored in chests remain readable in the chest.");
+                lines.add("Cave notes are readable from loot chests underground.");
             }
             case 2 -> {
                 lines.add("BASE DISCOVERIES");

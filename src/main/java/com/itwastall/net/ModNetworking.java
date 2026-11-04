@@ -3,6 +3,7 @@ package com.itwastall.net;
 import com.itwastall.ItWasTall;
 import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
+import com.itwastall.world.ItWasTallState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -35,12 +36,13 @@ public final class ModNetworking {
         PayloadTypeRegistry.playC2S().register(WindowSeenPayload.ID, WindowSeenPayload.CODEC);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (server.getTicks() % 20 != 0) return;
-            FearStatePayload snapshot = new FearStatePayload(Director.phase(), Director.stageIndex(),
-                    (float) Director.tension());
+            ItWasTallState state = ItWasTallState.getOrCreate(server);
             for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                if (ServerPlayNetworking.canSend(player, FearStatePayload.ID)) {
-                    ServerPlayNetworking.send(player, snapshot);
-                }
+                if (!ServerPlayNetworking.canSend(player, FearStatePayload.ID)) continue;
+                ServerPlayNetworking.send(player, new FearStatePayload(
+                        Director.phase(), Director.stageIndex(), (float) Director.tension(),
+                        com.itwastall.task.TaskManager.status(player.getUuid()),
+                        java.util.List.copyOf(state.loreBookIds(player.getUuid()))));
             }
         });
         ServerPlayNetworking.registerGlobalReceiver(WindowSeenPayload.ID, (payload, context) -> {
