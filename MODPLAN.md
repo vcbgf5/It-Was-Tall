@@ -1624,3 +1624,16 @@ Doprecyzowanie do sekcji 8 (BaseTracker / BaseScanner / BaseMap):
 - [x] Pozycja pionowa fałszywej postaci jest obniżana tak, aby głowa znajdowała się na wysokości szyby.
 - [x] Sylwetka przy szybie uruchamia animację GeckoLib `knock` i obraca tułów oraz głowę w stronę gracza.
 - [ ] Jumpscare po pukaniu przez 1 sekundę oraz powiązane zadanie nie zostały dodane — wymaga doprecyzowania, czy mają występować po każdym pukaniu, czy tylko po określonym zdarzeniu.
+
+
+## Rejestracja bloków i poprawki BaseScanner (2026-11-04)
+
+- [x] Każde udane postawienie bloku przez gracza jest przechwytywane po stronie serwera przez mixin `BlockItem`.
+- [x] Historia pozycji bloków jest zapisywana w `ItWasTallState` niezależnie od fazy, etapu i napięcia.
+- [x] Po ustawieniu kotwicy (łóżko / rozpoznany element bazy) wcześniejsze bloki gracza są odtwarzane na mapie jako `TYPE_PLACED`.
+- [x] Nowe bloki w pobliżu znanej bazy aktualizują mapę od razu; kolejne skanowanie korzysta z debounce.
+- [x] Ponowne skanowanie usuwa znaczniki pochodne, ale zachowuje historię postawionych bloków i nie dubluje markerów.
+- [x] Po ponownym wejściu do świata znana baza jest odtwarzana i skanowana ponownie.
+- [x] Skaner nie próbuje skanować współrzędnych Overworldu w Netherze ani Endzie.
+- [x] Wykrywanie szkła ograniczono do zwykłego, barwionego, przyciemnianego szkła i szyb; zwykłe pełne bloki nie są już mylone ze szkłem przez szeroki tag.
+- [ ] Nadal wymagany jest build Gradle i test w świecie Minecraft; poprawki nie są jeszcze potwierdzone kompilacją.
