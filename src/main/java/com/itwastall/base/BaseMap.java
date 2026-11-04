@@ -171,6 +171,6 @@ public final class BaseMap {
     public @NotNull String toString() {
         return "BaseMap{windows=" + count(TYPE_WINDOW) + ", doors=" + count(TYPE_DOOR)
                 + ", lights=" + count(TYPE_LIGHT) + ", chests=" + count(TYPE_CHEST)
-                + ", rooms " + count(TYPE_ROOM) + ", dark corners " + count(TYPE_CORNER) + "}";
+                + ", placed=" + count(TYPE_PLACED) + ", rooms " + count(TYPE_ROOM) + ", dark corners " + count(TYPE_CORNER) + "}";
     }
 }
