@@ -227,7 +227,14 @@ public final class ItWasTallCommand {
                         .then(argument("player", EntityArgumentType.player())
                                 .executes(ctx -> forceTask(ctx,
                                         List.of(EntityArgumentType.getPlayer(ctx, "player")),
-                                        TaskManager.Kind.DOUSE_LIGHTS))));
+                                        TaskManager.Kind.DOUSE_LIGHTS))))
+                .then(literal("hide")
+                        .executes(ctx -> forceTask(ctx, List.of(ctx.getSource().getPlayerOrThrow()),
+                                TaskManager.Kind.HIDE_AND_SEEK))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> forceTask(ctx,
+                                        List.of(EntityArgumentType.getPlayer(ctx, "player")),
+                                        TaskManager.Kind.HIDE_AND_SEEK))));
         return root;
     }
 

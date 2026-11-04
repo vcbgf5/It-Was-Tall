@@ -99,6 +99,15 @@ public final class ItWasTallConfig {
         /** "Douse the lights": seconds until the assignment expires (dawn also kills it). */
         public int taskLightsDeadlineSeconds = 300;
 
+        /** "Hide and seek" (§15.2, ETAP 5): seconds of the initial hide countdown. */
+        public int taskHideCountdownSeconds = 30;
+        /** How long It walks the rooms searching before it gives up (survive this long). */
+        public int taskSeekSeconds = 90;
+        /** Seconds between two checked dark corners (step/breath cues play at that spot). */
+        public int taskSeekCheckSeconds = 6;
+        /** Blocks: player sitting this close to the checked corner is FOUND (chase follows). */
+        public double taskSeekFindDistance = 3.5;
+
         // ---- mine / cave events ----
         /** Enable events while the player is underground (digging towards you, sounds, torches, peeking). */
         public boolean mineEvents = true;
