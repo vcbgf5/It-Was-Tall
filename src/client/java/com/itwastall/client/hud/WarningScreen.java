@@ -1,6 +1,5 @@
 package com.itwastall.client.hud;
 
-import com.itwastall.client.ClientAcceptedState;
 import com.itwastall.net.ScaresPrefPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
@@ -68,15 +67,13 @@ public class WarningScreen extends Screen {
     }
 
     private void accept() {
-        ClientAcceptedState.setAccepted(true);
         ClientPlayNetworking.send(new ScaresPrefPayload(scaresEnabled));
         this.close();
     }
 
     @Override
     public void close() {
-        // ESC or the button both count as an answer; never reopen this session
-        ClientAcceptedState.setAccepted(true);
+        // Closing the screen only dismisses this visit; it will appear again on next world join.
         super.close();
     }
 
