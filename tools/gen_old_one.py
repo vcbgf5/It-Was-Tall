@@ -149,25 +149,27 @@ def animations():
         "left_arm": {"rotation": cyc(1.0, -3, 3, 0.25)},
     })
     L = 2.4
-    sh = shudder(0.0, 0.45, 6, seed=3)
+    sh = shudder(0.0, 0.45, 5, seed=3)
+    # Everything stays joined: nothing swings on its own. The head cracks and the chest opens like doors,
+    # the arms hang limp at the sides, then the whole empty skin deflates in place (root scale, pivot at
+    # the feet), like a costume with nobody left inside it.
     A["split"] = dict(loop="hold_on_last_frame", animation_length=L, bones={
-        "body": {"rotation": kf(*sh, (0.45, [0, 0, 0]), (1.1, [-6, 0, 0]), (1.7, [-35, 0, 4]), (2.2, [-82, 0, 6]), (L, [-88, 0, 6])),
-                 "position": kf((0.0, [0, 0, 0]), (1.1, [0, 0, 0]), (2.2, [0, -9, 3]), (L, [0, -10, 3]))},
-        "head": {"rotation": kf(*shudder(0.0, 0.45, 10, axis=1, seed=5), (0.45, [0, 0, 0]), (0.6, [-25, 0, 0]), (L, [-20, 0, 0]))},
-        # the head cracks in two
-        "head_right": {"rotation": kf((0.0, [0, 0, 0]), (0.45, [0, 0, 0]), (0.75, [0, 0, 48]), (L, [0, 0, 70])),
-                       "position": kf((0.0, [0, 0, 0]), (0.45, [0, 0, 0]), (0.75, [-2.5, 1, 0]), (L, [-3, -2, 0]))},
-        "head_left": {"rotation": kf((0.0, [0, 0, 0]), (0.45, [0, 0, 0]), (0.75, [0, 0, -48]), (L, [0, 0, -70])),
-                      "position": kf((0.0, [0, 0, 0]), (0.45, [0, 0, 0]), (0.75, [2.5, 1, 0]), (L, [3, -2, 0]))},
-        # the chest opens like two doors
-        "torso_right": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [0, 0, 0]), (0.9, [0, 105, 0]), (L, [0, 120, 0]))},
-        "torso_left": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [0, 0, 0]), (0.9, [0, -105, 0]), (L, [0, -120, 0]))},
-        # arms go limp and fall away
-        "right_arm": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [-10, 0, 0]), (0.9, [-35, 0, 30]), (L, [10, 0, 75]))},
-        "left_arm": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [-10, 0, 0]), (0.9, [-35, 0, -30]), (L, [10, 0, -75]))},
-        # knees give way
-        "right_leg": {"rotation": kf((0.0, [0, 0, 0]), (1.0, [0, 0, 0]), (2.0, [-60, 0, 8]), (L, [-75, 0, 10]))},
-        "left_leg": {"rotation": kf((0.0, [0, 0, 0]), (1.0, [0, 0, 0]), (2.0, [-50, 0, -10]), (L, [-70, 0, -12]))},
+        "root": {"scale": kf((0.0, [1, 1, 1]), (1.0, [1, 1, 1]), (1.3, [1.02, 0.86, 1.02]), (1.65, [1.08, 0.55, 1.08]),
+                             (2.0, [1.14, 0.28, 1.14]), (2.25, [1.18, 0.14, 1.18]), (L, [1.2, 0.12, 1.2])),
+                 "rotation": kf((0.0, [0, 0, 0]), (1.0, [0, 0, 0]), (2.0, [4, 0, 2]), (L, [5, 0, 2]))},
+        "body": {"rotation": kf(*sh, (0.45, [0, 0, 0]), (0.7, [6, 0, 0]), (1.0, [3, 0, 0]), (L, [2, 0, 0]))},
+        "head": {"rotation": kf(*shudder(0.0, 0.45, 8, axis=1, seed=5), (0.45, [0, 0, 0]), (0.65, [18, 0, 0]), (1.0, [12, 0, 0]), (L, [10, 0, 0]))},
+        # the head cracks in two, hinged at the neck
+        "head_right": {"rotation": kf((0.0, [0, 0, 0]), (0.45, [0, 0, 0]), (0.62, [0, 0, 32]), (0.9, [0, 0, 44]), (L, [0, 0, 50]))},
+        "head_left": {"rotation": kf((0.0, [0, 0, 0]), (0.45, [0, 0, 0]), (0.62, [0, 0, -32]), (0.9, [0, 0, -44]), (L, [0, 0, -50]))},
+        # the chest opens like two doors (hinged at the shoulders)
+        "torso_right": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [0, 0, 0]), (0.75, [0, 80, 0]), (1.0, [0, 95, 0]), (L, [0, 100, 0]))},
+        "torso_left": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [0, 0, 0]), (0.75, [0, -80, 0]), (1.0, [0, -95, 0]), (L, [0, -100, 0]))},
+        # arms just hang there — a little forward, never out to the sides
+        "right_arm": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [0, 0, 0]), (0.8, [-8, 0, 3]), (L, [-4, 0, 4]))},
+        "left_arm": {"rotation": kf((0.0, [0, 0, 0]), (0.5, [0, 0, 0]), (0.8, [-8, 0, -3]), (L, [-4, 0, -4]))},
+        "right_leg": {"rotation": kf((0.0, [0, 0, 0]), (1.0, [0, 0, 0]), (L, [0, 0, 2]))},
+        "left_leg": {"rotation": kf((0.0, [0, 0, 0]), (1.0, [0, 0, 0]), (L, [0, 0, -2]))},
     })
     doc = {"format_version": "1.8.0", "animations": {f"animation.old_one.{k}": v for k, v in A.items()}}
     with open(os.path.join(ASSETS, "animations/entity/old_one.animation.json"), "w") as fh:

@@ -162,6 +162,8 @@ function applyAnim(models, anim, t){
     g.rotation.set(-(br[0]+r[0])*D2R, -(br[1]+r[1])*D2R, (br[2]+r[2])*D2R);
     const p = b.position ? sample(b.position, t) : [0,0,0];
     g.position.copy(g.userData.basePos).add(new THREE.Vector3(-p[0]*P, p[1]*P, p[2]*P));
+    const sc = b.scale ? sample(b.scale, t) : [1,1,1];
+    g.scale.set(sc[0], sc[1], sc[2]);
   }
 }
 function animTime(a, t){ return a.loop === true ? t % a.animation_length : Math.min(t, a.animation_length); }
