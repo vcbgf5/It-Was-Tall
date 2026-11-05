@@ -50,6 +50,7 @@ public class ItWasTall implements ModInitializer {
         FalsePresences.init();
         WindowKnocks.init();
         com.itwastall.entity.HouseEvents.init();
+        com.itwastall.entity.OldOneDirector.init();
         // base lights dousing (MODPLAN §14) — ETAP 4+, fed by the base scan's light markers
         DouseLights.init();
         // rare night builds: cemetery / shrine / cottage / the base's black copy (§17.1)
@@ -75,6 +76,7 @@ public class ItWasTall implements ModInitializer {
             DouseLights.forget(uuid);
             com.itwastall.world.JournalLog.forget(uuid);
             com.itwastall.entity.HouseEvents.forget(uuid);
+            com.itwastall.entity.OldOneDirector.forget(uuid);
             DynamicStructures.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);

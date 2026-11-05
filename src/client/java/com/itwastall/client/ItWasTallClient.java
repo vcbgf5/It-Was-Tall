@@ -49,6 +49,8 @@ public class ItWasTallClient implements ClientModInitializer {
                 TallOneRenderer::new
         );
 
+        EntityRendererRegistry.register(ModEntities.OLD_ONE, com.itwastall.client.render.OldOneRenderer::new);
+
         FalsePresenceRenderer.init();
 
         // notes (MODPLAN §16): right-click opens the torn-page NoteScreen

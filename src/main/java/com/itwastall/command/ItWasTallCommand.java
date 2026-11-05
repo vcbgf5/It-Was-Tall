@@ -190,6 +190,9 @@ public final class ItWasTallCommand {
                 .then(eventKind("knock", p -> {
                     if (!WindowKnocks.trigger(p)) throw new IllegalStateException("no window near the player's base");
                 }))
+                .then(eventKind("oldone", p -> {
+                    if (!com.itwastall.entity.OldOneDirector.spawnFor(p)) throw new IllegalStateException("no free spot near the player");
+                }))
                 .then(houseKind("doorknock", com.itwastall.entity.HouseEvents.Kind.DOOR_KNOCK, "no mapped door near the player"))
                 .then(houseKind("shadow", com.itwastall.entity.HouseEvents.Kind.SHADOW, "no mapped door near the player"))
                 .then(houseKind("knockinside", com.itwastall.entity.HouseEvents.Kind.KNOCK_INSIDE, "no dark corner mapped in the base"))

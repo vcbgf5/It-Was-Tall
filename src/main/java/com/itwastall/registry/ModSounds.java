@@ -55,6 +55,7 @@ public final class ModSounds {
     public static final SoundEvent UI_TINNITUS = register("ui.tinnitus");
     // TODO: zamienić na dedykowany plik ogg dla IT JOINED (teraz niski ambient drone)
     public static final SoundEvent UI_IT_JOINED = register("ui.it_joined");
+    public static final SoundEvent OLD_ONE_TEAR = register("entity.old_one.tear");
 
     private ModSounds() {
     }

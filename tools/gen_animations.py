@@ -133,6 +133,17 @@ A["attack"] = dict(loop=False, animation_length=0.55, bones={
     "root": {"position": kf((0.0, [0, 0, 0]), (0.32, [0, 0, -6]), (0.55, [0, 0, 0]))},
 })
 
+# --- emerge: rises out of the torn skin of the Old One (plays once, holds) ---------
+A["emerge"] = dict(loop="hold_on_last_frame", animation_length=1.6, bones={
+    "root": {"position": kf((0.0, [0, -46, 0]), (0.5, [0, -30, 0]), (1.2, [0, -6, 0]), (1.6, [0, 0, 0]))},
+    "right_arm": {"rotation": kf((0.0, [-170, 0, 10]), (0.6, [-160, 0, 14]), (1.2, [-60, 0, 10]), (1.6, [0, 0, 0]))},
+    "left_arm": {"rotation": kf((0.0, [-170, 0, -10]), (0.6, [-160, 0, -14]), (1.2, [-60, 0, -10]), (1.6, [0, 0, 0]))},
+    "right_forearm": {"rotation": kf((0.0, [-30, 0, 0]), (0.8, [-10, 0, 0]), (1.6, [0, 0, 0]))},
+    "left_forearm": {"rotation": kf((0.0, [-30, 0, 0]), (0.8, [-10, 0, 0]), (1.6, [0, 0, 0]))},
+    "torso": {"rotation": kf((0.0, [-25, 0, 0]), (1.0, [-10, 0, 0]), (1.6, [0, 0, 0]))},
+    "head": {"rotation": kf((0.0, [-40, 0, 0]), (0.9, [-30, 0, 15]), (1.3, [10, 0, -10]), (1.6, [0, 0, 0]))},
+})
+
 doc = {"format_version": "1.8.0",
        "animations": {f"animation.tall_one.{k}": v for k, v in A.items()}}
 os.makedirs(os.path.dirname(OUT), exist_ok=True)

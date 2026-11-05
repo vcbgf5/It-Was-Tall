@@ -18,10 +18,21 @@ public final class ModEntities {
                     .maxTrackingRange(16)
                     .build("tall_one"));
 
+    /** "Old One" — the Skinwalker Steve: a player-sized thing wearing a skin, with It inside. */
+    public static final EntityType<com.itwastall.entity.OldOneEntity> OLD_ONE = Registry.register(
+            Registries.ENTITY_TYPE,
+            ItWasTall.id("old_one"),
+            EntityType.Builder.create(com.itwastall.entity.OldOneEntity::new, SpawnGroup.MONSTER)
+                    .dimensions(0.6f, 1.8f)
+                    .eyeHeight(1.62f)
+                    .maxTrackingRange(10)
+                    .build("old_one"));
+
     private ModEntities() {
     }
 
     public static void init() {
         FabricDefaultAttributeRegistry.register(TALL_ONE, TallOneEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(OLD_ONE, com.itwastall.entity.OldOneEntity.createAttributes());
     }
 }

@@ -66,6 +66,20 @@ public final class ItWasTallConfig {
         /** Chance rolled per check (~once per 20 s) while the conditions hold; 1 knock burst per night. */
         public double windowKnockChance = 0.35;
 
+        // ---- the Old One (Skinwalker Steve) ----
+        /** A "player" named Old One appears close by and stares; walk up to it and It climbs out of it. */
+        public boolean oldOne = true;
+        /** First stage at which it can appear. */
+        public int oldOneMinStage = 2;
+        /** Minutes (per player) before the first one / between two of them. */
+        public int oldOneFirstMinutes = 8;
+        public int oldOneMinMinutes = 20;
+        public int oldOneMaxMinutes = 40;
+        /** Only after dark (false = any time; it looks more wrong in daylight). */
+        public boolean oldOneOnlyAtNight = false;
+        /** How close you get before it tears open. */
+        public double oldOneSplitDistance = 4.5;
+
         // ---- house events (MODPLAN §12 variants + §14 DoorEvent / ChestShuffleEvent / SignEvent) ----
         /** Things happen around your mapped base at night: doors, knocks, chests, signs. */
         public boolean houseEvents = true;

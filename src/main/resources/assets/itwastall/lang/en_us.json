@@ -4,6 +4,7 @@
   "key.itwastall.open_journal": "Open Journal",
   "category.itwastall": "It Was Tall",
   "item.itwastall.tall_one_spawn_egg": "It Spawn Egg",
+  "item.itwastall.note": "Note",
   "subtitles.itwastall.entity.tall_one.stare": "Something is watching",
   "subtitles.itwastall.entity.tall_one.scream": "It screams",
   "subtitles.itwastall.entity.tall_one.step": "Heavy footsteps",
@@ -38,5 +39,7 @@
   "subtitles.itwastall.scare.static": "Static",
   "subtitles.itwastall.scare.breath": "Breath on your neck",
   "subtitles.itwastall.scare.music_box": "Music box",
-  "item.itwastall.note": "Note"
+  "subtitles.itwastall.entity.old_one.tear": "Flesh tears apart",
+  "entity.itwastall.old_one": "Old One",
+  "item.itwastall.old_one_spawn_egg": "Old One Spawn Egg"
 }

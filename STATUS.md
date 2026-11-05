@@ -50,6 +50,8 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 - **MOVE_UNSEEN** (§3): daleko stojący It potrafi pojawić się bliżej, gdy nie patrzysz — tylko gdy ani stare, ani nowe miejsce nie jest w polu widzenia.
 - **Debug bazy 3D** (§8.5): `/itwastall debug view` otwiera obracaną miniaturę bazy z prawdziwych bloków + kolorowe znaczniki, warstwy 1–5, przekrój [ ], legenda i ostatnie zdarzenia. `/itwastall debug base` pokazuje też ramki w świecie.
 
+- **Old One („Skinwalker Steve”)**: postać wyglądająca jak gracz Steve (tekstura Steve'a z gry + nasza warstwa: puste oczy, rozciągnięte usta, krew, mięso w środku), z nickiem „Old One” nad głową. Pojawia się 8–12 bloków od ciebie, poza polem widzenia, i się gapi; skrada się tylko, gdy nie patrzysz. Gdy podejdziesz (≤ 4,5 bloku) albo go uderzysz: głowa pęka na pół, tułów otwiera się jak drzwi, skóra osuwa się na ziemię, a z niej wychodzi It (nowa animacja `emerge`) i od razu cię goni. Od etapu 2, co 20–40 min na gracza, tylko gdy na serwerze nie ma innego It. Komenda `event oldone`, jajo spawnujące, config `oldOne*`, podgląd `tools/build_old_one_preview.py`.
+
 ## 🟡 Częściowo
 
 - **AI**: zachowania STALK / WATCHED / MOVE_UNSEEN działają, ale są częścią trybu STARE, a nie osobnymi stanami enuma (świadomie — zmiana enuma psułaby zapisane encje).

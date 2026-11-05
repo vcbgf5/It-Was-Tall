@@ -533,6 +533,24 @@ def message_sound():
     return mix(hit, st, np.pad(w * 1.2, (n_(0.15), 0)))
 
 
+def flesh_tear(sec=1.8):
+    """The Old One splitting open: bones cracking faster and faster, wet tearing, a groan from inside."""
+    parts, tm, gap = [], 0.0, 0.28
+    while tm < sec * 0.55:
+        crack = spectrum_filter(noise(0.05), 600, 5000) * decay(0.05, 0.006) * rng.uniform(1.0, 1.6)
+        thump = sine(const(0.12, rng.uniform(70, 110))) * decay(0.12, 0.03) * 0.8
+        parts += [(tm, crack), (tm, thump)]
+        tm += gap
+        gap = max(0.045, gap * 0.72)
+    t = t_axis(sec)
+    crackle = (rng.random(n_(sec)) > 0.93).astype(float)
+    crackle = spectrum_filter(crackle, 200, 1500)
+    env_t = np.clip((t - sec * 0.25) / (sec * 0.25), 0, 1) * np.clip((sec - t) / (sec * 0.35), 0, 1)
+    wet = sweep_filter(noise(sec), lambda tt: 900 + 1400 * (tt / sec), q=2.2) * (0.4 + 3.0 * np.abs(crackle)) * env_t * 1.6
+    groan_ = np.pad(groan(0.9, 70) * 0.7, (n_(sec * 0.55), 0))
+    return reverb(mix(place(sec, parts), wet, groan_), 1.0, 0.25, 3500, "room")
+
+
 # =========================================================================== catalogue
 # event -> list of (file, generator, peak).  Subtitles: event -> (english, polish)
 def build_catalogue():
@@ -595,6 +613,8 @@ def build_catalogue():
         # ---- ui
         "ui.message": v(("ui/message", message_sound, .9)),
         "ui.tinnitus": v(("ui/tinnitus", tinnitus, .35)),
+        # ---- the Old One (appended last so every earlier sound stays byte-identical)
+        "entity.old_one.tear": v(("entity/old_one_tear1", flesh_tear, .95), ("entity/old_one_tear2", lambda: flesh_tear(2.1), .95)),
     }
 
 
@@ -633,6 +653,7 @@ SUBTITLES = {
     "scare.static": ("Static", "Trzaski"),
     "scare.breath": ("Breath on your neck", "Oddech na karku"),
     "scare.music_box": ("Music box", "Pozytywka"),
+    "entity.old_one.tear": ("Flesh tears apart", "Rozdzierane ciało"),
 }
 STREAM = {"ambient.drone", "ambient.wind", "ambient.hum"}
 
@@ -679,7 +700,13 @@ def main():
             count += 1
             print(f"{event:28s} {file:30s} {sec:5.1f}s")
         sounds_json[event] = entry
-    with open(os.path.join(ASSETS, "sounds.json"), "w") as fh:
+    # keep hand-made entries that this generator does not own (e.g. ui.it_joined -> drone2)
+    sj_path = os.path.join(ASSETS, "sounds.json")
+    if os.path.exists(sj_path):
+        for k, v in json.load(open(sj_path)).items():
+            if k not in sounds_json:
+                sounds_json[k] = v
+    with open(sj_path, "w") as fh:
         json.dump(sounds_json, fh, indent=1)
     for lang, idx in (("en_us", 0), ("pl_pl", 1)):
         p = os.path.join(ASSETS, "lang", lang + ".json")

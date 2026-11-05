@@ -4,6 +4,7 @@
   "key.itwastall.open_journal": "Otwórz dziennik",
   "category.itwastall": "It Was Tall",
   "item.itwastall.tall_one_spawn_egg": "Jajo spawnujące: To",
+  "item.itwastall.note": "Notatka",
   "subtitles.itwastall.entity.tall_one.stare": "Coś cię obserwuje",
   "subtitles.itwastall.entity.tall_one.scream": "Krzyk",
   "subtitles.itwastall.entity.tall_one.step": "Ciężkie kroki",
@@ -38,5 +39,7 @@
   "subtitles.itwastall.scare.static": "Trzaski",
   "subtitles.itwastall.scare.breath": "Oddech na karku",
   "subtitles.itwastall.scare.music_box": "Pozytywka",
-  "item.itwastall.note": "Notatka"
+  "subtitles.itwastall.entity.old_one.tear": "Rozdzierane ciało",
+  "entity.itwastall.old_one": "Old One",
+  "item.itwastall.old_one_spawn_egg": "Jajo spawnujące: Old One"
 }

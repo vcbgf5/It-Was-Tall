@@ -14,6 +14,11 @@ public final class ModItems {
             ItWasTall.id("tall_one_spawn_egg"),
             new SpawnEggItem(ModEntities.TALL_ONE, 0x151313, 0x9a958c, new Item.Settings()));
 
+    public static final Item OLD_ONE_SPAWN_EGG = Registry.register(
+            Registries.ITEM,
+            ItWasTall.id("old_one_spawn_egg"),
+            new SpawnEggItem(ModEntities.OLD_ONE, 0x00A8A8, 0x3B3B9E, new Item.Settings()));
+
     /** The only item that can defeat the Tall One. */
     public static final Item WARDING_CRYSTAL = Registry.register(
             Registries.ITEM,
@@ -47,7 +52,10 @@ public final class ModItems {
     }
 
     public static void init() {
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.SPAWN_EGGS).register(entries -> entries.add(TALL_ONE_SPAWN_EGG));
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.SPAWN_EGGS).register(entries -> {
+            entries.add(TALL_ONE_SPAWN_EGG);
+            entries.add(OLD_ONE_SPAWN_EGG);
+        });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(entries -> entries.add(WARDING_CRYSTAL));
     }
 }

@@ -62,7 +62,7 @@ import java.util.UUID;
  */
 public class TallOneEntity extends HostileEntity implements GeoEntity {
     /** Order matters (saved as ordinal). */
-    public enum Mode {STARE, CHASE, SINK, DIG, PEEK}
+    public enum Mode {STARE, CHASE, SINK, DIG, PEEK, EMERGE}
 
     private static final TrackedData<Integer> MODE = DataTracker.registerData(TallOneEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
@@ -73,6 +73,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     public static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.tall_one.attack");
     public static final RawAnimation KNOCK = RawAnimation.begin().thenLoop("animation.tall_one.knock");
     public static final RawAnimation DIG = RawAnimation.begin().thenLoop("animation.tall_one.dig");
+    public static final RawAnimation EMERGE = RawAnimation.begin().thenPlayAndHold("animation.tall_one.emerge");
+    /** Ticks of the emerge animation (1.6 s) before it starts the chase. */
+    private static final int EMERGE_TICKS = 32;
 
     private static final int SINK_ANIM_TICKS = 24;          // animation length 1.2 s
     private static final int STARE_SOUND_INTERVAL = 160;
@@ -209,6 +212,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             case SINK -> tickSink(player);
             case DIG -> tickDig(player);
             case PEEK -> tickPeek(player);
+            case EMERGE -> tickEmerge(player);
         }
     }
 
@@ -421,6 +425,27 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         setEquipmentDropChance(EquipmentSlot.MAINHAND, 0f);
         digFailures = 0;
         clearDig();
+    }
+
+    /** Climbs out of the torn body of the Old One, then hunts the player who came too close. */
+    public void startEmerge(PlayerEntity player) {
+        setVictim(player);
+        setNoGravity(false);
+        clearDig();
+        setMode(Mode.EMERGE);
+        getNavigation().stop();
+        setVelocity(Vec3d.ZERO);
+    }
+
+    private void tickEmerge(@Nullable PlayerEntity player) {
+        getNavigation().stop();
+        setVelocity(0, getVelocity().y, 0);
+        if (player != null) faceTowards(player);
+        if (modeTicks >= EMERGE_TICKS) {
+            // the payoff of the Old One: it always runs at you, whatever the stage table says
+            if (player != null) startChase(player);
+            else setMode(Mode.STARE);
+        }
     }
 
     public void startPeek() {
@@ -730,6 +755,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
+        if (getMode() == Mode.EMERGE) return false;
         // Ordinary weapons cannot defeat It. The Warding Crystal is the intended story solution.
         if (!(source.getAttacker() instanceof PlayerEntity player)
                 || !player.getMainHandStack().isOf(ModItems.WARDING_CRYSTAL)) {
@@ -778,6 +804,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             case SINK -> state.setAndContinue(SINK);
             case DIG -> state.setAndContinue(DIG);
             case PEEK -> state.setAndContinue(IDLE);
+            case EMERGE -> state.setAndContinue(EMERGE);
             case CHASE -> state.setAndContinue(state.isMoving() ? RUN : IDLE);
             case STARE -> state.setAndContinue(state.isMoving() ? WALK : IDLE);
         };
