@@ -43,6 +43,8 @@ public final class ItWasTallConfig {
         public int maxActiveIts = 1;
         /** From Stage 2 onward, It slowly approaches while the player is not looking directly at it. */
         public boolean stalking = true;
+        /** MOVE_UNSEEN (MODPLAN §3): while you look away, a distant It can reappear closer — never in view. */
+        public boolean moveUnseen = true;
         /** Movement speed used while stalking (separate from the chase speed). */
         public double stalkSpeed = 0.12;
         /** It stops approaching at or below this distance from the player. */

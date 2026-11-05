@@ -330,16 +330,19 @@ public final class ItWasTallCommand {
                             for (String line : com.itwastall.base.BaseTracker.markerSample(p.getUuid())) {
                                 ctx.getSource().sendFeedback(() -> Text.literal(line), false);
                             }
+                            // §8.5: "debug base" also shows the coloured frames in the world
+                            if (ModNetworking.sendBaseDebug(p, false)) {
+                                ctx.getSource().sendFeedback(() -> Text.literal(
+                                        "Frames shown for 30 s: windows red, doors green, lights yellow, chests orange, dark corners purple."), false);
+                            }
                             return 1;
                         }))
                 .then(literal("view")
                         .executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
-                            if (!ModNetworking.sendBaseDebug(p)) {
+                            if (!ModNetworking.sendBaseDebug(p, true)) {
                                 throw new IllegalStateException("no mapped base yet (click a bed, wait for the scan)");
                             }
-                            ctx.getSource().sendFeedback(() -> Text.literal(
-                                    "Base debug frames shown for 30 s: windows blue, doors green, lights yellow, chests orange, bed white."), false);
                             return 1;
                         }));
     }

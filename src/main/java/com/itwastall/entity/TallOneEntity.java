@@ -99,6 +99,12 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private int digTicks;
     private int digDuration;
     private int digFailures;
+    // A* plan (DigPathfinder): feet positions to walk through, re-planned as the player moves
+    @Nullable
+    private List<BlockPos> digPath;
+    private int digPathIndex;
+    private BlockPos digPathGoal = BlockPos.ORIGIN;
+    private int digPathPlannedAt;
 
     public TallOneEntity(EntityType<? extends HostileEntity> type, World world) {
         super(type, world);
@@ -244,6 +250,11 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             // Cancel residual horizontal motion too: being spotted must freeze It immediately.
             getNavigation().stop();
             setVelocity(0.0, getVelocity().y, 0.0);
+        }
+        // MOVE_UNSEEN: far away and not looked at -> sometimes it is simply somewhere closer next time you look
+        if (st.ordinal() >= 2 && cfg.moveUnseen && !watched && !playerSheltered && dist > 22
+                && modeTicks % 100 == 50 && random.nextFloat() < 0.35f) {
+            tryRepositionUnseen(player, dist);
         }
 
         if (modeTicks == 2 && player instanceof ServerPlayerEntity sp) {
@@ -430,6 +441,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         digCells.clear();
         digNext = null;
         digTicks = 0;
+        digPath = null;
     }
 
     private int breakId(int i) {
@@ -499,6 +511,28 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private boolean planDigStep(PlayerEntity player) {
         BlockPos feet = getBlockPos();
         BlockPos goal = player.getBlockPos();
+
+        // 1) follow the A* plan (MODPLAN §13 DigPathfinder); re-plan every 10 s or when the player moved away
+        boolean stale = digPath == null || digPathIndex >= digPath.size()
+                || modeTicks - digPathPlannedAt > 200 || goal.getManhattanDistance(digPathGoal) > 4;
+        if (stale) {
+            digPath = DigPathfinder.find(getWorld(), feet, goal, TallOneEntity::breakTicks);
+            digPathIndex = 0;
+            digPathGoal = goal;
+            digPathPlannedAt = modeTicks;
+        }
+        if (digPath != null && digPathIndex < digPath.size()) {
+            BlockPos next = digPath.get(digPathIndex);
+            Direction step = null;
+            for (Direction d : Direction.values()) if (feet.offset(d).equals(next)) step = d;
+            if (step != null && tryDigStep(feet, step)) {
+                digPathIndex++;
+                return true;
+            }
+            digPath = null;   // the world changed under the plan: fall back for this step, re-plan next time
+        }
+
+        // 2) fallback: the old greedy step straight towards the player
         int dx = goal.getX() - feet.getX();
         int dy = goal.getY() - feet.getY();
         int dz = goal.getZ() - feet.getZ();
@@ -516,33 +550,28 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         for (Direction d : Direction.values()) if (!order.contains(d) && d != Direction.UP) order.add(d);
 
         for (Direction dir : order) {
-            List<BlockPos> cells = cellsFor(feet, dir);
-            int duration = 0;
-            boolean ok = true;
-            List<BlockPos> toBreak = new ArrayList<>();
-            for (BlockPos c : cells) {
-                BlockState st = getWorld().getBlockState(c);
-                if (!st.getFluidState().isEmpty()) {
-                    ok = false;
-                    break;
-                }
-                if (st.getCollisionShape(getWorld(), c).isEmpty()) continue;
-                float hardness = st.getHardness(getWorld(), c);
-                if (hardness < 0 || hardness >= 50f) { // bedrock, obsidian...: an iron pickaxe can't do it
-                    ok = false;
-                    break;
-                }
-                toBreak.add(c);
-                duration = Math.max(duration, breakTicks(hardness));
-            }
-            if (!ok) continue;
-            digNext = feet.offset(dir);
-            digCells.addAll(toBreak);
-            digDuration = Math.max(1, duration);
-            digTicks = 0;
-            return true;
+            if (tryDigStep(feet, dir)) return true;
         }
         return false;
+    }
+
+    /** Prepares one step: the blocks to break and how long it takes. False when the step is impossible. */
+    private boolean tryDigStep(BlockPos feet, Direction dir) {
+        if (DigPathfinder.stepCost(getWorld(), feet, dir, TallOneEntity::breakTicks) < 0) return false;
+        int duration = 0;
+        List<BlockPos> toBreak = new ArrayList<>();
+        for (BlockPos c : cellsFor(feet, dir)) {
+            BlockState st = getWorld().getBlockState(c);
+            if (st.getCollisionShape(getWorld(), c).isEmpty()) continue;
+            toBreak.add(c);
+            duration = Math.max(duration, breakTicks(st.getHardness(getWorld(), c)));
+        }
+        digNext = feet.offset(dir);
+        digCells.clear();
+        digCells.addAll(toBreak);
+        digDuration = Math.max(1, duration);
+        digTicks = 0;
+        return true;
     }
 
     private static List<BlockPos> cellsFor(BlockPos feet, Direction dir) {
@@ -561,6 +590,46 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     /** Ticks an iron pickaxe needs for a block of the given hardness (5 * hardness), times the slowdown. */
     private static int breakTicks(float hardness) {
         return Math.max(4, (int) Math.ceil(hardness * 5f * ItWasTallConfig.INSTANCE.digSlowdown));
+    }
+
+    // ----------------------------------------------------------- MOVE_UNSEEN ----
+
+    /**
+     * Moves to a spot closer to the player (65 % of the distance, at least 14 blocks away) on the
+     * same side, but only if NEITHER the old nor the new position is visible to the player right
+     * now — it never teleports in front of anyone (MODPLAN §3.1).
+     */
+    private void tryRepositionUnseen(PlayerEntity player, double dist) {
+        World world = getWorld();
+        if (visibleTo(player, getPos().add(0, 2.5, 0))) return;
+        double baseAng = Math.atan2(getZ() - player.getZ(), getX() - player.getX());
+        double newDist = Math.max(14.0, dist * 0.65);
+        for (int i = 0; i < 12; i++) {
+            double ang = baseAng + (random.nextDouble() - 0.5) * 1.4;
+            double x = player.getX() + Math.cos(ang) * newDist;
+            double z = player.getZ() + Math.sin(ang) * newDist;
+            int y = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, MathHelper.floor(x), MathHelper.floor(z));
+            if (Math.abs(y - player.getY()) > 12) continue;
+            BlockPos below = BlockPos.ofFloored(x, y - 1, z);
+            BlockState ground = world.getBlockState(below);
+            if (!ground.getFluidState().isEmpty() || ground.isIn(net.minecraft.registry.tag.BlockTags.LEAVES)) continue;
+            Vec3d target = new Vec3d(x, y, z);
+            if (visibleTo(player, target.add(0, 2.5, 0))) continue;
+            if (!world.isSpaceEmpty(this, getBoundingBox().offset(target.subtract(getPos())))) continue;
+            refreshPositionAndAngles(x, y, z, getYaw(), getPitch());
+            getNavigation().stop();
+            return;
+        }
+    }
+
+    /** Is this point in the player's view cone with a clear line of sight? */
+    private boolean visibleTo(PlayerEntity player, Vec3d point) {
+        Vec3d to = point.subtract(player.getEyePos());
+        if (to.lengthSquared() < 1.0E-4) return true;
+        if (player.getRotationVec(1f).dotProduct(to.normalize()) < 0.35) return false;   // outside the view cone
+        var hit = getWorld().raycast(new net.minecraft.world.RaycastContext(player.getEyePos(), point,
+                net.minecraft.world.RaycastContext.ShapeType.VISUAL, net.minecraft.world.RaycastContext.FluidHandling.NONE, player));
+        return hit.getType() == net.minecraft.util.hit.HitResult.Type.MISS;
     }
 
     // ----------------------------------------------------------------- PEEK ----

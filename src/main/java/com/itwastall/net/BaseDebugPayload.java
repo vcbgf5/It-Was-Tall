@@ -16,6 +16,9 @@ import net.minecraft.network.codec.PacketCodecs;
  * payload down to 4 bytes per marker.
  */
 public record BaseDebugPayload(long anchor, int[] markers, int ttlSeconds) implements CustomPayload {
+    /** Special ttl: open the rotatable 3D base viewer instead of showing world frames. */
+    public static final int OPEN_VIEWER = 121;
+
     public static final CustomPayload.Id<BaseDebugPayload> ID = new CustomPayload.Id<>(ItWasTall.id("base_debug"));
     public static final PacketCodec<RegistryByteBuf, BaseDebugPayload> CODEC = PacketCodec.of(
             BaseDebugPayload::write,
@@ -45,7 +48,7 @@ public record BaseDebugPayload(long anchor, int[] markers, int ttlSeconds) imple
     /** Tiny helper so the ttl clamp lives next to the codec (no GC churn per payload). */
     private static final class PacketCodecsHelper {
         static int clampTtl(int ttl) {
-            return Math.max(1, Math.min(120, ttl));
+            return Math.max(1, Math.min(OPEN_VIEWER, ttl));
         }
     }
 }

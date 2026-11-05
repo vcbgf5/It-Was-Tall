@@ -42,20 +42,22 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 ### Struktury dynamiczne (§17.1)
 - **Cmentarz, kapliczka, chata, czarna kopia bazy**: rzadko, w nocy, 60–100 bloków za plecami gracza, nigdy na oczach innego gracza.
 
+### Dokończone w tej sesji
+- **Zdarzenia w domu** (`HouseEvents`, §12 + §14): kroki i 3 puknięcia do drzwi (etap 2+), pukanie od środka z ciemnego kąta, **DoorEvent** (drewniane drzwi otwierają się same, gdy nie patrzysz, w etapie 4 mogą trzasnąć), **ChestShuffleEvent** (zamienia kilka slotów w skrzyni, nic nie zabiera), **SignEvent** (czerwona tabliczka przed bazą), **cień pod drzwiami** (etap 4+). Komendy `event doorknock|shadow|knockinside|door|chest|sign`.
+- **Notatki**: przedmiot `itwastall:note`, po kliknięciu prawym otwiera się NoteScreen (podarta kartka). Używają go notatki z jaskiń, dynamicznych struktur i nowych struktur.
+- **Struktury generowane ze światem** (§17): opuszczona chata, kapliczka, tunel z pochodniami, pokój z tabliczkami, grota z kryształem (**gwarantowany Kryształ Odpędzający**). Pliki NBT, worldgen JSON, tagi biomów i tabele łupów generuje `tools/gen_structures.py`.
+- **DigPathfinder (A\*)** (§13): najtańsza droga przez skałę z uwzględnieniem czasu kopania, omija płyny, bedrock, obsydian i bloki ze skrzyniami/piecami; limit węzłów; stary sposób jako zapas.
+- **MOVE_UNSEEN** (§3): daleko stojący It potrafi pojawić się bliżej, gdy nie patrzysz — tylko gdy ani stare, ani nowe miejsce nie jest w polu widzenia.
+- **Debug bazy 3D** (§8.5): `/itwastall debug view` otwiera obracaną miniaturę bazy z prawdziwych bloków + kolorowe znaczniki, warstwy 1–5, przekrój [ ], legenda i ostatnie zdarzenia. `/itwastall debug base` pokazuje też ramki w świecie.
+
 ## 🟡 Częściowo
 
-- **AI**: STARE / CHASE / SINK / DIG / PEEK + podchodzenie („stalking”) są, ale osobnych stanów STALK, WATCHED, MOVE_UNSEEN, KNOCK, SEARCH_BASE (§3) nie ma: ich zachowania są wbudowane w STARE albo w zadania.
-- **Kopanie** idzie krok po kroku w stronę gracza; prawdziwego **A\* (DigPathfinder)** z §13 nie ma.
-- **Debug bazy 3D**: `/itwastall debug view` pokazuje kolorowe ramki w świecie; **obracanej miniatury bazy w GUI** (§8.5) nie ma.
-- **Punktacja chunków i łączenie klastrów** w BaseTracker (z notatek MODPLAN) nie są zrobione.
-- **NoteScreen** jest gotowy (tekstura pergaminu), ale nic go jeszcze nie otwiera: notatki w strukturach to zwykłe książki.
-- **Pukanie w drzwi, cień pod drzwiami, pukanie z wnętrza, rozbijanie szyby** (§12): jest tylko rozbijanie szyby w etapie 5 podczas pościgu.
+- **AI**: zachowania STALK / WATCHED / MOVE_UNSEEN działają, ale są częścią trybu STARE, a nie osobnymi stanami enuma (świadomie — zmiana enuma psułaby zapisane encje).
+- **Punktacja chunków i łączenie klastrów** w BaseTracker (z notatek MODPLAN) nie są zrobione — baza jest wykrywana z łóżka / interakcji.
 
 ## ❌ Brak
 
-- **Struktury generowane ze światem** (worldgen: chata z notatkami, kapliczka, tunel, pokój z tabliczkami, §17): brak plików `data/itwastall/worldgen`.
-- **DoorEvent, ChestShuffleEvent, SignEvent** (§14).
-- **Własna struktura jaskiniowa z gwarantowanym kryształem** (z notatek MODPLAN).
+- Nic większego z MODPLAN. Do zrobienia zostają testy w grze i balans.
 
 ## Ostatnie zmiany (ta sesja), niesprawdzone w grze
 

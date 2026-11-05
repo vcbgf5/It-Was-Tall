@@ -163,10 +163,16 @@ public final class ModNetworking {
 
     /** Debug 3D (MODPLAN §8.5): the player's saved BaseMap as coloured world frames. */
     public static boolean sendBaseDebug(ServerPlayerEntity player) {
+        return sendBaseDebug(player, false);
+    }
+
+    /** @param viewer true = open the 3D base viewer screen, false = 30 s of coloured frames in the world */
+    public static boolean sendBaseDebug(ServerPlayerEntity player, boolean viewer) {
         if (!ServerPlayNetworking.canSend(player, BaseDebugPayload.ID)) return false;
         var map = com.itwastall.base.BaseTracker.mapOf(player.getUuid());
         if (map == null) return false;
-        ServerPlayNetworking.send(player, new BaseDebugPayload(map.anchor(), map.encodedMarkers(), 30));
+        ServerPlayNetworking.send(player, new BaseDebugPayload(map.anchor(), map.encodedMarkers(),
+                viewer ? BaseDebugPayload.OPEN_VIEWER : 30));
         ItWasTall.LOGGER.debug("Base debug view -> {}", player.getName().getString());
         return true;
     }

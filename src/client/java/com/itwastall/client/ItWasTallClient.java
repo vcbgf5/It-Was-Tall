@@ -127,13 +127,14 @@ public class ItWasTallClient implements ClientModInitializer {
         // Base Debug
         ClientPlayNetworking.registerGlobalReceiver(
                 BaseDebugPayload.ID,
-                (payload, context) -> context.client().execute(() ->
-                        BaseDebugRenderer.show(
-                                payload.anchor(),
-                                payload.markers(),
-                                payload.ttlSeconds()
-                        )
-                )
+                (payload, context) -> context.client().execute(() -> {
+                    if (payload.ttlSeconds() == BaseDebugPayload.OPEN_VIEWER) {
+                        context.client().setScreen(new com.itwastall.client.screen.BaseViewerScreen(
+                                payload.anchor(), payload.markers()));
+                    } else {
+                        BaseDebugRenderer.show(payload.anchor(), payload.markers(), payload.ttlSeconds());
+                    }
+                })
         );
 
         // WARNING SCREEN
