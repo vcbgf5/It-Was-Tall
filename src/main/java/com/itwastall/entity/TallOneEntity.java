@@ -123,6 +123,12 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         builder.add(MODE, Mode.STARE.ordinal());
     }
 
+    /** Who it is after (null = nobody yet). */
+    @Nullable
+    public UUID getVictimUuid() {
+        return victim;
+    }
+
     public Mode getMode() {
         return Mode.values()[MathHelper.clamp(this.dataTracker.get(MODE), 0, Mode.values().length - 1)];
     }
@@ -294,6 +300,8 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         setMode(Mode.CHASE);
         setTarget(player);
         getWorld().playSound(null, getBlockPos(), ModSounds.SCREAM, getSoundCategory(), 2.5f, 0.85f);
+        // the red chase overlay starts NOW, not on the next 1 s pulse
+        if (player instanceof ServerPlayerEntity sp) ModNetworking.sendChase(sp, true);
         if (!chaseTensionGiven && Director.phase() == 1) {
             chaseTensionGiven = true;
             Director.addTension(4.0); // PHASES §2: rozpoczęcie pościgu +4, 1x na pościg (flag on entity)

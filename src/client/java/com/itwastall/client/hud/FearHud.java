@@ -27,14 +27,16 @@ public final class FearHud {
         if (!enabled || intensity <= 0.01f) return;
         int sw = ctx.getScaledWindowWidth();
         int sh = ctx.getScaledWindowHeight();
-        int alpha = MathHelper.clamp((int) (intensity * 48), 0, 48);
+        // soft radial vignette; above 70 % fear it pulses like a heartbeat
+        float a = intensity * 0.55f;
+        if (intensity > 0.7f) {
+            double t = (System.nanoTime() / 1_000_000_000.0) * (1.0 + intensity); // faster when afraid
+            double beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2)), 8);
+            a *= (float) (1.0 + 0.35 * beat);
+        }
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, 0, 900);
-        int color = (alpha << 24) | 0x240609;
-        ctx.fillGradient(0, 0, sw, sh / 5, color, 0);
-        ctx.fillGradient(0, sh * 4 / 5, sw, sh, 0, color);
-        ctx.fillGradient(0, 0, sw / 6, sh, color, 0);
-        ctx.fillGradient(sw * 5 / 6, 0, sw, sh, 0, color);
+        Vignette.draw(ctx, sw, sh, a);
         ctx.getMatrices().pop();
     }
 }

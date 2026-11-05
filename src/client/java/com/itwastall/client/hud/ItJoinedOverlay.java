@@ -59,14 +59,12 @@ public final class ItJoinedOverlay {
         ctx.getMatrices().translate(0, 0, 2600);
 
         // subtle vignette (darker than scare text's, this is meant as an unsettling hint only)
-        int dark = (int) (alpha * 55) << 24;
-        ctx.fillGradient(0, 0, sw, sh / 2, 0, dark);
-        ctx.fillGradient(0, sh / 2, sw, sh, dark, 0);
+        Vignette.draw(ctx, sw, sh, alpha * 0.85f);
 
         // bright glowing title centered
         float scale = Math.min(4f, (sw * 0.8f) / Math.max(1, tr.getWidth(TITLE)));
-        int titleW = tr.getWidth(TITLE);
-        int titleY = sh / 2 - tr.fontHeight * 3;
+        int titleW = Math.round(tr.getWidth(TITLE) * scale);   // width AFTER scaling
+        int titleY = sh / 2 - Math.round(tr.fontHeight * scale);
         int titleX = sw / 2 - titleW / 2;
         drawGlowText(ctx, tr, TITLE.getString(), titleX, titleY, scale, alpha);
 

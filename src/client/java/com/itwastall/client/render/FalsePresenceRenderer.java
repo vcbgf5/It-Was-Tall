@@ -66,19 +66,23 @@ public final class FalsePresenceRenderer {
         if (world == null || durationTicks <= 0) return;
 
         TallOneEntity fake = new TallOneEntity(ModEntities.TALL_ONE, world);
-        fake.refreshPositionAndAngles(x, y, z, yaw, 0f);
+        double feetY = y;
+        if (window) {
+            // Window figure: the payload y is the bottom of the pane's block. Lower the body so
+            // its EYES sit on the middle of the pane (the legs disappear below the window sill,
+            // which is all the player inside can see anyway). getStandingEyeHeight() is a
+            // RELATIVE offset — the old getBodyY() call returned an absolute world height and
+            // dropped the figure to y = -2.5, deep under the map.
+            feetY = y + 0.5 - fake.getStandingEyeHeight();
+        }
+        // place it once, directly at the final spot (no interpolation slide on the first frame)
+        fake.refreshPositionAndAngles(x, feetY, z, yaw, 0f);
         int id = nextEntityId();
         // a fake never chases: client-side entities never run the server-only state machine,
         // so MODE stays STARE (pure standing + the head tracking look control) — exactly the
         // "moze stac nieruchomo / wygladac jak prawdziwy The Tall One" intent.
         fake.setPersistent(); // keep it from any despawn logic anything else might run on it
         fake.setId(id);       // private id range: never collides with real spawned entities
-        if (window) {
-            // Lower the silhouette so its visible head/eye point lines up exactly with the
-            // pane the payload targets (bodyY(0.75) == payload y, model-height agnostic —
-            // never the old fixed -2.5 that detached when the house was taller or lower).
-            fake.setPosition(x, y - fake.getBodyY(0.75), z);
-        }
         world.addEntity(fake);
         if (window || dontlook) {
             if (dontlook) {

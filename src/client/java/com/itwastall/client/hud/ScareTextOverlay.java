@@ -77,6 +77,7 @@ public final class ScareTextOverlay {
         int dark = (int) (alpha * 110) << 24;
         ctx.fillGradient(0, 0, sw, sh / 2, 0, dark);
         ctx.fillGradient(0, sh / 2, sw, sh, dark, 0);
+        Vignette.draw(ctx, sw, sh, alpha * 0.7f);
 
         ctx.getMatrices().translate(sw / 2f + dx, sh / 2f - 4 * scale, 0);
         ctx.getMatrices().scale(scale, scale, 1f);

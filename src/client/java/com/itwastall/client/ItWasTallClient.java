@@ -32,6 +32,11 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 public class ItWasTallClient implements ClientModInitializer {
     private static KeyBinding journalKey;
 
+    /** Lets the journal close itself with the same key that opened it. */
+    public static boolean journalKeyMatches(int keyCode, int scanCode) {
+        return journalKey != null && journalKey.matchesKey(keyCode, scanCode);
+    }
+
     @Override
     public void onInitializeClient() {
 
@@ -46,6 +51,12 @@ public class ItWasTallClient implements ClientModInitializer {
 
         FalsePresenceRenderer.init();
         BaseDebugRenderer.init();
+
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.ChasePayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.hud.ChaseHud.setActive(payload.active())));
+
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.JournalPayload.ID, (payload, context) ->
+                context.client().execute(() -> JournalData.updateJournal(payload.baseCounts(), payload.events())));
 
         ClientPlayNetworking.registerGlobalReceiver(FearStatePayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.update(
@@ -117,7 +128,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

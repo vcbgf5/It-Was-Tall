@@ -4,10 +4,15 @@ import com.itwastall.net.TaskToastPayload;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.math.MathHelper;
 
 /** Small, non-blocking notification used by task and objective systems (MODPLAN §16). */
 public final class TaskToast {
+    private static final Identifier TEX = com.itwastall.ItWasTall.id("textures/gui/toast.png");
     private static String title = "";
     private static String message = "";
     private static long untilNanos;
@@ -47,18 +52,28 @@ public final class TaskToast {
         }
         float fade = Math.min(1f, Math.min((DISPLAY_NANOS - remaining) / 250_000_000f,
                 remaining / 450_000_000f));
-        int alpha = MathHelper.clamp((int) (fade * 230), 0, 230);
+        // slides in from the right edge
+        float slide = 1f - Math.min(1f, (DISPLAY_NANOS - remaining) / 220_000_000f);
+        int alpha = MathHelper.clamp((int) (fade * 255), 5, 255);
+        var tr = MinecraftClient.getInstance().textRenderer;
         int sw = ctx.getScaledWindowWidth();
-        int left = sw - 224;
-        int top = 28;
+        int left = sw - 228 + Math.round(slide * 60);
+        int top = 24;
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, 0, 1800);
-        ctx.fill(left, top, sw - 12, top + 48, (alpha << 24) | 0x11141B);
-        ctx.fill(left, top, left + 3, top + 48, (alpha << 24) | accent);
-        ctx.drawTextWithShadow(MinecraftClient.getInstance().textRenderer,
-                title, left + 11, top + 8, (alpha << 24) | 0xFFFFFF);
-        ctx.drawText(MinecraftClient.getInstance().textRenderer,
-                message, left + 11, top + 25, (alpha << 24) | 0xC7CBD2, false);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        ctx.setShaderColor(1f, 1f, 1f, fade);
+        ctx.drawTexture(TEX, left, top, 0, 0, 220, 44, 256, 64);
+        ctx.setShaderColor(1f, 1f, 1f, 1f);
+        // a smear of colour on the left edge: red = new, green = done, bright red = failed
+        ctx.fill(left + 4, top + 6, left + 7, top + 38, (Math.round(fade * 220) << 24) | accent);
+        ctx.drawText(tr, title, left + 14, top + 8, (alpha << 24) | 0xE8D9B8, true);
+        java.util.List<OrderedText> lines = tr.wrapLines(Text.literal(message), 196);
+        for (int i = 0; i < Math.min(2, lines.size()); i++) {
+            ctx.drawText(tr, lines.get(i), left + 14, top + 21 + i * 10, (alpha << 24) | 0xB4A890, false);
+        }
+        RenderSystem.disableBlend();
         ctx.getMatrices().pop();
     }
 }

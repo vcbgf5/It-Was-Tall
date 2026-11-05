@@ -15,6 +15,10 @@ public final class JournalData {
     private static String task = "no task";
     /** Lore book ids this player has already received (MODPLAN §9 journal listing). */
     private static final Set<String> LORE = new HashSet<>();
+    /** BASE page: empty = no base yet, else anchor xyz + windows, doors, lights, chests, corners, placed. */
+    private static java.util.List<Integer> baseCounts = java.util.List.of();
+    /** EVENTS page, newest first. */
+    private static java.util.List<String> events = java.util.List.of();
 
     private JournalData() {}
 
@@ -29,6 +33,13 @@ public final class JournalData {
         FearHud.setIntensity(tension / 100f);
     }
 
+    public static void updateJournal(java.util.List<Integer> newBase, java.util.List<String> newEvents) {
+        baseCounts = newBase == null ? java.util.List.of() : java.util.List.copyOf(newBase);
+        events = newEvents == null ? java.util.List.of() : java.util.List.copyOf(newEvents);
+    }
+
+    public static java.util.List<Integer> baseCounts() { return baseCounts; }
+    public static java.util.List<String> events() { return events; }
     public static int phase() { return phase; }
     public static int stage() { return stage; }
     public static float tension() { return tension; }
@@ -42,6 +53,8 @@ public final class JournalData {
         tension = 0;
         task = "no task";
         LORE.clear();
+        baseCounts = java.util.List.of();
+        events = java.util.List.of();
         FearHud.setIntensity(0);
     }
 }

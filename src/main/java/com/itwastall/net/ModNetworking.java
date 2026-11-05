@@ -30,6 +30,8 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BaseDebugPayload.ID, BaseDebugPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(TaskToastPayload.ID, TaskToastPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(JournalPayload.ID, JournalPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ChasePayload.ID, ChasePayload.CODEC);
         // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
         PayloadTypeRegistry.playC2S().register(ScaresPrefPayload.ID, ScaresPrefPayload.CODEC);
         // C2S: a deliberate look at a window figure earns a random task (MODPLAN §12 figure look)
@@ -43,6 +45,13 @@ public final class ModNetworking {
                         Director.phase(), Director.stageIndex(), (float) Director.tension(),
                         com.itwastall.task.TaskManager.status(player.getUuid()),
                         java.util.List.copyOf(state.loreBookIds(player.getUuid()))));
+                // red chase overlay: on/off every second (the start is also sent instantly)
+                sendChase(player, isChased(player));
+                // journal BASE / EVENTS pages: every 5 s is plenty (they change rarely)
+                if (server.getTicks() % 100 == 0 && ServerPlayNetworking.canSend(player, JournalPayload.ID)) {
+                    ServerPlayNetworking.send(player, new JournalPayload(baseCounts(player),
+                            com.itwastall.world.JournalLog.entries(player.getUuid())));
+                }
             }
         });
         ServerPlayNetworking.registerGlobalReceiver(WindowSeenPayload.ID, (payload, context) -> {
@@ -67,6 +76,37 @@ public final class ModNetworking {
         });
     }
 
+    /** True while a real Tall One is in CHASE mode with this player as its victim. */
+    public static boolean isChased(ServerPlayerEntity player) {
+        return !player.getServerWorld().getEntitiesByType(com.itwastall.registry.ModEntities.TALL_ONE,
+                player.getBoundingBox().expand(96),
+                it -> it.getMode() == com.itwastall.entity.TallOneEntity.Mode.CHASE
+                        && player.getUuid().equals(it.getVictimUuid())).isEmpty();
+    }
+
+    /** Red chase overlay on/off for this player. Respects the warning-screen scare opt-out. */
+    public static void sendChase(ServerPlayerEntity player, boolean active) {
+        if (active && scaresDisabled(player.getUuid())) active = false;
+        if (ServerPlayNetworking.canSend(player, ChasePayload.ID)) {
+            ServerPlayNetworking.send(player, new ChasePayload(active));
+        }
+    }
+
+    /** Compact BaseMap summary for the journal (see {@link JournalPayload#baseCounts()}). */
+    private static java.util.List<Integer> baseCounts(ServerPlayerEntity player) {
+        if (com.itwastall.base.BaseTracker.anchorOf(player.getUuid()) == null) return java.util.List.of();
+        var map = com.itwastall.base.BaseTracker.mapOf(player.getUuid());
+        if (map == null) return java.util.List.of();
+        net.minecraft.util.math.BlockPos a = net.minecraft.util.math.BlockPos.fromLong(map.anchor());
+        return java.util.List.of(a.getX(), a.getY(), a.getZ(),
+                map.count(com.itwastall.base.BaseMap.TYPE_WINDOW),
+                map.count(com.itwastall.base.BaseMap.TYPE_DOOR),
+                map.count(com.itwastall.base.BaseMap.TYPE_LIGHT),
+                map.count(com.itwastall.base.BaseMap.TYPE_CHEST),
+                map.count(com.itwastall.base.BaseMap.TYPE_CORNER),
+                map.count(com.itwastall.base.BaseMap.TYPE_PLACED));
+    }
+
     /** True when that player asked the server to hold the jumpscare / red-text scares back. */
     public static boolean scaresDisabled(UUID player) {
         return SCARES_OFF.contains(player);
@@ -77,6 +117,7 @@ public final class ModNetworking {
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
             if (ServerPlayNetworking.canSend(player, ItJoinedPayload.ID)) {
                 ServerPlayNetworking.send(player, new ItJoinedPayload(4000));
+                com.itwastall.world.JournalLog.add(player, "Something joined this world.");
             }
         }
     }
@@ -86,6 +127,7 @@ public final class ModNetworking {
         if (scaresDisabled(player.getUuid())) return; // the warning screen's toggle is absolute
         if (cfg.scareMessages && ServerPlayNetworking.canSend(player, ScareTextPayload.ID)) {
             ServerPlayNetworking.send(player, new ScareTextPayload(text, cfg.messageMillis));
+            com.itwastall.world.JournalLog.add(player, "Words on the screen: \"" + text + "\"");
         }
     }
 
@@ -95,6 +137,7 @@ public final class ModNetworking {
         ItWasTall.LOGGER.debug("Jumpscare -> {}", player.getName().getString());
         if (ServerPlayNetworking.canSend(player, JumpscarePayload.ID)) {
             ServerPlayNetworking.send(player, new JumpscarePayload(cfg.jumpscareMillis, cfg.jumpscares));
+            com.itwastall.world.JournalLog.add(player, "I saw its face. Only for a moment.");
         }
     }
 
@@ -111,6 +154,9 @@ public final class ModNetworking {
                                             float yaw, int durationTicks, boolean window, boolean dontlook) {
         if (!ServerPlayNetworking.canSend(player, FalsePresencePayload.ID)) return false;
         ServerPlayNetworking.send(player, new FalsePresencePayload(x, y, z, yaw, durationTicks, window, dontlook));
+        com.itwastall.world.JournalLog.add(player, window ? "It knocked on my window. It was looking in."
+                : dontlook ? "It stood right behind me. I didn't turn around."
+                : "A tall shape in the distance. Then nothing.");
         ItWasTall.LOGGER.debug("False presence -> {}", player.getName().getString());
         return true;
     }
@@ -129,5 +175,7 @@ public final class ModNetworking {
     public static void sendTaskToast(ServerPlayerEntity player, int kind, String title, String text) {
         if (!ServerPlayNetworking.canSend(player, TaskToastPayload.ID)) return;
         ServerPlayNetworking.send(player, new TaskToastPayload(kind, title, text));
+        String verb = kind == TaskToastPayload.KIND_COMPLETED ? "Done: " : kind == TaskToastPayload.KIND_FAILED ? "Failed: " : "It asked: ";
+        com.itwastall.world.JournalLog.add(player, verb + title);
     }
 }

@@ -72,6 +72,7 @@ public class ItWasTall implements ModInitializer {
             BaseTracker.forget(uuid);
             TaskManager.forget(uuid);
             DouseLights.forget(uuid);
+            com.itwastall.world.JournalLog.forget(uuid);
             DynamicStructures.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);

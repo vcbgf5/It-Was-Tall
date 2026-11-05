@@ -87,6 +87,7 @@ public class WarningScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // dark curtain over the world: this screen means it, make it feel like a horror cover
         context.fillGradient(0, 0, this.width, this.height, 0xE0100000, 0xF0000000);
+        Vignette.draw(context, this.width, this.height, 1.0f);
 
         int centerX = this.width / 2;
         int y = this.height / 4;
