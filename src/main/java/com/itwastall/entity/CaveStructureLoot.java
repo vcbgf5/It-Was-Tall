@@ -118,13 +118,10 @@ public final class CaveStructureLoot {
         boolean insertedNote = false;
         if (!hasNote && free >= 0) {
             Note note = NOTES.get(world.getRandom().nextInt(NOTES.size()));
-            ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
-            book.set(DataComponentTypes.WRITTEN_BOOK_CONTENT, new WrittenBookContentComponent(
-                    RawFilteredPair.of(note.title()), "Unknown", 0,
-                    List.of(RawFilteredPair.of(Text.literal(note.body()))), true));
-            var custom = new net.minecraft.nbt.NbtCompound();
+            // a torn note read in the NoteScreen (MODPLAN §16), not a book
+            ItemStack book = ModItems.note(note.id(), note.title(), note.body());
+            var custom = book.get(DataComponentTypes.CUSTOM_DATA).copyNbt();
             custom.putBoolean(NOTE_TAG, true);
-            custom.putString("note_id", note.id());
             book.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(custom));
             container.setStack(free, book);
             insertedNote = true;

@@ -319,6 +319,33 @@ def chase_vignette():
     img.save(os.path.join(OUT, "chase_vignette.png"))
 
 
+def note_item():
+    """16x16 inventory icon: a folded, torn parchment slip with a drop of blood."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    p = img.load()
+    r = random.Random(16)
+    for y in range(2, 15):
+        for x in range(3, 13):
+            if (x, y) in ((3, 2), (12, 14), (12, 13), (3, 14)):
+                continue                      # torn corners
+            base = 205 if x < 8 else 188      # folded: right half in shadow
+            v = base + r.randint(-12, 8)
+            p[x, y] = (v, int(v * 0.9), int(v * 0.72), 255)
+    for x in range(3, 13):                    # dark outline top/bottom
+        p[x, 2] = (110, 90, 64, 255)
+        p[x, 14] = (96, 78, 55, 255)
+    for y in range(2, 15):
+        p[3, y] = (110, 90, 64, 255)
+        p[12, y] = (90, 72, 50, 255)
+    for y in (5, 7, 9, 11):                   # ink lines
+        for x in range(5, 11 if y != 11 else 8):
+            p[x, y] = (70, 56, 44, 255)
+    for (x, y) in ((10, 11), (11, 11), (10, 12), (11, 10)):   # blood
+        p[x, y] = (120, 14, 10, 255)
+    os.makedirs(os.path.join(ROOT, "src/main/resources/assets/itwastall/textures/item"), exist_ok=True)
+    img.save(os.path.join(ROOT, "src/main/resources/assets/itwastall/textures/item/note.png"))
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     journal()
@@ -326,4 +353,5 @@ if __name__ == "__main__":
     toast()
     vignette()
     chase_vignette()
+    note_item()
     print("gui textures written to", OUT)

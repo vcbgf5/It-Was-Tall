@@ -20,7 +20,30 @@ public final class ModItems {
             ItWasTall.id("warding_crystal"),
             new Item(new Item.Settings().maxCount(1)));
 
+    /** A torn note (MODPLAN §16 NoteScreen): right-click to read. Title/body live in CUSTOM_DATA. */
+    public static final Item NOTE = Registry.register(
+            Registries.ITEM,
+            ItWasTall.id("note"),
+            new Item(new Item.Settings().maxCount(1)));
+
+    public static final String NOTE_ID = "note_id", NOTE_TITLE = "note_title", NOTE_BODY = "note_body";
+
     private ModItems() {
+    }
+
+    /** Builds a readable note: shown by name in the inventory, opened in the client's NoteScreen. */
+    public static net.minecraft.item.ItemStack note(String id, String title, String body) {
+        net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(NOTE);
+        net.minecraft.nbt.NbtCompound data = new net.minecraft.nbt.NbtCompound();
+        data.putString(NOTE_ID, id);
+        data.putString(NOTE_TITLE, title);
+        data.putString(NOTE_BODY, body);
+        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(data));
+        stack.set(net.minecraft.component.DataComponentTypes.ITEM_NAME, net.minecraft.text.Text.literal(title));
+        stack.set(net.minecraft.component.DataComponentTypes.LORE, new net.minecraft.component.type.LoreComponent(java.util.List.of(
+                net.minecraft.text.Text.literal("Right-click to read").formatted(net.minecraft.util.Formatting.DARK_GRAY,
+                        net.minecraft.util.Formatting.ITALIC))));
+        return stack;
     }
 
     public static void init() {

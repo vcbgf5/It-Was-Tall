@@ -747,11 +747,9 @@ public final class DynamicStructures {
 
     /** Flavour written book (untracked — the tracked §9 lore stays in the player's own chests). */
     private static ItemStack book(String title, String body) {
-        ItemStack stack = new ItemStack(Items.WRITTEN_BOOK);
-        stack.set(DataComponentTypes.WRITTEN_BOOK_CONTENT, new WrittenBookContentComponent(
-                RawFilteredPair.of(title), "Unknown", 0,
-                List.of(RawFilteredPair.of(Text.literal(body))), true));
-        return stack;
+        // a torn note (opens in the NoteScreen) — the tracked §9 lore stays in signed books
+        return com.itwastall.registry.ModItems.note("structure_" + title.toLowerCase(java.util.Locale.ROOT).replace(' ', '_'),
+                title, body);
     }
 
     private static double clamp01(double chance) {

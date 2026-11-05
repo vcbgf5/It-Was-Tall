@@ -190,12 +190,24 @@ public final class ItWasTallCommand {
                 .then(eventKind("knock", p -> {
                     if (!WindowKnocks.trigger(p)) throw new IllegalStateException("no window near the player's base");
                 }))
+                .then(houseKind("doorknock", com.itwastall.entity.HouseEvents.Kind.DOOR_KNOCK, "no mapped door near the player"))
+                .then(houseKind("shadow", com.itwastall.entity.HouseEvents.Kind.SHADOW, "no mapped door near the player"))
+                .then(houseKind("knockinside", com.itwastall.entity.HouseEvents.Kind.KNOCK_INSIDE, "no dark corner mapped in the base"))
+                .then(houseKind("door", com.itwastall.entity.HouseEvents.Kind.DOOR_OPEN, "no closed wooden door you are not looking at"))
+                .then(houseKind("chest", com.itwastall.entity.HouseEvents.Kind.CHEST, "no mapped chest with items, out of sight"))
+                .then(houseKind("sign", com.itwastall.entity.HouseEvents.Kind.SIGN, "no free spot for a sign outside the base"))
                 .then(literal("structure")
                         .then(structureKind("cemetery", com.itwastall.entity.DynamicStructures.Kind.CEMETERY))
                         .then(structureKind("shrine", com.itwastall.entity.DynamicStructures.Kind.SHRINE))
                         .then(structureKind("cottage", com.itwastall.entity.DynamicStructures.Kind.COTTAGE))
                         .then(structureKind("blackcopy", com.itwastall.entity.DynamicStructures.Kind.BLACKCOPY)));
         return root;
+    }
+
+    private static LiteralArgumentBuilder<ServerCommandSource> houseKind(String name, com.itwastall.entity.HouseEvents.Kind kind, String failure) {
+        return eventKind(name, p -> {
+            if (!com.itwastall.entity.HouseEvents.trigger(p, kind)) throw new IllegalStateException(failure);
+        });
     }
 
     private static LiteralArgumentBuilder<ServerCommandSource> eventKind(String name, PlayerAction action) {

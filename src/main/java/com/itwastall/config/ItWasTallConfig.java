@@ -64,6 +64,24 @@ public final class ItWasTallConfig {
         /** Chance rolled per check (~once per 20 s) while the conditions hold; 1 knock burst per night. */
         public double windowKnockChance = 0.35;
 
+        // ---- house events (MODPLAN §12 variants + §14 DoorEvent / ChestShuffleEvent / SignEvent) ----
+        /** Things happen around your mapped base at night: doors, knocks, chests, signs. */
+        public boolean houseEvents = true;
+        /** Chance per second (at night, near your base, stage 2+) that one house event starts. */
+        public double houseEventChancePerSecond = 0.012;
+        /** Minimum seconds between two house events for one player. */
+        public int houseEventCooldownSeconds = 300;
+        /** A wooden door of your base opens by itself (stage 3+); it may slam shut again (stage 4+). */
+        public boolean doorEvents = true;
+        /** A few stacks inside one of your chests swap places (stage 3+). Items are never removed. */
+        public boolean chestShuffle = true;
+        /** A sign with a message appears outside your base (stage 3+). */
+        public boolean signEvents = true;
+        /** Messages for the sign event: up to 4 lines each, separated by "|". */
+        public List<String> signMessages = new ArrayList<>(List.of(
+                "I SAW YOU|THROUGH THE|WINDOW", "IT WAS|TALL", "TURN|AROUND", "I KNOW|WHERE YOU|SLEEP",
+                "DON'T HIDE|JUST RUN", "LET ME|IN", "I WAS|HERE", "YOU LEFT|THE DOOR|OPEN"));
+
         // ---- false presence (PHASES Poziom 4: MODPLAN §7, client-side figure only) ----
         /** A fake Tall One, rendered only on one client, gone when you look right at it. */
         public boolean falsePresence = true;

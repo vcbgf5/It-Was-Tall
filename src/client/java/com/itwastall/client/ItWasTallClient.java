@@ -50,6 +50,25 @@ public class ItWasTallClient implements ClientModInitializer {
         );
 
         FalsePresenceRenderer.init();
+
+        // notes (MODPLAN §16): right-click opens the torn-page NoteScreen
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) -> {
+            net.minecraft.item.ItemStack stack = player.getStackInHand(hand);
+            if (!stack.isOf(com.itwastall.registry.ModItems.NOTE)) {
+                return net.minecraft.util.TypedActionResult.pass(net.minecraft.item.ItemStack.EMPTY);
+            }
+            if (world.isClient) {
+                var data = stack.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
+                var nbt = data == null ? new net.minecraft.nbt.NbtCompound() : data.copyNbt();
+                String title = nbt.getString(com.itwastall.registry.ModItems.NOTE_TITLE);
+                String body = nbt.getString(com.itwastall.registry.ModItems.NOTE_BODY);
+                net.minecraft.client.MinecraftClient.getInstance().setScreen(
+                        new com.itwastall.client.hud.NoteScreen(title.isEmpty() ? "Note" : title, body));
+                net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(
+                        net.minecraft.client.sound.PositionedSoundInstance.master(net.minecraft.sound.SoundEvents.ITEM_BOOK_PAGE_TURN, 0.8f));
+            }
+            return net.minecraft.util.TypedActionResult.success(stack, world.isClient);
+        });
         BaseDebugRenderer.init();
 
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.ChasePayload.ID, (payload, context) ->
