@@ -18,6 +18,8 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(ROOT, "src/main/resources/assets/itwastall")
 OUT = os.path.join(ROOT, "tools/preview/old_one_preview.html")
+# committed copy: the same preview with our own placeholder skin instead of the game's Steve
+PUBLIC_OUT = os.path.join(ROOT, "tools/preview/old_one_preview_public.html")
 
 
 def b64_file(path):
@@ -25,8 +27,38 @@ def b64_file(path):
         return "data:image/png;base64," + base64.b64encode(fh.read()).decode()
 
 
+def own_skin_png():
+    """Our own Steve-like placeholder skin (no Mojang pixels): brown hair, skin, teal shirt, blue jeans."""
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    SKIN, HAIR, SHIRT, JEANS, SHOE = (176, 124, 92), (64, 42, 22), (0, 150, 150), (58, 58, 140), (70, 70, 74)
+
+    def box(x0, y0, x1, y1, c):
+        for x in range(x0, x1):
+            for y in range(y0, y1):
+                img.putpixel((x, y), c + (255,))
+
+    box(0, 0, 32, 16, SKIN)
+    box(8, 0, 16, 8, HAIR)
+    for fx in (0, 8, 16, 24):
+        box(fx, 8, fx + 8, 10, HAIR)
+    box(24, 8, 32, 16, HAIR)
+    box(0, 10, 2, 14, HAIR); box(22, 10, 24, 14, HAIR)
+    box(9, 12, 11, 13, (240, 240, 240)); box(13, 12, 15, 13, (240, 240, 240))
+    box(10, 12, 11, 13, (60, 50, 140)); box(13, 12, 14, 13, (60, 50, 140))
+    box(11, 14, 13, 15, (110, 70, 50))
+    box(10, 15, 14, 16, (120, 70, 60))
+    box(16, 16, 40, 32, SHIRT)
+    box(40, 16, 56, 32, SKIN); box(40, 20, 56, 23, SHIRT); box(44, 16, 48, 20, SHIRT)
+    box(32, 48, 48, 64, SKIN); box(32, 52, 48, 55, SHIRT); box(36, 48, 40, 52, SHIRT)
+    box(0, 16, 16, 32, JEANS); box(0, 29, 16, 32, SHOE); box(8, 16, 12, 20, SHOE)
+    box(16, 48, 32, 64, JEANS); box(16, 61, 32, 64, SHOE); box(24, 48, 28, 52, SHOE)
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 def steve_png():
-    """Steve from the Minecraft client jar in the Gradle cache; a plain placeholder otherwise."""
+    """Steve from the Minecraft client jar in the Gradle cache; our own placeholder otherwise."""
     for jar in glob.glob(os.path.expanduser("~/.gradle/caches/**/*minecraft*client*.jar"), recursive=True):
         try:
             with zipfile.ZipFile(jar) as z:
@@ -34,16 +66,7 @@ def steve_png():
                 return "data:image/png;base64," + base64.b64encode(data).decode()
         except (KeyError, zipfile.BadZipFile, OSError):
             continue
-    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    for (x0, y0, x1, y1, c) in ((0, 0, 32, 16, (150, 110, 80)), (16, 16, 40, 32, (0, 160, 160)),
-                                (40, 16, 56, 32, (150, 110, 80)), (0, 16, 16, 32, (60, 60, 150)),
-                                (16, 48, 32, 64, (60, 60, 150)), (32, 48, 48, 64, (150, 110, 80))):
-        for x in range(x0, x1):
-            for y in range(y0, y1):
-                img.putpixel((x, y), c + (255,))
-    buf = io.BytesIO()
-    img.save(buf, "PNG")
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+    return own_skin_png()
 
 
 HTML = r"""<!doctype html><html lang="pl"><head><meta charset="utf-8">
@@ -226,20 +249,25 @@ if (params.get('scene')) { sc = {t: Number(params.get('scene'))}; yaw = 0; }
 
 
 def main():
+    build(OUT, steve_png())
+    build(PUBLIC_OUT, own_skin_png())
+
+
+def build(out, skin):
     three = open(os.path.join(ROOT, "tools/preview/three.min.js")).read()
     html = (HTML.replace("__THREE__", three)
             .replace("__OLD_GEO__", open(os.path.join(ASSETS, "geo/entity/old_one.geo.json")).read())
             .replace("__OLD_ANIM__", open(os.path.join(ASSETS, "animations/entity/old_one.animation.json")).read())
             .replace("__TALL_GEO__", open(os.path.join(ASSETS, "geo/entity/tall_one.geo.json")).read())
             .replace("__TALL_ANIM__", open(os.path.join(ASSETS, "animations/entity/tall_one.animation.json")).read())
-            .replace("__STEVE__", steve_png())
+            .replace("__STEVE__", skin)
             .replace("__OVERLAY__", b64_file(os.path.join(ASSETS, "textures/entity/old_one_overlay.png")))
             .replace("__EYES__", b64_file(os.path.join(ASSETS, "textures/entity/old_one_eyes.png")))
             .replace("__TALL_TEX__", b64_file(os.path.join(ASSETS, "textures/entity/tall_one.png")))
             .replace("__TALL_GLOW__", b64_file(os.path.join(ASSETS, "textures/entity/tall_one_glowmask.png"))))
-    with open(OUT, "w") as fh:
+    with open(out, "w") as fh:
         fh.write(html)
-    print("wrote", OUT, len(html) // 1024, "KB")
+    print("wrote", out, len(html) // 1024, "KB")
 
 
 if __name__ == "__main__":
