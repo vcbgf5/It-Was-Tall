@@ -30,7 +30,8 @@ public final class NoteScreen extends Screen {
     public NoteScreen(String title, String body) {
         super(Text.literal(title == null ? "Note" : title));
         this.noteTitle = title == null ? "Note" : title;
-        this.noteBody = body == null ? "" : body;
+        // notes from loot tables store line breaks as "|" (SNBT strings cannot hold a newline)
+        this.noteBody = body == null ? "" : body.replace("|", "\n");
     }
 
     @Override
