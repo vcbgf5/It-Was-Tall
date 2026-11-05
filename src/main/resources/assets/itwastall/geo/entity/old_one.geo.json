@@ -24,8 +24,26 @@
           ]
         },
         {
-          "name": "right_leg",
+          "name": "half_right",
           "parent": "root",
+          "pivot": [
+            -8,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "half_left",
+          "parent": "root",
+          "pivot": [
+            8,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right_leg",
+          "parent": "half_right",
           "pivot": [
             -2,
             12,
@@ -110,7 +128,7 @@
         },
         {
           "name": "left_leg",
-          "parent": "root",
+          "parent": "half_left",
           "pivot": [
             2,
             12,
@@ -194,17 +212,8 @@
           ]
         },
         {
-          "name": "body",
-          "parent": "root",
-          "pivot": [
-            0,
-            12,
-            0
-          ]
-        },
-        {
           "name": "torso_right",
-          "parent": "body",
+          "parent": "half_right",
           "pivot": [
             -4,
             12,
@@ -289,7 +298,7 @@
         },
         {
           "name": "torso_left",
-          "parent": "body",
+          "parent": "half_left",
           "pivot": [
             4,
             12,
@@ -374,7 +383,7 @@
         },
         {
           "name": "right_arm",
-          "parent": "body",
+          "parent": "half_right",
           "pivot": [
             -5,
             22,
@@ -459,7 +468,7 @@
         },
         {
           "name": "left_arm",
-          "parent": "body",
+          "parent": "half_left",
           "pivot": [
             5,
             22,
@@ -543,17 +552,8 @@
           ]
         },
         {
-          "name": "head",
-          "parent": "body",
-          "pivot": [
-            0,
-            24,
-            0
-          ]
-        },
-        {
           "name": "head_right",
-          "parent": "head",
+          "parent": "half_right",
           "pivot": [
             0,
             24,
@@ -638,7 +638,7 @@
         },
         {
           "name": "head_left",
-          "parent": "head",
+          "parent": "half_left",
           "pivot": [
             0,
             24,

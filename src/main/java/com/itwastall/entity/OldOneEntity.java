@@ -43,8 +43,8 @@ import java.util.UUID;
 /**
  * THE OLD ONE — "Skinwalker Steve". Looks like an ordinary player (the game's own Steve skin with
  * hollow eyes, a name tag reading "Old One") and stands close by, staring at you. It only moves when
- * you are not looking. Walk up to it (or hit it) and the body tears open: the head cracks in two,
- * the chest opens like a pair of doors, the empty skin collapses — and the Tall One climbs out of it
+ * you are not looking. Walk up to it (or hit it) and the body splits down the middle, head to feet,
+ * the two halves fall away to the left and right — and the Tall One climbs out from between them
  * and runs at you. If a Tall One already exists on the server (one-per-server rule), nothing comes
  * out; you only get its face for a tenth of a second.
  */

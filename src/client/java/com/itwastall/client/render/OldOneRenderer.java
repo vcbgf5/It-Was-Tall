@@ -17,7 +17,8 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 /**
  * The Old One: the model {@code geo/entity/old_one.geo.json} drawn with the GAME'S OWN Steve skin
  * (referenced, never copied), then our overlay on top (hollow eyes, stretched mouth, blood, the flesh
- * inside the halves) and two emissive pinpoints in the eye sockets.
+ * inside the halves) and two emissive pinpoints in the eye sockets. No head tracking: the model has no
+ * single "head" bone (each half carries half of the head, so the body can split down the middle).
  */
 public class OldOneRenderer extends GeoEntityRenderer<OldOneEntity> {
     private static final Identifier STEVE = Identifier.ofVanilla("textures/entity/player/wide/steve.png");
@@ -25,7 +26,7 @@ public class OldOneRenderer extends GeoEntityRenderer<OldOneEntity> {
     private static final Identifier EYES = ItWasTall.id("textures/entity/old_one_eyes.png");
 
     public OldOneRenderer(EntityRendererFactory.Context context) {
-        super(context, new DefaultedEntityGeoModel<OldOneEntity>(ItWasTall.id("old_one"), true) {
+        super(context, new DefaultedEntityGeoModel<OldOneEntity>(ItWasTall.id("old_one"), false) {
             @Override
             public Identifier getTextureResource(OldOneEntity animatable) {
                 return STEVE;
