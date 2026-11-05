@@ -414,79 +414,98 @@ public final class DynamicStructures {
     // ---------------------------------------------------------------- cottage
 
     /**
-     * An abandoned spruce cottage (7 x 5, gable roof): cobbled foundation, log corner posts,
-     * plank walls with glass-pane windows (some smashed), an EMPTY interior with a rotten bed,
-     * a table, a fallen chair, cobwebs, a hanging soul lantern, a sign scratched with "it was
-     * tall" and one chest. The front door is IRON and jammed: a lever beside it and a dead
-     * redstone trail that peters out in the grass, connected to nothing.
+     * An abandoned cottage (7 x 5 inside the log frame): a cobbled plinth, spruce plank walls on log
+     * corner posts, a full gable roof of dark oak stairs with eaves on every side, a plank deck under
+     * the stairs so there are no holes, gable ends with a beam and a small attic window, a stone
+     * chimney against the back wall. Inside: a rotten bed, a table, a fallen chair, cobwebs, a
+     * hanging soul lantern, a sign scratched with "it was tall" and one chest. The front door is IRON
+     * and jammed: a lever beside it and a dead redstone trail that peters out in the grass.
+     *
+     * <p>Coordinates: {@code i} along the front direction f (front wall i = 2, back wall i = -2),
+     * {@code j} along r (side walls j = ±3), {@code y} above the ground row.
      */
     private static void buildCottage(ServerWorld world, BlockPos ground, ServerPlayerEntity player) {
         Random random = player.getRandom();
         Direction f = Direction.Type.HORIZONTAL.random(random);   // the front faces f
         Direction r = f.rotateYClockwise();
         Direction l = r.getOpposite();
-        prepareSite(world, ground, f, 4, r, 5, 9, Blocks.COARSE_DIRT.getDefaultState(), Blocks.COBBLESTONE.getDefaultState());
+        Direction back = f.getOpposite();
+        prepareSite(world, ground, f, 4, r, 5, 10, Blocks.COARSE_DIRT.getDefaultState(), Blocks.COBBLESTONE.getDefaultState());
 
         BlockState log = Blocks.SPRUCE_LOG.getDefaultState();
         BlockState plank = Blocks.SPRUCE_PLANKS.getDefaultState();
-        // floor (fd -2..2, rj -3..3) on a cobbled ring
+        BlockState roofPlank = Blocks.DARK_OAK_PLANKS.getDefaultState();
+        BlockState roofStair = Blocks.DARK_OAK_STAIRS.getDefaultState();
+        BlockState beam = Blocks.STRIPPED_SPRUCE_LOG.getDefaultState().with(net.minecraft.block.PillarBlock.AXIS, r.getAxis());
+        BlockState air = Blocks.AIR.getDefaultState();
+
+        // floor: rotten boards inside a cobbled ring (the plinth)
         for (int i = -2; i <= 2; i++) {
             for (int j = -3; j <= 3; j++) {
                 boolean edge = Math.abs(i) == 2 || Math.abs(j) == 3;
-                pos(world, at(ground, f, i, r, j, 0), edge
-                        ? (random.nextInt(3) == 0 ? Blocks.MOSSY_COBBLESTONE.getDefaultState() : Blocks.COBBLESTONE.getDefaultState())
-                        : (random.nextInt(7) == 0 ? Blocks.COARSE_DIRT.getDefaultState() : plank));   // rotten boards
+                pos(world, at(ground, f, i, r, j, 0), edge ? mossy(random)
+                        : (random.nextInt(7) == 0 ? Blocks.COARSE_DIRT.getDefaultState() : plank));
             }
         }
-        // walls y1..3
+        // walls y1..3: log posts in the corners, a cobbled first row, planks above; hollow inside
         for (int i = -2; i <= 2; i++) {
             for (int j = -3; j <= 3; j++) {
                 boolean edge = Math.abs(i) == 2 || Math.abs(j) == 3;
                 boolean corner = Math.abs(i) == 2 && Math.abs(j) == 3;
                 for (int y = 1; y <= 3; y++) {
                     BlockPos p = at(ground, f, i, r, j, y);
-                    if (!edge) pos(world, p, Blocks.AIR.getDefaultState());          // hollow inside
-                    else pos(world, p, corner ? log : plank);
+                    if (!edge) pos(world, p, air);
+                    else if (corner) pos(world, p, log);
+                    else pos(world, p, y == 1 ? mossy(random) : plank);
                 }
             }
         }
-        // windows: front/back at rj ±2, sides at fd 0; some smashed (left empty)
+        // windows at eye height: two in the front, two in the back, one in each side; some smashed
         int[][] windows = {{2, -2}, {2, 2}, {-2, -2}, {-2, 2}, {0, -3}, {0, 3}};
         for (int[] w : windows) {
-            BlockPos p = at(ground, f, w[0], r, w[1], 2);
-            pos(world, p, random.nextInt(4) == 0 ? Blocks.AIR.getDefaultState() : Blocks.GLASS_PANE.getDefaultState());
+            pos(world, at(ground, f, w[0], r, w[1], 2), random.nextInt(4) == 0 ? air : Blocks.GLASS_PANE.getDefaultState());
         }
-        // gable roof: slopes towards ±r, ridge along f; overhang one block front and back
-        BlockState st = Blocks.SPRUCE_STAIRS.getDefaultState();
+
+        // gable ends (i = ±2): a beam on the wall top, then the triangle up to the ridge, a small attic window
+        for (int i : new int[]{-2, 2}) {
+            for (int j = -3; j <= 3; j++) pos(world, at(ground, f, i, r, j, 4), beam);
+            for (int y = 5; y <= 7; y++) {
+                int half = 7 - y;                    // y5: |j|<=2, y6: |j|<=1, y7: j=0
+                for (int j = -half; j <= half; j++) pos(world, at(ground, f, i, r, j, y), plank);
+            }
+            pos(world, at(ground, f, i, r, 0, 5), random.nextInt(3) == 0 ? air : Blocks.GLASS_PANE.getDefaultState());
+        }
+        // the roof: eaves one block out on every side (i = -3..3), stairs stepping up from |j| = 4 at y4
+        // to |j| = 1 at y7, a dark-oak deck under every step so the slope is closed, a slab ridge on top
         for (int i = -3; i <= 3; i++) {
             for (int k = 0; k <= 3; k++) {
                 int y = 4 + k, j = 4 - k;
-                if (k < 3) {
-                    pos(world, at(ground, f, i, r, j, y), stairs(st, l, false));     // right slope faces inward
-                    pos(world, at(ground, f, i, r, -j, y), stairs(st, r, false));    // left slope faces inward
-                } else {
-                    pos(world, at(ground, f, i, r, 0, y), Blocks.SPRUCE_SLAB.getDefaultState());   // ridge
+                pos(world, at(ground, f, i, r, j, y), stairs(roofStair, l, false));     // right slope rises to the left
+                pos(world, at(ground, f, i, r, -j, y), stairs(roofStair, r, false));    // left slope rises to the right
+                if (j - 1 >= 1) {
+                    // the deck under the next step: closes the slope (over the walls it also seals the wall top)
+                    pos(world, at(ground, f, i, r, j - 1, y), roofPlank);
+                    pos(world, at(ground, f, i, r, -(j - 1), y), roofPlank);
                 }
             }
+            pos(world, at(ground, f, i, r, 0, 7), roofPlank);
+            pos(world, at(ground, f, i, r, 0, 8), Blocks.DARK_OAK_SLAB.getDefaultState());   // ridge
         }
-        // gable ends (front and back walls up into the roof)
-        for (int i : new int[]{-2, 2}) {
-            for (int y = 4; y <= 6; y++) {
-                int half = 6 - y;           // y4: |j|<=2, y5: |j|<=1, y6: j=0
-                for (int j = -half; j <= half; j++) pos(world, at(ground, f, i, r, j, y), plank);
-            }
+        // a stone chimney against the back wall, up through the eave (cold: nobody has lit a fire in years)
+        for (int y = 0; y <= 9; y++) {
+            pos(world, at(ground, f, -3, r, -2, y), y == 9 ? Blocks.COBBLESTONE_WALL.getDefaultState() : mossy(random));
         }
-        // ceiling beams inside (air under the roof stays open, like an attic)
-        for (int j = -2; j <= 2; j++) pos(world, at(ground, f, 0, r, j, 4), Blocks.STRIPPED_SPRUCE_LOG.getDefaultState()
-                .with(net.minecraft.block.PillarBlock.AXIS, r.getAxis()));
+        // one ceiling beam across the middle; the attic above stays open
+        for (int j = -2; j <= 2; j++) pos(world, at(ground, f, 0, r, j, 4), beam);
 
-        // the jammed iron door in the middle of the front wall
+        // the jammed iron door in the middle of the front wall, a worn step in front of it
         BlockState door = Blocks.IRON_DOOR.getDefaultState()
                 .with(DoorBlock.FACING, f)
                 .with(DoorBlock.OPEN, false);
         BlockPos doorPos = at(ground, f, 2, r, 0, 1);
         pos(world, doorPos, door.with(DoorBlock.HALF, DoubleBlockHalf.LOWER));
         pos(world, doorPos.up(), door.with(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        pos(world, at(ground, f, 3, r, 0, 0), Blocks.COBBLESTONE.getDefaultState());
         // a lever on the OUTSIDE of the wall, beside the door, and a dead dust trail into the grass
         pos(world, at(ground, f, 3, r, 1, 2), Blocks.LEVER.getDefaultState()
                 .with(LeverBlock.FACE, net.minecraft.block.enums.BlockFace.WALL)
@@ -499,16 +518,17 @@ public final class DynamicStructures {
         }
 
         // inside: rotten bed, table, fallen chair, cobwebs, hanging soul lantern, the sign, the chest
-        BlockPos bedFoot = at(ground, f, -1, r, -2, 1);
+        BlockState st = Blocks.SPRUCE_STAIRS.getDefaultState();
+        BlockPos bedFoot = at(ground, f, -1, r, -1, 1);
         BlockState bed = Blocks.BROWN_BED.getDefaultState().with(net.minecraft.block.BedBlock.FACING, l);
         pos(world, bedFoot, bed.with(net.minecraft.block.BedBlock.PART, net.minecraft.block.enums.BedPart.FOOT));
         pos(world, bedFoot.offset(l), bed.with(net.minecraft.block.BedBlock.PART, net.minecraft.block.enums.BedPart.HEAD));
         pos(world, at(ground, f, -1, r, 2, 1), Blocks.CRAFTING_TABLE.getDefaultState());
         pos(world, at(ground, f, 0, r, 2, 1), stairs(st, r, false));                      // the chair, turned away
-        pos(world, at(ground, f, 1, r, -2, 1), stairs(st, f.getOpposite(), true));         // knocked over
+        pos(world, at(ground, f, 1, r, -2, 1), stairs(st, back, true));                   // knocked over
         pos(world, at(ground, f, -1, r, 2, 3), Blocks.COBWEB.getDefaultState());
         pos(world, at(ground, f, 1, r, -2, 3), Blocks.COBWEB.getDefaultState());
-        pos(world, at(ground, f, -1, r, -1, 3), Blocks.COBWEB.getDefaultState());
+        pos(world, at(ground, f, 0, r, -1, 5), Blocks.COBWEB.getDefaultState());           // up in the attic
         pos(world, at(ground, f, 0, r, 0, 3), Blocks.SOUL_LANTERN.getDefaultState().with(net.minecraft.block.LanternBlock.HANGING, true));
         BlockPos signPos = at(ground, f, -1, r, 0, 2);
         pos(world, signPos, Blocks.SPRUCE_WALL_SIGN.getDefaultState().with(net.minecraft.block.WallSignBlock.FACING, f));
@@ -531,6 +551,10 @@ public final class DynamicStructures {
         }
         finishConnections(world);
         play(world, ground, random);
+    }
+
+    private static BlockState mossy(Random random) {
+        return random.nextInt(3) == 0 ? Blocks.MOSSY_COBBLESTONE.getDefaultState() : Blocks.COBBLESTONE.getDefaultState();
     }
 
     // ---------------------------------------------------------------- black copy
