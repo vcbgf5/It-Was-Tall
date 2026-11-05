@@ -89,7 +89,7 @@ public final class FalsePresenceRenderer {
                 // the watcher was born BEHIND the player — introduce itself with a sting
                 MinecraftClient.getInstance().getSoundManager().play(
                         net.minecraft.client.sound.PositionedSoundInstance.master(
-                                com.itwastall.registry.ModSounds.AMBIENT_STING, 1.0f, 0.8f));
+                                com.itwastall.registry.ModSounds.AMBIENT_STING, 1.0f, com.itwastall.registry.ModSounds.vol(0.8f)));
             }
 
             // Start after insertion so GeckoLib has a live client-side entity to animate

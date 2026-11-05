@@ -29,7 +29,7 @@ public final class FearHud {
         int sh = ctx.getScaledWindowHeight();
         // soft radial vignette; above 70 % fear it pulses like a heartbeat
         float a = intensity * 0.55f;
-        if (intensity > 0.7f) {
+        if (intensity > 0.7f && !com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode) {   // photosensitive: steady, no heartbeat pulse
             double t = (System.nanoTime() / 1_000_000_000.0) * (1.0 + intensity); // faster when afraid
             double beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2)), 8);
             a *= (float) (1.0 + 0.35 * beat);

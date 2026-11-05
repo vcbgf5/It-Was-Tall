@@ -7,6 +7,7 @@ import com.itwastall.net.ModNetworking;
 import com.itwastall.registry.ModSounds;
 import com.itwastall.registry.ModItems;
 import com.itwastall.world.ItWasTallState;
+import com.itwastall.world.JournalLog;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -59,10 +60,26 @@ import java.util.UUID;
  * Underground: DIG (spawned inside the rock above a miner, it digs a 1x4 tunnel towards the player with an iron
  * pickaxe, then chases), PEEK (stands right behind the player; turning around = jumpscare). While chasing in a
  * cave it falls back to DIG when it cannot path to the player (tunnels are too low for it).
+ * <p>
+ * State machine (MODPLAN §3), one {@link Mode} per state:
+ * <ul>
+ *   <li>IDLE — nobody to haunt; waits a moment, then leaves.</li>
+ *   <li>STARE — stands and watches. → WATCHED (you look at it), STALK (stage 2+, creeps closer while unseen),
+ *       MOVE_UNSEEN (far away and unseen: it is somewhere closer next time you look), FEINT (stage 3+),
+ *       CHASE (you came too close / stared it down), DISAPPEAR (timeout or the stage says no chase).</li>
+ *   <li>STALK / WATCHED — the Weeping-Angel part: moves only while unseen, freezes the instant you look.</li>
+ *   <li>TREE — peeks out from behind a tree trunk; when you notice it, it steps back behind the trunk and is gone.</li>
+ *   <li>FEINT — a fake attack: screams and runs at you, and a few blocks away it is simply not there anymore.</li>
+ *   <li>KNOCK — stage 5: stands outside your door and knocks. Open it and it comes in after you.</li>
+ *   <li>CHASE → ATTACK (a short wind-up and one hit) → CHASE; SINK when you reach shelter; DIG underground.</li>
+ *   <li>DISAPPEAR — it waits until you are not looking at it and then it is gone (never a visible teleport),
+ *       at most a few seconds.</li>
+ * </ul>
+ * Modes are saved by ordinal, so new states are only ever appended to the enum.
  */
 public class TallOneEntity extends HostileEntity implements GeoEntity {
     /** Order matters (saved as ordinal). */
-    public enum Mode {STARE, CHASE, SINK, DIG, PEEK, EMERGE}
+    public enum Mode {STARE, CHASE, SINK, DIG, PEEK, EMERGE, IDLE, STALK, WATCHED, MOVE_UNSEEN, ATTACK, DISAPPEAR, FEINT, TREE, KNOCK}
 
     private static final TrackedData<Integer> MODE = DataTracker.registerData(TallOneEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
@@ -90,6 +107,22 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private int jumpscareAt = -1;
     private double lastVictimDistance = -1;
     private int chaseStuckTicks;
+    /** Ticks of the whole sighting (STARE/STALK/WATCHED/MOVE_UNSEEN share it; modeTicks restarts per state). */
+    private int sightTicks;
+    private boolean watchedNow;
+    private int unwatchedTicks;
+    private boolean feintRolled;
+    /** Slot in the world data (MODPLAN §4) claimed at least once. */
+    private boolean slotClaimed;
+    // TREE: where it hides (directly behind the trunk) once you have seen it
+    @Nullable
+    private Vec3d treeHide;
+    private boolean treeHiding;
+    private int treeSeenTicks;
+    // KNOCK: the door it knocks on
+    @Nullable
+    private BlockPos knockDoor;
+    private static final int ATTACK_TICKS = 12, ATTACK_HIT_AT = 6;
 
     // per-chase tension-hook guards (PHASES §2: each hook fires at most once per chase/event)
     private boolean chaseTensionGiven;   // +4 at chase start, once per chase
@@ -138,6 +171,11 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         return victim;
     }
 
+    /** Ticks spent in the current mode (debug). */
+    public int modeTicks() {
+        return modeTicks;
+    }
+
     public Mode getMode() {
         return Mode.values()[MathHelper.clamp(this.dataTracker.get(MODE), 0, Mode.values().length - 1)];
     }
@@ -163,6 +201,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("Mode", getMode().ordinal());
         if (victim != null) nbt.putUuid("Victim", victim);
+        if (knockDoor != null) nbt.putLong("KnockDoor", knockDoor.asLong());
     }
 
     @Override
@@ -171,6 +210,12 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         this.dataTracker.set(MODE, nbt.getInt("Mode"));
         setNoGravity(getMode() == Mode.DIG);
         if (nbt.containsUuid("Victim")) victim = nbt.getUuid("Victim");
+        if (nbt.contains("KnockDoor")) knockDoor = BlockPos.fromLong(nbt.getLong("KnockDoor"));
+        // short-lived tricks do not survive a reload: it simply leaves
+        Mode m = getMode();
+        if (m == Mode.FEINT || m == Mode.TREE || m == Mode.ATTACK || m == Mode.MOVE_UNSEEN) {
+            this.dataTracker.set(MODE, (m == Mode.ATTACK ? Mode.CHASE : m == Mode.MOVE_UNSEEN ? Mode.STARE : Mode.DISAPPEAR).ordinal());
+        }
     }
 
     // -------------------------------------------------------------------- AI ----
@@ -197,6 +242,12 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         super.mobTick();
         modeTicks++;
         if (attackCooldown > 0) attackCooldown--;
+        if (getWorld() instanceof ServerWorld sw && (!slotClaimed || this.age % 20 == 0)) {
+            if (!claimSlot(sw)) {
+                discard();   // another It already owns this server (MODPLAN §4: no duplicates)
+                return;
+            }
+        }
 
         // PHASES §1 (FAZA PRE): the mod is quiet before IT JOINED — an entity that exists anyway
         // (e.g. spawn-egg testing) freezes and quietly disappears after 30 s, without any effect.
@@ -206,80 +257,327 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         }
 
         PlayerEntity player = findVictim();
+        if (player == null && isSightingMode(getMode())) setMode(Mode.IDLE);
         switch (getMode()) {
+            case IDLE -> tickIdle(player);
             case STARE -> tickStare(player);
+            case STALK -> tickStalk(player);
+            case WATCHED -> tickWatched(player);
+            case MOVE_UNSEEN -> tickMoveUnseen(player);
+            case TREE -> tickTree(player);
+            case FEINT -> tickFeint(player);
+            case KNOCK -> tickKnock(player);
             case CHASE -> tickChase(player);
+            case ATTACK -> tickAttack(player);
             case SINK -> tickSink(player);
             case DIG -> tickDig(player);
             case PEEK -> tickPeek(player);
             case EMERGE -> tickEmerge(player);
+            case DISAPPEAR -> tickDisappear(player);
         }
     }
 
-    private void tickStare(@Nullable PlayerEntity player) {
-        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
-        Stage st = Director.currentStage(); // live per tick (PHASES §0) — no snapshot from init
-        if (player == null) {
-            getNavigation().stop();
-            if (modeTicks > 200) discard();
+    private static boolean isSightingMode(Mode mode) {
+        return mode == Mode.STARE || mode == Mode.STALK || mode == Mode.WATCHED || mode == Mode.MOVE_UNSEEN;
+    }
+
+    /**
+     * MODPLAN §4: the one real It is written into the world data every second. If the record belongs to
+     * another It that still counts (it ticked recently, loaded or not), this one is the duplicate.
+     */
+    private boolean claimSlot(ServerWorld sw) {
+        ItWasTallState state = ItWasTallState.getOrCreate(sw.getServer());
+        long now = sw.getServer().getOverworld().getTime();
+        UUID owner = state.activeIt();
+        if (owner != null && !owner.equals(getUuid()) && state.activeItFresh(now)
+                && Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts) <= 1) {
+            return false;
+        }
+        state.noteActiveIt(getUuid(), sw.getRegistryKey().getValue().toString(), getBlockPos().asLong(), now);
+        slotClaimed = true;
+        return true;
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
+        // killed or discarded: the slot is free again. Unloaded / changed dimension: it still exists.
+        if (reason.shouldDestroy() && getWorld() instanceof ServerWorld sw) {
+            ItWasTallState.getOrCreate(sw.getServer()).clearActiveIt(getUuid());
+        }
+    }
+
+    // --------------------------------------------------------------- IDLE ----
+
+    private void tickIdle(@Nullable PlayerEntity player) {
+        getNavigation().stop();
+        if (player != null) {
+            setMode(Mode.STARE);
             return;
         }
+        if (modeTicks > 200) discard();   // nobody around to see it leave
+    }
+
+    /**
+     * Shared by STARE / STALK / WATCHED / MOVE_UNSEEN: the bookkeeping of a sighting and every way out of it.
+     * Returns true when it already switched to another state (the caller must stop then).
+     */
+    private boolean tickSighting(PlayerEntity player) {
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        Stage st = Director.currentStage(); // live per tick (PHASES §0) — no snapshot from init
+        sightTicks++;
         // Multiplayer: anyone else who walks right up to it gets chased instead.
         PlayerEntity intruder = getWorld().getClosestPlayer(getX(), getY(), getZ(), cfg.chaseTriggerDistance,
                 p -> EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR.test(p) && p != player);
         if (intruder != null && !ShelterCheck.isSheltered(getWorld(), intruder.getBlockPos())) {
             maybeStartChase(intruder);
-            return;
+            return true;
         }
         faceTowards(player);
 
         double dist = distanceTo(player);
-        boolean watched = isBeingWatchedBy(player);
-        lookedAtTicks = watched ? lookedAtTicks + 1 : Math.max(0, lookedAtTicks - 2);
+        watchedNow = isBeingWatchedBy(player);
+        lookedAtTicks = watchedNow ? lookedAtTicks + 1 : Math.max(0, lookedAtTicks - 2);
+        unwatchedTicks = watchedNow ? 0 : unwatchedTicks + 1;
         boolean approaching = lastVictimDistance > 0 && dist < lastVictimDistance - 0.02;
         lastVictimDistance = dist;
 
-        // STALK: from Stage 2 onward It slowly closes the distance while unseen,
-        // then freezes as soon as the player looks directly at it.
-        boolean playerSheltered = ShelterCheck.isSheltered(getWorld(), player.getBlockPos());
-        if (st.ordinal() >= 2 && cfg.stalking && !watched && !playerSheltered
-                && dist > Math.max(2.0, cfg.stalkStopDistance)
-                && dist <= Math.max(cfg.stalkStopDistance, cfg.stalkMaxDistance)
-                && canSee(player)) {
-            double stalkSpeed = MathHelper.clamp(cfg.stalkSpeed, 0.01, 0.35);
-            if (modeTicks % 10 == 0 || getNavigation().isIdle()) {
-                getNavigation().startMovingTo(player, stalkSpeed);
-            }
-        } else {
-            // Cancel residual horizontal motion too: being spotted must freeze It immediately.
-            getNavigation().stop();
-            setVelocity(0.0, getVelocity().y, 0.0);
-        }
-        // MOVE_UNSEEN: far away and not looked at -> sometimes it is simply somewhere closer next time you look
-        if (st.ordinal() >= 2 && cfg.moveUnseen && !watched && !playerSheltered && dist > 22
-                && modeTicks % 100 == 50 && random.nextFloat() < 0.35f) {
-            tryRepositionUnseen(player, dist);
-        }
-
-        if (modeTicks == 2 && player instanceof ServerPlayerEntity sp) {
+        if (sightTicks == 2 && player instanceof ServerPlayerEntity sp) {
             MineEvents.playTo(sp, ModSounds.AMBIENT_STING, getEyePos(), 1.2f, 1.0f);
         }
-        if (dist < 24 && modeTicks % 90 == 45) {
-            getWorld().playSound(null, getBlockPos(), ModSounds.GROWL, getSoundCategory(), 0.9f, 0.8f + random.nextFloat() * 0.2f);
+        if (dist < 24 && sightTicks % 90 == 45) {
+            getWorld().playSound(null, getBlockPos(), ModSounds.GROWL, getSoundCategory(), ModSounds.vol(0.9f), 0.8f + random.nextFloat() * 0.2f);
         }
-        if (modeTicks % STARE_SOUND_INTERVAL == 1) {
+        if (sightTicks % STARE_SOUND_INTERVAL == 1) {
             playSoundTo(player, ModSounds.STARE, 0.6f, 0.8f + random.nextFloat() * 0.2f);
         }
 
         maybeAwardWatchTension(player); // PHASES §2: looked at >= 2 s -> +1.0 (30 min cap per player)
 
+        boolean sheltered = ShelterCheck.isSheltered(getWorld(), player.getBlockPos());
         boolean tooClose = dist < cfg.chaseTriggerDistance;
         boolean staredDown = lookedAtTicks > cfg.stareTriggerSeconds * 20 && approaching;
-        if ((tooClose || staredDown) && !ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) {
+        if ((tooClose || staredDown) && !sheltered) {
             maybeStartChase(player); // stage-gated: chase may simply not happen (see helper)
-        } else if (modeTicks > cfg.stareTimeoutSeconds * 20) {
+            return true;
+        }
+        // FEINT (stage 3+): you have been looking at it for a second and a half, far enough away for a run-up
+        if (!feintRolled && lookedAtTicks == 30 && st.ordinal() >= 3 && cfg.feints && !sheltered
+                && dist > 10 && dist < 34 && getNavigation().findPathTo(player, 0) != null) {
+            feintRolled = true;
+            if (random.nextFloat() < MathHelper.clamp(cfg.feintChance, 0.0, 1.0)) {
+                startFeint(player);
+                return true;
+            }
+        }
+        if (sightTicks > cfg.stareTimeoutSeconds * 20) {
+            startDisappear();
+            return true;
+        }
+        return false;
+    }
+
+    /** STALK conditions: from Stage 2 onward It slowly closes the distance while unseen. */
+    private boolean canStalk(PlayerEntity player) {
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        double dist = distanceTo(player);
+        return Director.currentStage().ordinal() >= 2 && cfg.stalking && !watchedNow
+                && !ShelterCheck.isSheltered(getWorld(), player.getBlockPos())
+                && dist > Math.max(2.0, cfg.stalkStopDistance)
+                && dist <= Math.max(cfg.stalkStopDistance, cfg.stalkMaxDistance)
+                && canSee(player);
+    }
+
+    private void freeze() {
+        // Cancel residual horizontal motion too: being spotted must freeze It immediately.
+        getNavigation().stop();
+        setVelocity(0.0, getVelocity().y, 0.0);
+    }
+
+    private void tickStare(@Nullable PlayerEntity player) {
+        if (player == null || tickSighting(player)) return;
+        freeze();
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        if (watchedNow) {
+            setMode(Mode.WATCHED);
+        } else if (canStalk(player)) {
+            setMode(Mode.STALK);
+        } else if (Director.currentStage().ordinal() >= 2 && cfg.moveUnseen && distanceTo(player) > 22
+                && !ShelterCheck.isSheltered(getWorld(), player.getBlockPos())
+                && sightTicks % 100 == 50 && random.nextFloat() < 0.35f) {
+            setMode(Mode.MOVE_UNSEEN);
+        }
+    }
+
+    private void tickStalk(@Nullable PlayerEntity player) {
+        if (player == null || tickSighting(player)) return;
+        if (watchedNow) {
+            freeze();
+            setMode(Mode.WATCHED);
+            return;
+        }
+        if (!canStalk(player)) {
+            freeze();
+            setMode(Mode.STARE);
+            return;
+        }
+        double stalkSpeed = MathHelper.clamp(ItWasTallConfig.INSTANCE.stalkSpeed, 0.01, 0.35);
+        if (modeTicks % 10 == 1 || getNavigation().isIdle()) {
+            getNavigation().startMovingTo(player, stalkSpeed);
+        }
+    }
+
+    private void tickWatched(@Nullable PlayerEntity player) {
+        if (player == null || tickSighting(player)) return;
+        freeze();
+        if (unwatchedTicks >= 10) setMode(Mode.STARE);   // you looked away for half a second
+    }
+
+    private void tickMoveUnseen(@Nullable PlayerEntity player) {
+        if (player == null || tickSighting(player)) return;
+        freeze();
+        if (watchedNow) {
+            setMode(Mode.WATCHED);
+            return;
+        }
+        // MOVE_UNSEEN: far away and not looked at -> it is simply somewhere closer next time you look
+        if (tryRepositionUnseen(player, distanceTo(player)) || modeTicks > 40) setMode(Mode.STARE);
+    }
+
+    // -------------------------------------------------------------- DISAPPEAR ----
+
+    /** It leaves: as soon as nobody is looking at it (or after a few seconds at most). */
+    public void startDisappear() {
+        if (getMode() == Mode.DISAPPEAR) return;
+        setTarget(null);
+        freeze();
+        setMode(Mode.DISAPPEAR);
+    }
+
+    private void tickDisappear(@Nullable PlayerEntity player) {
+        freeze();
+        if (player == null || !visibleTo(player, getPos().add(0, 2.5, 0)) || modeTicks > 60) discard();
+    }
+
+    // ------------------------------------------------------------------ FEINT ----
+
+    /** Test entry (/itwastall event feint). */
+    public void beginFeint(PlayerEntity player) {
+        startFeint(player);
+    }
+
+    /** A fake attack: a scream, a run at you, and a few blocks away it is just not there anymore. */
+    private void startFeint(PlayerEntity player) {
+        setVictim(player);
+        setMode(Mode.FEINT);
+        getWorld().playSound(null, getBlockPos(), ModSounds.SCREAM, getSoundCategory(), ModSounds.vol(2.2f), 1.05f);
+        if (player instanceof ServerPlayerEntity sp) ModNetworking.sendChase(sp, true);
+    }
+
+    private void tickFeint(@Nullable PlayerEntity player) {
+        if (player == null) {
+            discard();
+            return;
+        }
+        faceTowards(player);
+        if (modeTicks % 5 == 1 || getNavigation().isIdle()) {
+            getNavigation().startMovingTo(player, ItWasTallConfig.INSTANCE.chaseSpeed * 1.1);
+        }
+        if (distanceTo(player) < 2.8 || modeTicks > 70) {
+            if (getWorld() instanceof ServerWorld sw) {
+                sw.spawnParticles(ParticleTypes.LARGE_SMOKE, getX(), getBodyY(0.6), getZ(), 24, 0.3, 0.9, 0.3, 0.01);
+            }
+            if (player instanceof ServerPlayerEntity sp) {
+                MineEvents.playTo(sp, ModSounds.AMBIENT_STING, sp.getEyePos(), 1.0f, 1.3f);
+                ModNetworking.sendChase(sp, false);
+                JournalLog.add(sp, "It ran straight at me. Then it just wasn't there.");
+            }
+            if (Director.phase() == 1) Director.addTension(2.0);
             discard();
         }
+    }
+
+    // ------------------------------------------------------------------- TREE ----
+
+    /** Spawned half-hidden next to a trunk; {@code hide} is the spot right behind it. */
+    public void startTree(Vec3d hide) {
+        treeHide = hide;
+        treeHiding = false;
+        treeSeenTicks = 0;
+        setMode(Mode.TREE);
+    }
+
+    private void tickTree(@Nullable PlayerEntity player) {
+        if (player == null || treeHide == null) {
+            startDisappear();
+            return;
+        }
+        faceTowards(player);
+        double dist = distanceTo(player);
+        if (dist < ItWasTallConfig.INSTANCE.chaseTriggerDistance * 0.8 && !ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) {
+            maybeStartChase(player);
+            return;
+        }
+        if (treeHiding) {
+            // one slow step back behind the trunk, then it is gone
+            getMoveControl().moveTo(treeHide.x, treeHide.y, treeHide.z, 0.6);
+            if (getPos().squaredDistanceTo(treeHide.x, getY(), treeHide.z) < 0.09 || modeTicks > 50) startDisappear();
+            return;
+        }
+        freeze();
+        if (isBeingWatchedBy(player)) treeSeenTicks++;
+        if (treeSeenTicks >= 12) {
+            treeHiding = true;
+            modeTicks = 0;
+            getWorld().playSound(null, getBlockPos(), ModSounds.STEP, getSoundCategory(), ModSounds.vol(0.5f), 0.5f);
+            maybeAwardWatchTension(player);
+        } else if (modeTicks > 20 * 60) {
+            startDisappear();
+        }
+    }
+
+    // ------------------------------------------------------------------ KNOCK ----
+
+    /** Stage 5: stands outside the door at {@code door} (lower half) and knocks. */
+    public void startKnock(BlockPos door) {
+        knockDoor = door.toImmutable();
+        setMode(Mode.KNOCK);
+    }
+
+    private void tickKnock(@Nullable PlayerEntity player) {
+        freeze();
+        if (player == null || knockDoor == null) {
+            startDisappear();
+            return;
+        }
+        BlockState door = getWorld().getBlockState(knockDoor);
+        Vec3d at = Vec3d.ofCenter(knockDoor).add(0, 0.4, 0);
+        double dx = at.x - getX(), dz = at.z - getZ();
+        float yaw = (float) (MathHelper.atan2(dz, dx) * MathHelper.DEGREES_PER_RADIAN) - 90f;
+        setYaw(yaw);
+        setBodyYaw(yaw);
+        setHeadYaw(yaw);
+        boolean doorGone = !(door.getBlock() instanceof net.minecraft.block.DoorBlock);
+        boolean opened = !doorGone && door.get(net.minecraft.block.DoorBlock.OPEN);
+        if (opened || doorGone) {
+            // you opened it. It was waiting for that.
+            if (distanceTo(player) < 16) {
+                if (Director.currentStage().chaseEnabled()) startChase(player);
+                else startDisappear();
+            } else {
+                startDisappear();
+            }
+            return;
+        }
+        // three bursts of three knocks
+        int t = modeTicks - 20;
+        if (t >= 0 && t < 3 * 60 && t % 60 < 30 && t % 60 % 10 == 0) {
+            if (t % 60 == 0) triggerAnim("action", "knock");
+            if (player instanceof ServerPlayerEntity sp) {
+                MineEvents.playTo(sp, ModSounds.SCARE_KNOCK, at, 1.2f, 0.8f + random.nextFloat() * 0.1f);
+            }
+        }
+        if (modeTicks > 20 + 3 * 60 + 60) startDisappear();
     }
 
     /**
@@ -297,9 +595,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         startChase(player);
     }
 
-    /** Quiet disappearance: no sound, no effect, no jumpscare ("It znika", PHASES Etapy notes). */
+    /** Quiet disappearance: no sound, no effect, no jumpscare ("It znika", PHASES Etapy notes) —
+     *  as soon as it is out of your sight (DISAPPEAR state). */
     private void disappearQuiet() {
-        discard();
+        startDisappear();
     }
 
     /** Ends an encounter where it had to give up: SINK when the stage allows it, quiet otherwise. */
@@ -314,7 +613,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         clearDig();
         setMode(Mode.CHASE);
         setTarget(player);
-        getWorld().playSound(null, getBlockPos(), ModSounds.SCREAM, getSoundCategory(), 2.5f, 0.85f);
+        getWorld().playSound(null, getBlockPos(), ModSounds.SCREAM, getSoundCategory(), ModSounds.vol(2.5f), 0.85f);
         // the red chase overlay starts NOW, not on the next 1 s pulse
         if (player instanceof ServerPlayerEntity sp) ModNetworking.sendChase(sp, true);
         if (!chaseTensionGiven && Director.phase() == 1) {
@@ -359,11 +658,29 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             return;
         }
         if (attackCooldown == 0 && squaredDistanceTo(player) < 5.0) {
-            attackCooldown = 20;
+            setMode(Mode.ATTACK);
+        }
+    }
+
+    /** ATTACK: a short wind-up, one hit if you are still in reach, back to the chase. */
+    private void tickAttack(@Nullable PlayerEntity player) {
+        if (player == null) {
+            startDisappear();
+            return;
+        }
+        freeze();
+        faceTowards(player);
+        if (modeTicks == 1) {
             triggerAnim("action", "attack");
+            playSound(ModSounds.ATTACK, ModSounds.vol(1.2f), 1.0f);
+        }
+        if (modeTicks == ATTACK_HIT_AT) {
             swingHand(getActiveHand());
-            tryAttack(player);
-            playSound(ModSounds.ATTACK, 1.2f, 1.0f);
+            if (squaredDistanceTo(player) < 6.5) tryAttack(player);
+        }
+        if (modeTicks >= ATTACK_TICKS) {
+            attackCooldown = 20 - ATTACK_TICKS;
+            setMode(Mode.CHASE);
         }
     }
 
@@ -379,7 +696,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         int min = Math.max(0, cfg.jumpscareDelayMinTicks);
         int max = Math.max(min, cfg.jumpscareDelayMaxTicks);
         jumpscareAt = SINK_ANIM_TICKS + min + random.nextInt(max - min + 1);
-        getWorld().playSound(null, getBlockPos(), ModSounds.SINK, getSoundCategory(), 1.8f, 0.7f);
+        getWorld().playSound(null, getBlockPos(), ModSounds.SINK, getSoundCategory(), ModSounds.vol(1.8f), 0.7f);
         if (escapedFromChase && Director.phase() == 1) Director.addTension(-3.0); // PHASES §2: udana ucieczka do bazy w pościgu -3
     }
 
@@ -449,7 +766,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     }
 
     public void startPeek() {
-        getWorld().playSound(null, getBlockPos(), ModSounds.SNIFF, getSoundCategory(), 0.7f, 1.0f);
+        getWorld().playSound(null, getBlockPos(), ModSounds.SNIFF, getSoundCategory(), ModSounds.vol(0.7f), 1.0f);
         setMode(Mode.PEEK);
         getNavigation().stop();
     }
@@ -501,13 +818,13 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             getWorld().setBlockBreakingInfo(breakId(i), digCells.get(i), stage);
         }
         if (digTicks == 1 && random.nextInt(4) == 0) {
-            getWorld().playSound(null, getBlockPos(), ModSounds.SCRAPE, getSoundCategory(), 0.8f, 0.9f);
+            getWorld().playSound(null, getBlockPos(), ModSounds.SCRAPE, getSoundCategory(), ModSounds.vol(0.8f), 0.9f);
         }
         if (!digCells.isEmpty() && digTicks % 6 == 1) {
             BlockPos c = digCells.get(random.nextInt(digCells.size()));
             BlockState st = getWorld().getBlockState(c);
-            getWorld().playSound(null, c, st.getSoundGroup().getHitSound(), getSoundCategory(), 1.0f, 0.6f);
-            getWorld().playSound(null, c, ModSounds.DIG, getSoundCategory(), 0.7f, 0.9f + random.nextFloat() * 0.2f);
+            getWorld().playSound(null, c, st.getSoundGroup().getHitSound(), getSoundCategory(), ModSounds.vol(1.0f), 0.6f);
+            getWorld().playSound(null, c, ModSounds.DIG, getSoundCategory(), ModSounds.vol(0.7f), 0.9f + random.nextFloat() * 0.2f);
         }
         if (digTicks >= digDuration) {
             for (int i = 0; i < digCells.size(); i++) {
@@ -624,9 +941,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
      * same side, but only if NEITHER the old nor the new position is visible to the player right
      * now — it never teleports in front of anyone (MODPLAN §3.1).
      */
-    private void tryRepositionUnseen(PlayerEntity player, double dist) {
+    private boolean tryRepositionUnseen(PlayerEntity player, double dist) {
         World world = getWorld();
-        if (visibleTo(player, getPos().add(0, 2.5, 0))) return;
+        if (visibleTo(player, getPos().add(0, 2.5, 0))) return false;
         double baseAng = Math.atan2(getZ() - player.getZ(), getX() - player.getX());
         double newDist = Math.max(14.0, dist * 0.65);
         for (int i = 0; i < 12; i++) {
@@ -643,8 +960,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             if (!world.isSpaceEmpty(this, getBoundingBox().offset(target.subtract(getPos())))) continue;
             refreshPositionAndAngles(x, y, z, getYaw(), getPitch());
             getNavigation().stop();
-            return;
+            return true;
         }
+        return false;
     }
 
     /** Is this point in the player's view cone with a clear line of sight? */
@@ -724,7 +1042,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             if (!isGlass(state) || state.getHardness(getWorld(), p) < 0) continue;
             triggerAnim("action", "attack");
             swingHand(getActiveHand());
-            playSound(ModSounds.ATTACK, 1.0f, 1.0f);
+            playSound(ModSounds.ATTACK, ModSounds.vol(1.0f), 1.0f);
             getWorld().breakBlock(p, false, this);
             return;
         }
@@ -755,7 +1073,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (getMode() == Mode.EMERGE) return false;
+        if (getMode() == Mode.EMERGE || getMode() == Mode.FEINT || getMode() == Mode.DISAPPEAR) return false;
         // Ordinary weapons cannot defeat It. The Warding Crystal is the intended story solution.
         if (!(source.getAttacker() instanceof PlayerEntity player)
                 || !player.getMainHandStack().isOf(ModItems.WARDING_CRYSTAL)) {
@@ -786,7 +1104,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        playSound(ModSounds.STEP, 0.35f, 0.6f);
+        playSound(ModSounds.STEP, ModSounds.vol(0.35f), 0.6f);
     }
 
     // -------------------------------------------------------------- GeckoLib ----
@@ -805,8 +1123,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             case DIG -> state.setAndContinue(DIG);
             case PEEK -> state.setAndContinue(IDLE);
             case EMERGE -> state.setAndContinue(EMERGE);
-            case CHASE -> state.setAndContinue(state.isMoving() ? RUN : IDLE);
-            case STARE -> state.setAndContinue(state.isMoving() ? WALK : IDLE);
+            case CHASE, FEINT -> state.setAndContinue(state.isMoving() ? RUN : IDLE);
+            case STALK -> state.setAndContinue(WALK);
+            case ATTACK, KNOCK, WATCHED, MOVE_UNSEEN, DISAPPEAR, IDLE -> state.setAndContinue(IDLE);
+            case STARE, TREE -> state.setAndContinue(state.isMoving() ? WALK : IDLE);
         };
     }
 

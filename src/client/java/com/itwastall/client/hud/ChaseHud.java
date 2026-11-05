@@ -49,7 +49,8 @@ public final class ChaseHud {
         double t = (now - startNanos) / 1_000_000_000.0 * 2.2;
         double phase = t - Math.floor(t);
         double beat = Math.exp(-Math.pow((phase - 0.08) / 0.05, 2)) + 0.6 * Math.exp(-Math.pow((phase - 0.30) / 0.05, 2));
-        float pulse = (float) (0.72 + 0.28 * beat);
+        // photosensitive mode: a steady, softer red without the beat
+        float pulse = com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode ? 0.6f : (float) (0.72 + 0.28 * beat);
 
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, 0, 950);

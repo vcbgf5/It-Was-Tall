@@ -78,6 +78,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.HouseEvents.forget(uuid);
             com.itwastall.entity.OldOneDirector.forget(uuid);
             DynamicStructures.forget(uuid);
+            com.itwastall.entity.EventGate.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

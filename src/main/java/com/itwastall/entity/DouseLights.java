@@ -154,4 +154,10 @@ public final class DouseLights {
         long night = -1;
         int count;
     }
+
+    /** How many times this fired for the player in the current night ledger, for /itwastall debug events. */
+    public static int ledgerCount(UUID player) {
+        Ledger ledger = LEDGERS.get(player);
+        return ledger == null ? 0 : ledger.count;
+    }
 }

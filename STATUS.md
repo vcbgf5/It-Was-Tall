@@ -52,14 +52,25 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 
 - **Old One („Skinwalker Steve”)**: postać wyglądająca jak gracz Steve (tekstura Steve'a z gry + nasza warstwa: puste oczy, rozciągnięte usta, krew, mięso w środku), z nickiem „Old One” nad głową. Pojawia się 8–12 bloków od ciebie, poza polem widzenia, i się gapi; skrada się tylko, gdy nie patrzysz. Gdy podejdziesz (≤ 4,5 bloku) albo go uderzysz: ciało pęka wzdłuż środka od głowy do stóp, dwie połowy upadają na boki (w lewo i w prawo), a spomiędzy nich wychodzi It (nowa animacja `emerge`) i od razu cię goni. Od etapu 2, co 20–40 min na gracza, tylko gdy na serwerze nie ma innego It. Komenda `event oldone`, jajo spawnujące, config `oldOne*`, podgląd `tools/build_old_one_preview.py`.
 
+### Dokończone w tej sesji (2)
+- **Stany AI jako osobne stany** (§3): IDLE, STARE, STALK, WATCHED, MOVE_UNSEEN, TREE, FEINT, KNOCK, CHASE, ATTACK, SINK, DIG, PEEK, EMERGE, DISAPPEAR. Nowe stany są dopisane na końcu enuma, więc zapisane światy działają (pilnuje tego GameTest). DISAPPEAR znika dopiero, gdy na niego nie patrzysz (najwyżej 3 s).
+- **Fałszywy atak** (FEINT, etap 3+): krzyk, bieg prosto na ciebie, a 3 bloki przed tobą znika w dymie. Nie zadaje obrażeń. Config `feints`, `feintChance`, komenda `event feint`.
+- **Za drzewem** (TREE, etap 2+): wychyla się zza pnia (widać głowę i ramię). Kiedy go zauważysz, cofa się za pień i znika. Config `treePeeks`, `treePeekChance`, komenda `event tree`.
+- **Prawdziwe pukanie** (KNOCK, etap 5): czasem pod drzwiami stoi prawdziwy It. Otworzysz, to goni. Config `realKnockChance`, komenda `event realknock`.
+- **Jeden It — zapis w świecie** (§4): It zapisuje się w danych świata co sekundę. Limit liczy też Ita w niezaładowanym chunku, a duplikat (np. po restarcie) sam się usuwa. Wpis bez odświeżenia przez 10 min przestaje blokować. `debug entity forget` czyści wpis.
+- **Config** (§19): `photosensitiveMode` (bez błysków, ciemne przejście zamiast zdjęcia, bez pulsowania winiety i pościgu, bez migającej klatki w IT JOINED), `effectsVolume`, `minEventCooldown` (wspólna przerwa między większymi zdarzeniami jednego gracza), `maxEventRange`, `debugAllowedForNonOps`.
+- **Komendy** (§21): `/itwastall debug entity` (gdzie jest It, stan, za kim idzie, wpis w świecie), `/itwastall debug events [gracz]` (wszystkie timery i cooldowny).
+- **Punktacja chunków i klastry** (notatki §8): chunk dostaje punkty za postawione bloki (skrzynie, piece, drzwi, szkło, światła ważą więcej) i za czas spędzony w nim. Sąsiednie mocne chunki łączą się w klastry. Bez łóżka najsilniejszy klaster staje się bazą, a baza przenosi się, gdy inny klaster jest wyraźnie silniejszy. Łóżko zawsze wygrywa. `debug base` pokazuje klastry.
+- **GameTesty** (§24.2): osobny source set `src/gametest` (nie trafia do jara), uruchamiane przez `./gradlew runGametest`. Testują schronienie, zapis mapy bazy, A* omijający obsydian, jeden It, zapis stanu świata, klastry chunków i stałe numery stanów AI.
+
 ## 🟡 Częściowo
 
-- **AI**: zachowania STALK / WATCHED / MOVE_UNSEEN działają, ale są częścią trybu STARE, a nie osobnymi stanami enuma (świadomie — zmiana enuma psułaby zapisane encje).
-- **Punktacja chunków i łączenie klastrów** w BaseTracker (z notatek MODPLAN) nie są zrobione — baza jest wykrywana z łóżka / interakcji.
+- **SEARCH_BASE** (It wchodzi do bazy i przeszukuje pokoje, etap 5) — nie zrobione, świadomie pominięte w tej turze.
+- **„Stoi na końcu korytarza/tunelu”** (§3.2) — nie zrobione.
 
 ## ❌ Brak
 
-- Nic większego z MODPLAN. Do zrobienia zostają testy w grze i balans.
+- Testy w grze i balans. GameTesty są napisane, ale jeszcze nie były uruchomione.
 
 ## Ostatnie zmiany (ta sesja), niesprawdzone w grze
 

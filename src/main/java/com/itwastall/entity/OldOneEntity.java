@@ -155,7 +155,7 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
         splitTicks = 0;
         getNavigation().stop();
         setVelocity(Vec3d.ZERO);
-        getWorld().playSound(null, getBlockPos(), ModSounds.OLD_ONE_TEAR, getSoundCategory(), 1.6f, 1.0f);
+        getWorld().playSound(null, getBlockPos(), ModSounds.OLD_ONE_TEAR, getSoundCategory(), ModSounds.vol(1.6f), 1.0f);
         if (player instanceof ServerPlayerEntity sp) JournalLog.add(sp, "It looked like a player. It wasn't. Something climbed out of it.");
     }
 

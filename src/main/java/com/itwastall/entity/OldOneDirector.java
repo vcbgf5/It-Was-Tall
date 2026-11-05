@@ -57,7 +57,12 @@ public final class OldOneDirector {
                 NEXT.put(player.getUuid(), now + 20L * 30);
                 continue;
             }
+            if (!EventGate.ready(player)) {
+                NEXT.put(player.getUuid(), now + 20L * 15);
+                continue;
+            }
             if (spawnFor(player)) {
+                EventGate.mark(player);
                 int min = Math.max(1, cfg.oldOneMinMinutes), max = Math.max(min, cfg.oldOneMaxMinutes);
                 NEXT.put(player.getUuid(), now + 20L * 60 * min + random.nextInt(20 * 60 * (max - min) + 1));
             } else {
@@ -100,5 +105,11 @@ public final class OldOneDirector {
             return true;
         }
         return false;
+    }
+
+    /** World time of this player's next roll (-1 = not scheduled yet), for /itwastall debug events. */
+    public static long nextAt(UUID player) {
+        Long next = NEXT.get(player);
+        return next == null ? -1 : next;
     }
 }

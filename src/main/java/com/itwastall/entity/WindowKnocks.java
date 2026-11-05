@@ -83,7 +83,9 @@ public final class WindowKnocks {
             if (!eligible(player)) continue;
             Random random = player.getRandom();
             if (random.nextDouble() >= MathHelper.clamp(cfg.windowKnockChance, 0.0, 1.0)) continue;
+            if (!EventGate.ready(player)) continue;
             if (!startKnock(player, level)) continue;
+            EventGate.mark(player);
             Ledger ledger = LEDGERS.computeIfAbsent(player.getUuid(), u -> new Ledger());
             ledger.night = nightIndex(player.getWorld());
             ledger.count++;
@@ -257,5 +259,11 @@ public final class WindowKnocks {
     private static final class Ledger {
         long night = -1;
         int count;
+    }
+
+    /** How many times this fired for the player in the current night ledger, for /itwastall debug events. */
+    public static int ledgerCount(UUID player) {
+        Ledger ledger = LEDGERS.get(player);
+        return ledger == null ? 0 : ledger.count;
     }
 }

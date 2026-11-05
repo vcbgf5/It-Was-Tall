@@ -33,7 +33,7 @@ public final class ScareTextOverlay {
         startNanos = System.nanoTime();
         durationNanos = Math.max(500, durationMs) * 1_000_000L;
         glitchFrames = 0;
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_MESSAGE, 1.0f, 0.9f));
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_MESSAGE, 1.0f, ModSounds.vol(0.9f)));
     }
 
     public static void render(DrawContext ctx, RenderTickCounter tickCounter) {

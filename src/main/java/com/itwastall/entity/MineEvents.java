@@ -326,6 +326,12 @@ public final class MineEvents {
     /** Plays a sound that only this player hears. */
     public static void playTo(ServerPlayerEntity player, SoundEvent sound, Vec3d pos, float volume, float pitch) {
         player.networkHandler.sendPacket(new PlaySoundS2CPacket(Registries.SOUND_EVENT.getEntry(sound), SoundCategory.HOSTILE,
-                pos.x, pos.y, pos.z, volume, pitch, player.getRandom().nextLong()));
+                pos.x, pos.y, pos.z, ModSounds.vol(volume), pitch, player.getRandom().nextLong()));
+    }
+
+    /** Underground seconds and event cooldown (ticks) for /itwastall debug events. */
+    public static String debugLine(UUID player) {
+        PlayerState st = STATES.get(player);
+        return st == null ? "no data" : "underground " + st.undergroundTicks / 20 + " s, cooldown " + st.cooldown / 20 + " s";
     }
 }

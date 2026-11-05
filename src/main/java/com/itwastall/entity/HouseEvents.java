@@ -5,6 +5,7 @@ import com.itwastall.base.BaseMap;
 import com.itwastall.base.BaseTracker;
 import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
+import com.itwastall.registry.ModEntities;
 import com.itwastall.registry.ModSounds;
 import com.itwastall.world.JournalLog;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -114,7 +115,9 @@ public final class HouseEvents {
             List<Kind> allowed = allowedKinds(stage);
             if (allowed.isEmpty()) continue;
             Kind kind = allowed.get(random.nextInt(allowed.size()));
+            if (!EventGate.ready(player)) continue;
             if (start(player, kind)) {
+                EventGate.mark(player);
                 NEXT.put(player.getUuid(), now + 20L * Math.max(30, cfg.houseEventCooldownSeconds));
             }
         }
@@ -181,6 +184,12 @@ public final class HouseEvents {
         if (outside == null || inside == null) return false;
         Vec3d out = Vec3d.ofBottomCenter(outside);
         MineEvents.playTo(player, ModSounds.SCARE_FOOTSTEPS, out, 0.9f, 0.9f);
+        // ETAP 5: sometimes it is not a sound at all — the real It stands outside and knocks (open = chase)
+        if (!shadow && Director.stageIndex() >= 5 && player.getRandom().nextDouble() < ItWasTallConfig.INSTANCE.realKnockChance
+                && realKnock(player, door, outside)) {
+            JournalLog.add(player, "Something knocked on my door. Through the gap I saw how tall it was.");
+            return true;
+        }
         Vec3d knockAt = Vec3d.ofCenter(door).add(0, 0.4, 0);
         for (int i = 0; i < 3; i++) {
             int when = 34 + i * 12;
@@ -197,6 +206,32 @@ public final class HouseEvents {
         JournalLog.add(player, shadow ? "Knocking on the door. Something dark crept in under it."
                 : "Three knocks on my door. I didn't open.");
         return true;
+    }
+
+    /** Test entry (/itwastall event realknock): the real It at the nearest mapped door. */
+    public static boolean realKnockNearest(ServerPlayerEntity player) {
+        BlockPos door = nearestDoor(player, 40, false);
+        if (door == null) return false;
+        BlockPos outside = doorSide(player.getServerWorld(), door, player, true);
+        return outside != null && realKnock(player, door, outside);
+    }
+
+    /** Spawns the one real It just outside {@code door}, facing it, in KNOCK mode. */
+    private static boolean realKnock(ServerPlayerEntity player, BlockPos door, BlockPos outside) {
+        ServerWorld world = player.getServerWorld();
+        if (HauntDirector.countActive(world.getServer()) >= Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)) return false;
+        TallOneEntity it = ModEntities.TALL_ONE.create(world);
+        if (it == null) return false;
+        // one step back from the door so the 3.4-block body fits (the doorway itself is only 2 high)
+        BlockPos stand = outside.offset(Direction.getFacing(outside.getX() - door.getX(), 0, outside.getZ() - door.getZ()));
+        it.refreshPositionAndAngles(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5, 0f, 0f);
+        if (!world.isSpaceEmpty(it)) {
+            it.refreshPositionAndAngles(outside.getX() + 0.5, outside.getY(), outside.getZ() + 0.5, 0f, 0f);
+            if (!world.isSpaceEmpty(it)) return false;
+        }
+        it.setVictim(player);
+        it.startKnock(door);
+        return world.spawnEntity(it);
     }
 
     /** Dark smoke on the floor right inside the door — only this player sees it. */
@@ -401,5 +436,11 @@ public final class HouseEvents {
         Vec3d to = target.subtract(player.getEyePos());
         if (to.lengthSquared() < 1.0E-6) return 1;
         return look.dotProduct(to.normalize());
+    }
+
+    /** World time of this player's next roll (-1 = not scheduled yet), for /itwastall debug events. */
+    public static long nextAt(UUID player) {
+        Long next = NEXT.get(player);
+        return next == null ? -1 : next;
     }
 }

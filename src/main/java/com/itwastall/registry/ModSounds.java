@@ -67,4 +67,10 @@ public final class ModSounds {
 
     public static void init() {
     }
+
+    /** MODPLAN §19 "głośność efektów": scales a volume by config {@code effectsVolume} (0..2). */
+    public static float vol(float volume) {
+        double m = com.itwastall.config.ItWasTallConfig.INSTANCE.effectsVolume;
+        return (float) (volume * Math.max(0.0, Math.min(2.0, m)));
+    }
 }

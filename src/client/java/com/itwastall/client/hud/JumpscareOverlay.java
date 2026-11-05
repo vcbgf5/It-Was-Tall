@@ -7,6 +7,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 
 /** Full-screen jumpscare image shown for a fixed real-time duration (default 100 ms = 0.1 s). */
 public final class JumpscareOverlay {
@@ -18,6 +19,7 @@ public final class JumpscareOverlay {
     private static final int MIN_FRAMES = 2;
 
     private static long showUntilNanos;
+    private static long fadeStartNanos;
     private static int framesLeft;
 
     private JumpscareOverlay() {
@@ -28,9 +30,15 @@ public final class JumpscareOverlay {
             showUntilNanos = System.nanoTime() + durationMs * 1_000_000L;
             framesLeft = MIN_FRAMES;
         }
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.JUMPSCARE, 1.0f, 1.0f));
+        boolean soft = com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode;
+        if (soft && showImage) {
+            // photosensitive mode: no image flash — a short dark fade instead (a little longer, never a single frame)
+            showUntilNanos = System.nanoTime() + Math.max(400, durationMs) * 1_000_000L;
+            fadeStartNanos = System.nanoTime();
+        }
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.JUMPSCARE, 1.0f, ModSounds.vol(soft ? 0.7f : 1.0f)));
         // ringing ears afterwards
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_TINNITUS, 1.0f, 0.6f));
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_TINNITUS, 1.0f, ModSounds.vol(0.6f)));
     }
 
     public static void render(DrawContext ctx, RenderTickCounter tickCounter) {
@@ -47,6 +55,15 @@ public final class JumpscareOverlay {
         // in front of everything the HUD drew (hotbar items are rendered with a z offset)
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, 0, 3000);
+        if (com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode) {
+            // dark fade in and out, no picture, no hard cut
+            float total = Math.max(1, showUntilNanos - fadeStartNanos);
+            float f = (System.nanoTime() - fadeStartNanos) / total;
+            float a = MathHelper.clamp(f < 0.3f ? f / 0.3f : (1f - f) / 0.7f, 0f, 1f) * 0.85f;
+            ctx.fill(0, 0, sw, sh, ((int) (a * 255) << 24));
+            ctx.getMatrices().pop();
+            return;
+        }
         ctx.fill(0, 0, sw, sh, 0xFF000000);
         ctx.drawTexture(TEXTURE, x, y, w, h, 0f, 0f, TEX_W, TEX_H, TEX_W, TEX_H);
         ctx.getMatrices().pop();

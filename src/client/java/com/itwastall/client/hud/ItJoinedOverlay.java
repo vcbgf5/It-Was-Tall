@@ -32,7 +32,7 @@ public final class ItJoinedOverlay {
         startNanos = System.nanoTime();
         durationNanos = Math.max(1000, durationMs) * 1_000_000L;
         // the low drone (sounds.json maps ui.it_joined) once, when the title appears
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_IT_JOINED, 1.0f, 0.85f));
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(ModSounds.UI_IT_JOINED, 1.0f, ModSounds.vol(0.85f)));
     }
 
     public static void render(DrawContext ctx, RenderTickCounter tickCounter) {
@@ -52,7 +52,7 @@ public final class ItJoinedOverlay {
         float fade = MathHelper.clamp(t / 0.12f, 0f, 1f) * MathHelper.clamp((1f - t) / 0.35f, 0f, 1f);
         // subtle glow pulse, plus an occasional dip = one milder flashing frame
         float pulse = 0.9f + 0.1f * MathHelper.sin(elapsed / 90_000_000.0f);
-        if (Math.random() < 0.05) pulse *= 0.6f;
+        if (Math.random() < 0.05 && !com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode) pulse *= 0.6f;   // no flashing frame in photosensitive mode
         float alpha = fade * pulse;
 
         ctx.getMatrices().push();

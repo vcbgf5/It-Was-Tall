@@ -22,11 +22,36 @@ repositories {
 
 loom {
     splitEnvironmentSourceSets()
+}
 
+// MODPLAN §24.2: Fabric GameTests live in their own source set (and their own tiny mod), so they are
+// never part of the released jar. Run them with:  ./gradlew runGametest
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+}
+
+loom {
     mods {
         'itwastall' {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
+        }
+        'itwastall-gametest' {
+            sourceSet sourceSets.gametest
+        }
+    }
+
+    runs {
+        gametest {
+            server()
+            name "Game Test"
+            vmArg "-Dfabric-api.gametest"
+            vmArg "-Dfabric-api.gametest.report-file=${project.file('build/gametest/junit.xml')}"
+            runDir "build/gametest"
+            source sourceSets.gametest
         }
     }
 }

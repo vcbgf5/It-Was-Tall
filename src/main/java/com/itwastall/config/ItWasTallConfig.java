@@ -59,6 +59,29 @@ public final class ItWasTallConfig {
         public int jumpscareDelayMaxTicks = 40;
         /** If it is not approached, it gives up staring after this many seconds. */
         public int stareTimeoutSeconds = 180;
+        /** FEINT (MODPLAN §3.2, stage 3+): sometimes it screams and runs at you, then simply is not there. */
+        public boolean feints = true;
+        /** Chance, once per sighting (after ~1.5 s of you looking at it), that the sighting turns into a feint. */
+        public double feintChance = 0.25;
+        /** TREE (MODPLAN §3.2, stage 2+): instead of standing in the open it peeks out from behind a tree. */
+        public boolean treePeeks = true;
+        /** Chance that one haunting tries the tree variant first (falls back to the open field if no tree fits). */
+        public double treePeekChance = 0.35;
+        /** KNOCK (stage 5): chance that a door-knock house event is the real It standing outside the door. */
+        public double realKnockChance = 0.4;
+
+        // ---- comfort / server settings (MODPLAN §19) ----
+        /** Softer visuals: no flashing frames, gentler vignette and chase pulse, jumpscare image replaced by a dark fade. */
+        public boolean photosensitiveMode = false;
+        /** Multiplier for the volume of every sound the mod plays to a player (0 = mute the mod, 1 = normal). */
+        public double effectsVolume = 1.0;
+        /** Minimum seconds between two bigger events (house events, window knocks, false presences, Old One,
+         *  dynamic structures) for the same player. 0 = no global gap, only the per-event cooldowns. */
+        public int minEventCooldown = 45;
+        /** Nothing the mod spawns or places may be farther than this from the player it is meant for (blocks). */
+        public int maxEventRange = 100;
+        /** Lets players without operator rights use /itwastall debug ... (read-only views). */
+        public boolean debugAllowedForNonOps = false;
 
         // ---- window knocks (PHASES Poziom 5: MODPLAN §12) ----
         /** The Tall One knocks three times on a window while you are inside your base at night. */

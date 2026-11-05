@@ -49,7 +49,11 @@ import static net.minecraft.server.command.CommandManager.literal;
  * /itwastall tension <+/-(number)>                - add/remove tension
  * /itwastall phase activate                       - force the IT JOINED sequence (PRE -> ACTIVE)
  * /itwastall status                               - how many Its exist on the server + phase/stage info
+ * /itwastall event feint|tree|realknock [player]  - force one of the It tricks (fake attack, behind a tree, real knock)
+ * /itwastall debug entity [forget]                - where the real It is, its state and the world-data record
+ * /itwastall debug events [player]                - every timer / cooldown of one player's events
  * </pre>
+ * With {@code debugAllowedForNonOps} in the config, players without operator rights may use /itwastall debug ...
  */
 public final class ItWasTallCommand {
     private ItWasTallCommand() {
@@ -57,21 +61,23 @@ public final class ItWasTallCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess access,
                                 CommandManager.RegistrationEnvironment env) {
+        // the root is open to everyone only when debugAllowedForNonOps is on; then only /itwastall debug ...
+        // is usable without operator rights (MODPLAN §19), every other branch still needs level 2
         dispatcher.register(literal("itwastall")
-                .requires(src -> src.hasPermissionLevel(2))
-                .then(literal("spawn")
+                .requires(src -> src.hasPermissionLevel(2) || ItWasTallConfig.INSTANCE.debugAllowedForNonOps)
+                .then(op(literal("spawn")
                         .executes(ctx -> spawn(ctx.getSource(), ctx.getSource().getPlayerOrThrow(), 30))
                         .then(argument("distance", IntegerArgumentType.integer(4, 96))
                                 .executes(ctx -> spawn(ctx.getSource(), ctx.getSource().getPlayerOrThrow(), IntegerArgumentType.getInteger(ctx, "distance")))
                                 .then(argument("player", EntityArgumentType.player())
                                         .executes(ctx -> spawn(ctx.getSource(), EntityArgumentType.getPlayer(ctx, "player"),
-                                                IntegerArgumentType.getInteger(ctx, "distance"))))))
-                .then(forPlayers("haunt", p -> {
+                                                IntegerArgumentType.getInteger(ctx, "distance")))))))
+                .then(op(forPlayers("haunt", p -> {
                     if (!HauntDirector.spawnStare(p)) throw new IllegalStateException("no free spot");
-                }))
-                .then(forPlayers("jumpscare", p -> ModNetworking.sendJumpscare(p)))
-                .then(forPlayers("scare", p -> ScareSounds.playRandomScare(p)))
-                .then(literal("message")
+                })))
+                .then(op(forPlayers("jumpscare", p -> ModNetworking.sendJumpscare(p))))
+                .then(op(forPlayers("scare", p -> ScareSounds.playRandomScare(p))))
+                .then(op(literal("message")
                         .executes(ctx -> each(ctx, List.of(ctx.getSource().getPlayerOrThrow()), "message",
                                 p -> ScareSounds.showMessage(p, ItWasTallConfig.INSTANCE.scareText)))
                         .then(argument("players", EntityArgumentType.players())
@@ -81,13 +87,13 @@ public final class ItWasTallCommand {
                                         .executes(ctx -> {
                                             String text = StringArgumentType.getString(ctx, "text");
                                             return each(ctx, EntityArgumentType.getPlayers(ctx, "players"), "message", p -> ScareSounds.showMessage(p, text));
-                                        }))))
-                .then(mineCommand())
-                .then(eventCommand())
-                .then(taskCommand())
+                                        })))))
+                .then(op(mineCommand()))
+                .then(op(eventCommand()))
+                .then(op(taskCommand()))
                 .then(debugCommand())
-                .then(baseCommand())
-                .then(literal("stage")
+                .then(op(baseCommand()))
+                .then(op(literal("stage")
                         .executes(ctx -> {
                             ctx.getSource().sendFeedback(() -> Text.literal(Director.statusLine()), false);
                             return Director.stageIndex();
@@ -100,8 +106,8 @@ public final class ItWasTallCommand {
                                             + " Applies from the next tick, no restart needed.";
                                     ctx.getSource().sendFeedback(() -> Text.literal(feedback), false);
                                     return n;
-                                })))
-                .then(literal("tension")
+                                }))))
+                .then(op(literal("tension")
                         .executes(ctx -> {
                             double v = Director.tension();
                             ctx.getSource().sendFeedback(() -> Text.literal("Tension: " + fmt(v) + " / 100 (stage " + Director.stageIndex() + ")"), false);
@@ -114,8 +120,8 @@ public final class ItWasTallCommand {
                                     ctx.getSource().sendFeedback(() -> Text.literal("Tension " + (amount >= 0 ? "+ " : "- ") + fmt(Math.abs(amount))
                                             + " -> " + fmt(Director.tension()) + " / 100 (stage " + Director.stageIndex() + ")"), false);
                                     return 1;
-                                })))
-                .then(literal("phase")
+                                }))))
+                .then(op(literal("phase")
                         .then(literal("activate")
                                 .executes(ctx -> {
                                     boolean ok = Director.activatePhase(ctx.getSource().getServer());
@@ -125,13 +131,13 @@ public final class ItWasTallCommand {
                                         ctx.getSource().sendError(Text.literal("Phase is already ACTIVE."));
                                     }
                                     return ok ? 1 : 0;
-                                })))
-                .then(literal("status").executes(ctx -> {
+                                }))))
+                .then(op(literal("status").executes(ctx -> {
                     int n = HauntDirector.countActive(ctx.getSource().getServer());
                     ctx.getSource().sendFeedback(() -> Text.literal("Its on the server: " + n + " / " + ItWasTallConfig.INSTANCE.maxActiveIts), false);
                     ctx.getSource().sendFeedback(() -> Text.literal(Director.statusLine()), false);
                     return n;
-                })));
+                }))));
     }
 
     /** Command readout: PHASE, ETAP (index + name), tension, itJoined. */
@@ -189,6 +195,20 @@ public final class ItWasTallCommand {
                 }))
                 .then(eventKind("knock", p -> {
                     if (!WindowKnocks.trigger(p)) throw new IllegalStateException("no window near the player's base");
+                }))
+                .then(eventKind("feint", p -> {
+                    if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
+                    TallOneEntity it = spawnAt(p, 22);
+                    if (it == null) throw new IllegalStateException("no room in front of the player");
+                    it.beginFeint(p);
+                }))
+                .then(eventKind("tree", p -> {
+                    if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
+                    if (!HauntDirector.spawnBehindTree(p, 10, 40)) throw new IllegalStateException("no suitable tree in front of the player");
+                }))
+                .then(eventKind("realknock", p -> {
+                    if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
+                    if (!com.itwastall.entity.HouseEvents.realKnockNearest(p)) throw new IllegalStateException("no mapped door with room outside");
                 }))
                 .then(eventKind("oldone", p -> {
                     if (!com.itwastall.entity.OldOneDirector.spawnFor(p)) throw new IllegalStateException("no free spot near the player");
@@ -320,6 +340,11 @@ public final class ItWasTallCommand {
                         }));
     }
 
+    /** Operator-only branch of /itwastall. */
+    private static <T extends com.mojang.brigadier.builder.ArgumentBuilder<ServerCommandSource, T>> T op(T builder) {
+        return builder.requires(src -> src.hasPermissionLevel(2));
+    }
+
     /** "/itwastall debug base" + "/itwastall debug view" — MODPLAN §8.5 debug suite. */
     private static LiteralArgumentBuilder<ServerCommandSource> debugCommand() {
         return literal("debug")
@@ -331,6 +356,9 @@ public final class ItWasTallCommand {
                             ctx.getSource().sendFeedback(() -> Text.literal(
                                     "pending scan columns: " + com.itwastall.base.BaseTracker.pendingWork(p.getUuid())), false);
                             for (String line : com.itwastall.base.BaseTracker.markerSample(p.getUuid())) {
+                                ctx.getSource().sendFeedback(() -> Text.literal(line), false);
+                            }
+                            for (String line : com.itwastall.base.BaseTracker.clusterSummary(p)) {
                                 ctx.getSource().sendFeedback(() -> Text.literal(line), false);
                             }
                             // §8.5: "debug base" also shows the coloured frames in the world
@@ -347,7 +375,76 @@ public final class ItWasTallCommand {
                                 throw new IllegalStateException("no mapped base yet (click a bed, wait for the scan)");
                             }
                             return 1;
-                        }));
+                        }))
+                // MODPLAN §21: where the real It is, what it is doing, who it is after
+                .then(literal("entity")
+                        .executes(ctx -> debugEntity(ctx.getSource()))
+                        .then(op(literal("forget").executes(ctx -> {
+                            com.itwastall.world.ItWasTallState.getOrCreate(ctx.getSource().getServer()).forgetActiveIt();
+                            ctx.getSource().sendFeedback(() -> Text.literal("Forgot the remembered It (the slot is free)."), true);
+                            return 1;
+                        }))))
+                // MODPLAN §21: every timer and cooldown of one player's events
+                .then(literal("events")
+                        .executes(ctx -> debugEvents(ctx.getSource(), ctx.getSource().getPlayerOrThrow()))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> debugEvents(ctx.getSource(), EntityArgumentType.getPlayer(ctx, "player")))));
+    }
+
+    private static int debugEntity(ServerCommandSource source) {
+        var server = source.getServer();
+        var state = com.itwastall.world.ItWasTallState.getOrCreate(server);
+        long now = server.getOverworld().getTime();
+        int n = 0;
+        for (ServerWorld w : server.getWorlds()) {
+            for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> true)) {
+                n++;
+                var victim = it.getVictimUuid() == null ? null : server.getPlayerManager().getPlayer(it.getVictimUuid());
+                String who = victim == null ? "nobody" : victim.getName().getString() + " (" + (int) it.distanceTo(victim) + " m)";
+                String line = "It " + it.getUuidAsString().substring(0, 8) + " in " + w.getRegistryKey().getValue()
+                        + " at " + it.getBlockPos().toShortString() + " — " + it.getMode() + " for " + it.modeTicks() / 20 + " s, after " + who
+                        + (it.isInvisible() ? ", invisible" : "");
+                source.sendFeedback(() -> Text.literal(line), false);
+            }
+            for (com.itwastall.entity.OldOneEntity one : w.getEntitiesByType(ModEntities.OLD_ONE, e -> true)) {
+                String line = "Old One at " + one.getBlockPos().toShortString() + (one.isSplitting() ? " — tearing open" : " — standing");
+                source.sendFeedback(() -> Text.literal(line), false);
+            }
+        }
+        if (state.activeIt() != null) {
+            String rec = "World data: It " + state.activeIt().toString().substring(0, 8) + " in " + state.activeItDim()
+                    + " at " + net.minecraft.util.math.BlockPos.fromLong(state.activeItPos()).toShortString()
+                    + ", last seen " + (now - state.activeItSeen()) / 20 + " s ago"
+                    + (state.activeItFresh(now) ? " (counts against the limit)" : " (stale, does not count)");
+            source.sendFeedback(() -> Text.literal(rec), false);
+        } else {
+            source.sendFeedback(() -> Text.literal("World data: no It remembered."), false);
+        }
+        int loaded = n;
+        source.sendFeedback(() -> Text.literal("Loaded Its: " + loaded + ", counted: " + HauntDirector.countActive(server)
+                + " / " + Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)), false);
+        return 1;
+    }
+
+    private static int debugEvents(ServerCommandSource source, ServerPlayerEntity p) {
+        long now = p.getServerWorld().getServer().getOverworld().getTime();
+        java.util.UUID u = p.getUuid();
+        java.util.function.LongFunction<String> in = at -> at < 0 ? "not scheduled" : at <= now ? "due now" : "in " + (at - now) / 20 + " s";
+        List<String> lines = List.of(
+                "Events of " + p.getName().getString() + " — phase " + (Director.phase() == 0 ? "PRE" : "ACTIVE") + ", stage " + Director.stageIndex(),
+                "  shared event gap (minEventCooldown): " + (com.itwastall.entity.EventGate.secondsLeft(p) == 0 ? "ready" : com.itwastall.entity.EventGate.secondsLeft(p) + " s left"),
+                "  haunting (It in the distance): " + in.apply(HauntDirector.nextAt(u)),
+                "  Old One: " + in.apply(com.itwastall.entity.OldOneDirector.nextAt(u)),
+                "  house events: " + in.apply(com.itwastall.entity.HouseEvents.nextAt(u)),
+                "  small scare: " + in.apply(ScareSounds.nextScareAt(u)),
+                "  window knocks tonight: " + WindowKnocks.ledgerCount(u),
+                "  false presences tonight: " + FalsePresences.ledgerCount(u),
+                "  lights doused tonight: " + com.itwastall.entity.DouseLights.ledgerCount(u),
+                "  structures today: " + com.itwastall.entity.DynamicStructures.ledgerCount(u),
+                "  mine: " + MineEvents.debugLine(u),
+                "  task: " + TaskManager.status(u));
+        for (String line : lines) source.sendFeedback(() -> Text.literal(line), false);
+        return 1;
     }
 
     private static LiteralArgumentBuilder<ServerCommandSource> mineCommand() {
@@ -363,6 +460,26 @@ public final class ItWasTallCommand {
                             .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")), "mine " + name, action))));
         }
         return root;
+    }
+
+    private static boolean freeSlot(ServerPlayerEntity player) {
+        return HauntDirector.countActive(player.getServer()) < Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts);
+    }
+
+    /** An It on the ground {@code distance} blocks in front of the player (null if there is no room). */
+    @org.jetbrains.annotations.Nullable
+    private static TallOneEntity spawnAt(ServerPlayerEntity player, int distance) {
+        ServerWorld world = player.getServerWorld();
+        float yawRad = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
+        double x = player.getX() - MathHelper.sin(yawRad) * distance;
+        double z = player.getZ() + MathHelper.cos(yawRad) * distance;
+        int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, MathHelper.floor(x), MathHelper.floor(z));
+        TallOneEntity it = ModEntities.TALL_ONE.create(world);
+        if (it == null) return null;
+        it.refreshPositionAndAngles(x, y, z, player.getYaw() + 180f, 0f);
+        if (!world.isSpaceEmpty(it)) return null;
+        it.setVictim(player);
+        return world.spawnEntity(it) ? it : null;
     }
 
     private static int spawn(ServerCommandSource source, ServerPlayerEntity player, int distance) throws CommandSyntaxException {

@@ -111,6 +111,7 @@ public final class BaseTracker {
         BlockState state = world.getBlockState(pos);
         if (state.getBlock() instanceof BedBlock) {
             setAnchor(sp, pos.toImmutable());
+            if (server != null) ItWasTallState.getOrCreate(server).setBedAnchored(sp.getUuid(), true);
             return ActionResult.PASS;
         }
 
@@ -165,7 +166,69 @@ public final class BaseTracker {
             }
         }
 
+        // chunk scores (MODPLAN §8 notes): time spent per chunk every 20 s, cluster check every minute
+        if (tickingServer.getTicks() % 400 == 0) {
+            ItWasTallState state = ItWasTallState.getOrCreate(tickingServer);
+            for (ServerPlayerEntity player : tickingServer.getPlayerManager().getPlayerList()) {
+                if (player.isSpectator() || !player.isAlive() || player.getWorld().getRegistryKey() != World.OVERWORLD) continue;
+                boolean calmNight = player.getWorld().isNight()
+                        && com.itwastall.entity.ShelterCheck.isSheltered(player.getWorld(), player.getBlockPos());
+                ChunkScores.addDwell(state, player.getUuid(), player.getBlockPos(), calmNight);
+            }
+        }
+        if (tickingServer.getTicks() % 1200 == 600) {
+            for (ServerPlayerEntity player : tickingServer.getPlayerManager().getPlayerList()) {
+                if (player.getWorld().getRegistryKey() == World.OVERWORLD) evaluateClusters(player);
+            }
+        }
+
         runScans(tickingServer);
+    }
+
+    /**
+     * No bed? The strongest cluster of chunks (blocks placed + time spent) becomes the base once it is
+     * strong enough; a non-bed base moves when another cluster becomes clearly stronger (they moved house).
+     */
+    private static void evaluateClusters(ServerPlayerEntity player) {
+        if (server == null) return;
+        ItWasTallState state = ItWasTallState.getOrCreate(server);
+        UUID uuid = player.getUuid();
+        if (state.isBedAnchored(uuid)) return;          // a bed always wins
+        List<ChunkScores.Cluster> clusters = ChunkScores.clusters(player.getServerWorld(), state, uuid);
+        if (clusters.isEmpty()) return;
+        ChunkScores.Cluster best = clusters.get(0);
+        if (best.score() < ChunkScores.BASE_SCORE) return;
+        Long anchor = anchorOf(uuid);
+        if (anchor == null) {
+            setAnchor(player, best.center());
+            ItWasTall.LOGGER.info("Base of {} found from chunk scores ({} chunks, score {}).",
+                    player.getName().getString(), best.chunks().size(), Math.round(best.score()));
+            return;
+        }
+        BlockPos current = BlockPos.fromLong(anchor);
+        if (best.contains(current)) return;
+        double currentScore = 0;
+        for (ChunkScores.Cluster c : clusters) if (c.contains(current)) currentScore = c.score();
+        if (best.score() >= Math.max(ChunkScores.BASE_SCORE * 2, currentScore * 2.0)) {
+            setAnchor(player, best.center());
+            ItWasTall.LOGGER.info("Base of {} moved to a stronger cluster at {}.", player.getName().getString(),
+                    best.center().toShortString());
+        }
+    }
+
+    /** Debug lines: the strongest clusters of that player. */
+    public static List<String> clusterSummary(ServerPlayerEntity player) {
+        List<String> lines = new ArrayList<>();
+        if (server == null) return lines;
+        ItWasTallState state = ItWasTallState.getOrCreate(server);
+        List<ChunkScores.Cluster> clusters = ChunkScores.clusters(player.getServerWorld(), state, player.getUuid());
+        lines.add("chunk clusters: " + clusters.size() + (state.isBedAnchored(player.getUuid()) ? " (bed anchor wins)" : "")
+                + ", base from score " + Math.round(ChunkScores.BASE_SCORE));
+        for (int i = 0; i < Math.min(3, clusters.size()); i++) {
+            ChunkScores.Cluster c = clusters.get(i);
+            lines.add("  #" + (i + 1) + " score " + Math.round(c.score()) + ", " + c.chunks().size() + " chunks, centre " + c.center().toShortString());
+        }
+        return lines;
     }
 
     // ------------------------------------------------------------ public API ----

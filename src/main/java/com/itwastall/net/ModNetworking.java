@@ -80,7 +80,9 @@ public final class ModNetworking {
     public static boolean isChased(ServerPlayerEntity player) {
         return !player.getServerWorld().getEntitiesByType(com.itwastall.registry.ModEntities.TALL_ONE,
                 player.getBoundingBox().expand(96),
-                it -> it.getMode() == com.itwastall.entity.TallOneEntity.Mode.CHASE
+                it -> (it.getMode() == com.itwastall.entity.TallOneEntity.Mode.CHASE
+                        || it.getMode() == com.itwastall.entity.TallOneEntity.Mode.ATTACK
+                        || it.getMode() == com.itwastall.entity.TallOneEntity.Mode.FEINT)
                         && player.getUuid().equals(it.getVictimUuid())).isEmpty();
     }
 

@@ -54,6 +54,25 @@ public final class ItWasTallState extends PersistentState {
     /** Next world-time tick when another lore book may be placed for this player. */
     private final Map<UUID, Long> loreBookCooldowns = new HashMap<>();
 
+    /**
+     * MODPLAN §4: the one real Tall One, remembered in the world data so the server limit also counts
+     * an It standing in an UNLOADED chunk and no duplicate survives a restart. {@code activeItSeen} is
+     * the Overworld time of its last tick; a record that has not ticked for {@link #ACTIVE_IT_STALE_TICKS}
+     * no longer blocks new hauntings (and if that old It ever loads again, it removes itself).
+     */
+    @org.jetbrains.annotations.Nullable
+    private UUID activeIt;
+    private String activeItDim = "";
+    private long activeItPos;
+    private long activeItSeen;
+    public static final long ACTIVE_IT_STALE_TICKS = 20L * 60 * 10;
+
+    /** Time spent per chunk (ChunkScores, MODPLAN §8 notes): player -> chunk -> dwell points. */
+    private final Map<UUID, Map<Long, Float>> chunkDwell = new HashMap<>();
+    /** Players whose base anchor is a bed they used (a bed always wins over a chunk cluster). */
+    private final Set<UUID> bedAnchored = new HashSet<>();
+    private static final int MAX_DWELL_CHUNKS = 400;
+
     public ItWasTallState() {
     }
 
@@ -61,6 +80,11 @@ public final class ItWasTallState extends PersistentState {
     public static ItWasTallState getOrCreate(MinecraftServer server) {
         PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
         return manager.getOrCreate(TYPE, ID);
+    }
+
+    /** Reads a saved state (also used by the GameTests to check that a save round-trips). */
+    public static ItWasTallState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        return createFromNbt(nbt, lookup);
     }
 
     private static ItWasTallState createFromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
@@ -90,6 +114,22 @@ public final class ItWasTallState extends PersistentState {
         }
         NbtCompound loreCooldowns = nbt.getCompound("loreBookCooldowns");
         for (String key : loreCooldowns.getKeys()) state.loreBookCooldowns.put(UUID.fromString(key), loreCooldowns.getLong(key));
+        NbtCompound dwell = nbt.getCompound("chunkDwell");
+        for (String key : dwell.getKeys()) {
+            NbtCompound one = dwell.getCompound(key);
+            long[] chunks = one.getLongArray("c");
+            int[] bits = one.getIntArray("v");
+            Map<Long, Float> m = new HashMap<>();
+            for (int i = 0; i < Math.min(chunks.length, bits.length); i++) m.put(chunks[i], Float.intBitsToFloat(bits[i]));
+            state.chunkDwell.put(UUID.fromString(key), m);
+        }
+        for (String key : nbt.getCompound("bedAnchored").getKeys()) state.bedAnchored.add(UUID.fromString(key));
+        if (nbt.containsUuid("activeIt")) {
+            state.activeIt = nbt.getUuid("activeIt");
+            state.activeItDim = nbt.getString("activeItDim");
+            state.activeItPos = nbt.getLong("activeItPos");
+            state.activeItSeen = nbt.getLong("activeItSeen");
+        }
         return state;
     }
 
@@ -124,6 +164,30 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound loreCooldowns = new NbtCompound();
         loreBookCooldowns.forEach((uuid, value) -> loreCooldowns.putLong(uuid.toString(), value));
         nbt.put("loreBookCooldowns", loreCooldowns);
+        NbtCompound dwell = new NbtCompound();
+        chunkDwell.forEach((uuid, m) -> {
+            long[] chunks = new long[m.size()];
+            int[] bits = new int[m.size()];
+            int i = 0;
+            for (Map.Entry<Long, Float> e : m.entrySet()) {
+                chunks[i] = e.getKey();
+                bits[i++] = Float.floatToIntBits(e.getValue());
+            }
+            NbtCompound one = new NbtCompound();
+            one.putLongArray("c", chunks);
+            one.putIntArray("v", bits);
+            dwell.put(uuid.toString(), one);
+        });
+        nbt.put("chunkDwell", dwell);
+        NbtCompound beds = new NbtCompound();
+        for (UUID uuid : bedAnchored) beds.putBoolean(uuid.toString(), true);
+        nbt.put("bedAnchored", beds);
+        if (activeIt != null) {
+            nbt.putUuid("activeIt", activeIt);
+            nbt.putString("activeItDim", activeItDim);
+            nbt.putLong("activeItPos", activeItPos);
+            nbt.putLong("activeItSeen", activeItSeen);
+        }
         return nbt;
     }
 
@@ -267,5 +331,87 @@ public final class ItWasTallState extends PersistentState {
 
     public void removePlayerBase(UUID player) {
         if (playerBases.remove(player) != null) markDirty();
+    }
+
+    // ---- the one real Tall One (MODPLAN §4) ----
+
+    @org.jetbrains.annotations.Nullable
+    public UUID activeIt() {
+        return activeIt;
+    }
+
+    public String activeItDim() {
+        return activeItDim;
+    }
+
+    public long activeItPos() {
+        return activeItPos;
+    }
+
+    public long activeItSeen() {
+        return activeItSeen;
+    }
+
+    /** True while the record still counts against the server limit (it ticked recently). */
+    public boolean activeItFresh(long now) {
+        return activeIt != null && now - activeItSeen < ACTIVE_IT_STALE_TICKS;
+    }
+
+    /** Called by the It every second while it exists (and once when it appears). */
+    public void noteActiveIt(UUID uuid, String dim, long pos, long now) {
+        boolean changed = !uuid.equals(activeIt) || !dim.equals(activeItDim) || pos != activeItPos;
+        activeIt = uuid;
+        activeItDim = dim;
+        activeItPos = pos;
+        activeItSeen = now;
+        if (changed) markDirty();   // the "seen" time alone is not worth a disk write every second
+    }
+
+    /** Forgets the record, but only if it still belongs to this It. */
+    public void clearActiveIt(UUID uuid) {
+        if (uuid.equals(activeIt)) {
+            activeIt = null;
+            activeItDim = "";
+            markDirty();
+        }
+    }
+
+    /** Admin escape hatch (/itwastall debug entity forget). */
+    public void forgetActiveIt() {
+        activeIt = null;
+        activeItDim = "";
+        markDirty();
+    }
+
+    // ---- chunk scores (BaseTracker / ChunkScores) ----
+
+    public void addChunkDwell(UUID player, long chunk, float amount) {
+        Map<Long, Float> m = chunkDwell.computeIfAbsent(player, u -> new HashMap<>());
+        m.merge(chunk, amount, Float::sum);
+        if (m.size() > MAX_DWELL_CHUNKS) {
+            // forget the chunk the player cared least about
+            Long weakest = null;
+            float min = Float.MAX_VALUE;
+            for (Map.Entry<Long, Float> e : m.entrySet()) {
+                if (e.getValue() < min) {
+                    min = e.getValue();
+                    weakest = e.getKey();
+                }
+            }
+            if (weakest != null) m.remove(weakest);
+        }
+        markDirty();
+    }
+
+    public Map<Long, Float> chunkDwell(UUID player) {
+        return chunkDwell.getOrDefault(player, Map.of());
+    }
+
+    public boolean isBedAnchored(UUID player) {
+        return bedAnchored.contains(player);
+    }
+
+    public void setBedAnchored(UUID player, boolean bed) {
+        if (bed ? bedAnchored.add(player) : bedAnchored.remove(player)) markDirty();
     }
 }

@@ -88,6 +88,7 @@ public final class DynamicStructures {
             }
             if (ledger.count >= 1) continue;          // §17: one build per night
             if (player.getRandom().nextDouble() >= clamp01(cfg.structureChance)) continue;
+            if (!EventGate.ready(player)) continue;
 
             // black copy only when the player HAS a mapped base and its own chance fires;
             // otherwise the rare night flavour set: cemetery / shrine / cottage
@@ -104,6 +105,7 @@ public final class DynamicStructures {
             BlockPos spot = findSpot(player, player.getRandom(), kind);
             if (spot == null) continue;
             build(player, spot, kind);
+            EventGate.mark(player);
             ledger.count++;
             ItWasTall.LOGGER.info("A {} rose behind {} at {}.", kind, player.getName().getString(),
                     spot.toShortString());
@@ -140,7 +142,10 @@ public final class DynamicStructures {
         float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
         for (int attempt = 0; attempt < 24; attempt++) {
             float behindYaw = yaw + 180f + (random.nextFloat() - 0.5f) * 120f;
-            double dist = 60.0 + random.nextDouble() * 40.0;
+            // MODPLAN §19 maxEventRange caps the far end (never closer than 40: it must rise out of sight)
+            double far = Math.max(40.0, Math.min(100.0, ItWasTallConfig.INSTANCE.maxEventRange));
+            double near = Math.min(60.0, far - 10.0);
+            double dist = near + random.nextDouble() * (far - near);
             int x = MathHelper.floor(player.getX() - MathHelper.sin(behindYaw) * dist);
             int z = MathHelper.floor(player.getZ() + MathHelper.cos(behindYaw) * dist);
             int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
@@ -764,5 +769,11 @@ public final class DynamicStructures {
     private static final class Ledger {
         long day = -1;
         int count;
+    }
+
+    /** How many times this fired for the player in the current day ledger, for /itwastall debug events. */
+    public static int ledgerCount(UUID player) {
+        Ledger ledger = LEDGERS.get(player);
+        return ledger == null ? 0 : ledger.count;
     }
 }

@@ -76,9 +76,11 @@ public final class FalsePresences {
             Random random = player.getRandom();
             if (random.nextDouble() >= chance) continue;
 
+            if (!EventGate.ready(player)) continue;
             BlockPos spot = findSpot(player, random, 10, 20);
             if (spot == null) continue;
             if (sendFigure(player, spot, FIGURE_TICKS, false)) {
+                EventGate.mark(player);
                 ledger.count++;
                 ItWasTall.LOGGER.debug("False presence -> {}", player.getName().getString());
             }
@@ -213,5 +215,11 @@ public final class FalsePresences {
     private static final class Ledger {
         long night = -1;
         int count;
+    }
+
+    /** How many times this fired for the player in the current night ledger, for /itwastall debug events. */
+    public static int ledgerCount(UUID player) {
+        Ledger ledger = LEDGERS.get(player);
+        return ledger == null ? 0 : ledger.count;
     }
 }

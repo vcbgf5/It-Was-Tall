@@ -231,4 +231,10 @@ public final class ScareSounds {
         queueMessage(player, ItWasTallConfig.INSTANCE.scareText, 40);
         return true;
     }
+
+    /** World time of the next small scare (-1 = not scheduled), for /itwastall debug events. */
+    public static long nextScareAt(UUID player) {
+        State st = STATES.get(player);
+        return st == null ? -1 : st.nextScare;
+    }
 }

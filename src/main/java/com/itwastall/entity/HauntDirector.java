@@ -99,9 +99,22 @@ public final class HauntDirector {
         return player.getServerWorld().getEntitiesByType(ModEntities.TALL_ONE, player.getBoundingBox().expand(96), e -> true).isEmpty();
     }
 
+    /**
+     * Real Its on the server (MODPLAN §4): every loaded one, plus the one remembered in the world data
+     * when it is not loaded right now (standing in an unloaded chunk) and ticked recently enough.
+     */
     public static int countActive(MinecraftServer server) {
         int n = 0;
-        for (ServerWorld w : server.getWorlds()) n += w.getEntitiesByType(ModEntities.TALL_ONE, e -> true).size();
+        UUID recorded = com.itwastall.world.ItWasTallState.getOrCreate(server).activeIt();
+        boolean recordedLoaded = false;
+        for (ServerWorld w : server.getWorlds()) {
+            for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> true)) {
+                if (it.isRemoved()) continue;
+                n++;
+                if (it.getUuid().equals(recorded)) recordedLoaded = true;
+            }
+        }
+        if (!recordedLoaded && com.itwastall.world.ItWasTallState.getOrCreate(server).activeItFresh(server.getOverworld().getTime())) n++;
         return n;
     }
 
@@ -112,8 +125,15 @@ public final class HauntDirector {
         ServerWorld world = player.getServerWorld();
         Random random = player.getRandom();
         Stage st = Director.currentStage(); // live read (PHASES §0)
-        int minDist = Math.max(1, st.hauntMinDist());
-        int maxDist = Math.max(minDist, st.hauntMaxDist());
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        int range = Math.max(16, cfg.maxEventRange);
+        int minDist = Math.min(Math.max(1, st.hauntMinDist()), range);
+        int maxDist = Math.min(Math.max(minDist, st.hauntMaxDist()), range);
+        // TREE (MODPLAN §3.2): stage 2+, sometimes it is half hidden behind a trunk instead of out in the open
+        if (st.ordinal() >= 2 && cfg.treePeeks && random.nextDouble() < cfg.treePeekChance
+                && spawnBehindTree(player, Math.max(12, Math.min(minDist, 30)), Math.max(18, Math.min(maxDist, 40)))) {
+            return true;
+        }
         float baseYaw = player.getYaw();
         for (int attempt = 0; attempt < 24; attempt++) {
             float yaw = (baseYaw + (random.nextFloat() - 0.5f) * 120f) * MathHelper.RADIANS_PER_DEGREE;
@@ -142,5 +162,78 @@ public final class HauntDirector {
             return world.spawnEntity(it);
         }
         return false;
+    }
+
+    /**
+     * TREE: a trunk (at least 3 logs tall) roughly in front of the player; It stands just behind it and a
+     * little to one side, so its head and one shoulder show. Remembers the spot right behind the trunk —
+     * that is where it steps when you notice it.
+     */
+    public static boolean spawnBehindTree(ServerPlayerEntity player, int minDist, int maxDist) {
+        ServerWorld world = player.getServerWorld();
+        Random random = player.getRandom();
+        float baseYaw = player.getYaw();
+        for (int attempt = 0; attempt < 40; attempt++) {
+            float yaw = (baseYaw + (random.nextFloat() - 0.5f) * 100f) * MathHelper.RADIANS_PER_DEGREE;
+            double dist = minDist + random.nextDouble() * Math.max(1, maxDist - minDist);
+            int cx = MathHelper.floor(player.getX() - MathHelper.sin(yaw) * dist);
+            int cz = MathHelper.floor(player.getZ() + MathHelper.cos(yaw) * dist);
+            BlockPos trunk = findTrunk(world, cx, cz, player);
+            if (trunk == null) continue;
+
+            Vec3d tc = new Vec3d(trunk.getX() + 0.5, trunk.getY(), trunk.getZ() + 0.5);
+            Vec3d away = new Vec3d(tc.x - player.getX(), 0, tc.z - player.getZ());
+            if (away.lengthSquared() < 1.0) continue;
+            away = away.normalize();
+            Vec3d side = new Vec3d(-away.z, 0, away.x).multiply(random.nextBoolean() ? 1 : -1);
+            Vec3d hide = tc.add(away.multiply(1.05));
+            Vec3d peek = hide.add(side.multiply(0.65));
+
+            TallOneEntity it = ModEntities.TALL_ONE.create(world);
+            if (it == null) return false;
+            it.refreshPositionAndAngles(peek.x, peek.y, peek.z, 0f, 0f);
+            if (!world.isSpaceEmpty(it)) continue;
+            if (!world.isSpaceEmpty(it, it.getBoundingBox().offset(hide.subtract(peek)))) continue;
+            BlockPos below = BlockPos.ofFloored(peek.x, peek.y - 0.5, peek.z);
+            if (world.getBlockState(below).getCollisionShape(world, below).isEmpty()) continue;
+            // its head, beside the trunk, must be visible from where the player stands
+            Vec3d head = peek.add(side.multiply(0.25)).add(0, 3.0, 0);
+            if (!world.raycast(new net.minecraft.world.RaycastContext(player.getEyePos(), head,
+                    net.minecraft.world.RaycastContext.ShapeType.VISUAL, net.minecraft.world.RaycastContext.FluidHandling.NONE, player))
+                    .getType().equals(net.minecraft.util.hit.HitResult.Type.MISS)) continue;
+            it.setVictim(player);
+            it.startTree(hide);
+            return world.spawnEntity(it);
+        }
+        return false;
+    }
+
+    /** Lowest log of a 3+ log trunk within 2 blocks of (x, z), standing on solid ground near the player's height. */
+    @org.jetbrains.annotations.Nullable
+    private static BlockPos findTrunk(ServerWorld world, int x, int z, ServerPlayerEntity player) {
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                int top = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz);
+                BlockPos.Mutable p = new BlockPos.Mutable(x + dx, top - 1, z + dz);
+                if (!world.getBlockState(p).isIn(net.minecraft.registry.tag.BlockTags.LOGS)) continue;
+                int logs = 0;
+                while (p.getY() > world.getBottomY() && world.getBlockState(p).isIn(net.minecraft.registry.tag.BlockTags.LOGS) && logs < 40) {
+                    p.move(0, -1, 0);
+                    logs++;
+                }
+                // p is now the block under the trunk
+                BlockState ground = world.getBlockState(p);
+                if (logs < 3 || ground.getCollisionShape(world, p).isEmpty() || !ground.getFluidState().isEmpty()) continue;
+                if (Math.abs(p.getY() + 1 - player.getY()) > 8) continue;
+                return p.up().toImmutable();
+            }
+        }
+        return null;
+    }
+
+    /** World time of this player's next roll (-1 = not scheduled yet), for /itwastall debug events. */
+    public static long nextAt(UUID player) {
+        Long next = NEXT.get(player);
+        return next == null ? -1 : next;
     }
 }
