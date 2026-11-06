@@ -70,6 +70,18 @@ public final class ItWasTallConfig {
         /** KNOCK (stage 5): chance that a door-knock house event is the real It standing outside the door. */
         public double realKnockChance = 0.4;
 
+        // ---- OUTSPACE, the dream world ----
+        /** Sometimes a sleeper is pulled into the dream maze (no damage, no death, the Old One hunts there). */
+        public boolean outspace = true;
+        /** First stage at which it can happen. */
+        public int outspaceMinStage = 5;
+        /** Chance when someone lies down to sleep (at most one player a night on the whole server). */
+        public double outspaceChance = 0.35;
+        /** How long a dream lasts before you wake up in your bed (seconds). */
+        public int outspaceSeconds = 30;
+        /** Chance that a room of the maze holds a chest (dream books, torches, rarely a Warding Crystal). */
+        public double outspaceLootChance = 0.08;
+
         // ---- comfort / server settings (MODPLAN §19) ----
         /** Softer visuals: no flashing frames, gentler vignette and chase pulse, jumpscare image replaced by a dark fade. */
         public boolean photosensitiveMode = false;

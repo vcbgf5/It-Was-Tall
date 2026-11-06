@@ -42,5 +42,6 @@
   "subtitles.itwastall.entity.old_one.tear": "Flesh tears apart",
   "entity.itwastall.old_one": "Old One",
   "item.itwastall.old_one_spawn_egg": "Old One Spawn Egg",
-  "item.itwastall.lore_book": "Strange Book"
+  "item.itwastall.lore_book": "Strange Book",
+  "dimension.itwastall.outspace": "Outspace"
 }

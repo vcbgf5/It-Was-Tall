@@ -1,0 +1,11 @@
+{
+  "type": "itwastall:outspace",
+  "generator": {
+    "type": "itwastall:outspace",
+    "seed": 1311666,
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:the_void"
+    }
+  }
+}

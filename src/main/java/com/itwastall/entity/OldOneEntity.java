@@ -50,9 +50,12 @@ import java.util.UUID;
  */
 public class OldOneEntity extends HostileEntity implements GeoEntity {
     private static final TrackedData<Boolean> SPLITTING = DataTracker.registerData(OldOneEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    /** OUTSPACE (the dream world): it does not tear open — it hunts, and catching you wakes you up. */
+    private static final TrackedData<Boolean> DREAM = DataTracker.registerData(OldOneEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
 
     public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.old_one.idle");
     public static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.old_one.walk");
+    public static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.old_one.run");
     public static final RawAnimation SPLIT = RawAnimation.begin().thenPlayAndHold("animation.old_one.split");
 
     /** Split timeline (ticks): It starts climbing out, the empty skin is gone. */
@@ -84,10 +87,24 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
     protected void initDataTracker(DataTracker.Builder builder) {
         super.initDataTracker(builder);
         builder.add(SPLITTING, false);
+        builder.add(DREAM, false);
     }
 
     public boolean isSplitting() {
         return dataTracker.get(SPLITTING);
+    }
+
+    public boolean isDream() {
+        return dataTracker.get(DREAM);
+    }
+
+    public void setDream(boolean dream) {
+        dataTracker.set(DREAM, dream);
+    }
+
+    @Nullable
+    public UUID victimUuid() {
+        return victim;
     }
 
     public void setVictim(@Nullable PlayerEntity player) {
@@ -116,6 +133,10 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
     protected void mobTick() {
         super.mobTick();
         ticks++;
+        if (isDream()) {
+            tickDream();
+            return;
+        }
         PlayerEntity player = findVictim();
         if (isSplitting()) {
             tickSplit(player);
@@ -147,8 +168,30 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
         if (ticks > 20 * 150 && !watched) discard();
     }
 
+    /**
+     * The dream hunter: always walks straight at its dreamer (looking at it does not stop it), never opens;
+     * when it reaches you — jumpscare, and you wake up in your bed.
+     */
+    private void tickDream() {
+        PlayerEntity player = victim == null ? null : getWorld().getPlayerByUuid(victim);
+        if (!(player instanceof ServerPlayerEntity sp) || !sp.isAlive() || sp.getWorld() != getWorld()) {
+            discard();                                   // the dreamer woke up
+            return;
+        }
+        face(sp);
+        if (ticks % 10 == 1 || getNavigation().isIdle()) getNavigation().startMovingTo(sp, 1.35);
+        if (ticks % 80 == 40) MineEvents.playTo(sp, ModSounds.AMBIENT_BREATH, getEyePos(), 0.8f, 0.9f);
+        if (distanceTo(sp) < 1.6) {
+            ModNetworking.sendJumpscare(sp);
+            Outspace.wake(sp, true);
+            discard();
+            return;
+        }
+        if (ticks > 20 * 90) discard();
+    }
+
     public void startSplit(PlayerEntity player) {
-        if (isSplitting()) return;
+        if (isSplitting() || isDream()) return;
         setVictim(player);
         dataTracker.set(SPLITTING, true);
         setCustomNameVisible(false);
@@ -207,7 +250,7 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (isSplitting()) return false;
+        if (isSplitting() || isDream()) return false;
         if (source.getAttacker() instanceof PlayerEntity p) {
             startSplit(p);            // you touched it — that was enough
             return false;
@@ -245,12 +288,14 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         if (victim != null) nbt.putUuid("Victim", victim);
+        nbt.putBoolean("Dream", isDream());
     }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
         if (nbt.containsUuid("Victim")) victim = nbt.getUuid("Victim");
+        setDream(nbt.getBoolean("Dream"));
         setCustomName(Text.literal("Old One"));
         setCustomNameVisible(true);
     }
@@ -264,6 +309,7 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
 
     private PlayState animation(AnimationState<OldOneEntity> state) {
         if (isSplitting()) return state.setAndContinue(SPLIT);
+        if (isDream()) return state.setAndContinue(state.isMoving() ? RUN : IDLE);
         return state.setAndContinue(state.isMoving() ? WALK : IDLE);
     }
 

@@ -50,6 +50,7 @@ import static net.minecraft.server.command.CommandManager.literal;
  * /itwastall phase activate                       - force the IT JOINED sequence (PRE -> ACTIVE)
  * /itwastall status                               - how many Its exist on the server + phase/stage info
  * /itwastall event feint|tree|realknock [player]  - force one of the It tricks (fake attack, behind a tree, real knock)
+ * /itwastall outspace [player] / outspace wake [player] - send someone into the dream world / wake them up
  * /itwastall debug entity [forget]                - where the real It is, its state and the world-data record
  * /itwastall debug events [player]                - every timer / cooldown of one player's events
  * </pre>
@@ -88,6 +89,14 @@ public final class ItWasTallCommand {
                                             String text = StringArgumentType.getString(ctx, "text");
                                             return each(ctx, EntityArgumentType.getPlayers(ctx, "players"), "message", p -> ScareSounds.showMessage(p, text));
                                         })))))
+                .then(op(literal("outspace")
+                        .executes(ctx -> each(ctx, List.of(ctx.getSource().getPlayerOrThrow()), "outspace", ItWasTallCommand::dream))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")), "outspace", ItWasTallCommand::dream)))
+                        .then(literal("wake")
+                                .executes(ctx -> each(ctx, List.of(ctx.getSource().getPlayerOrThrow()), "outspace wake", ItWasTallCommand::wake))
+                                .then(argument("player", EntityArgumentType.player())
+                                        .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")), "outspace wake", ItWasTallCommand::wake))))))
                 .then(op(mineCommand()))
                 .then(op(eventCommand()))
                 .then(op(taskCommand()))
@@ -443,6 +452,7 @@ public final class ItWasTallCommand {
                 "  lights doused tonight: " + com.itwastall.entity.DouseLights.ledgerCount(u),
                 "  structures today: " + com.itwastall.entity.DynamicStructures.ledgerCount(u),
                 "  mine: " + MineEvents.debugLine(u),
+                "  dream: " + com.itwastall.entity.Outspace.debugLine(p),
                 "  task: " + TaskManager.status(u));
         for (String line : lines) source.sendFeedback(() -> Text.literal(line), false);
         return 1;
@@ -461,6 +471,15 @@ public final class ItWasTallCommand {
                             .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")), "mine " + name, action))));
         }
         return root;
+    }
+
+    private static void dream(ServerPlayerEntity p) {
+        if (!com.itwastall.entity.Outspace.enter(p)) throw new IllegalStateException("already dreaming, or the outspace dimension is missing");
+    }
+
+    private static void wake(ServerPlayerEntity p) {
+        if (!com.itwastall.entity.Outspace.inOutspace(p)) throw new IllegalStateException("not dreaming");
+        com.itwastall.entity.Outspace.wake(p, false);
     }
 
     private static boolean freeSlot(ServerPlayerEntity player) {

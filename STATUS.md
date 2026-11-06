@@ -70,6 +70,14 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 - **Historia zadań w journalu**: każde zadanie (przydzielone / zrobione / nieudane / anulowane) zapisuje się w świecie i pokazuje na stronie STATUS („Earlier”).
 - **Zakładka NOTES**: tablica ogłoszeń dla całego serwera. Piszesz notatkę (do 200 znaków, Enter albo „pin it”), każdy widzi ją w journalu, a swoją możesz usunąć „x” (operator może usunąć każdą). Zapisane w świecie, z ochroną przed spamem.
 - **Multiplayer (też LAN / Essential)**: gracz po wejściu od razu dostaje cały stan (strach, etap, zadanie, journal, książki, notatki), a po 2 s jeszcze raz na wypadek, gdyby klient się jeszcze ładował. Każda wysyłka w obie strony jest zabezpieczona (`canSend`), serwer sprawdza wszystko, co przychodzi od klienta, a kod serwera nie odwołuje się do klas klienta.
+- **OUTSPACE — świat snu** (nowy wymiar `itwastall:outspace`):
+  - nieskończony labirynt generowany własnym generatorem chunków: pokoje 5×5 i 5 bloków wysokości, podłoga i sufit z bruku (czasem omszałego), ściany z dębowych desek, słupy z dębowego pnia, przejścia szerokości 2, czasem duże sale, pochodnie na ścianach;
+  - od etapu 5, gdy ktoś kładzie się spać, raz na noc jedna osoba na serwer (35 %) zostaje wciągnięta na 30 s;
+  - nic nie zadaje obrażeń, nie da się umrzeć i nic nie przepada;
+  - Old One (dalej ze skinem Steve'a z gry) w trybie snu nie rozrywa się, tylko biegnie (nowa animacja `run`); gdy cię dopadnie: jumpscare i budzisz się w łóżku;
+  - po 30 s budzisz się sam (5 s przed końcem napis „wake up.”); w niektórych pokojach skrzynie: książki snu (trafiają do wspólnego journala), pochodnie, rzadko Kryształ Odpędzający, a znalezione rzeczy zostają;
+  - kto wyjdzie z gry w trakcie snu, po powrocie budzi się w domu;
+  - komendy `/itwastall outspace [gracz]` i `/itwastall outspace wake [gracz]`, config `outspace*`, GameTest `outspaceMazeIsClosed`.
 - **GameTesty** (§24.2): osobny source set `src/gametest` (nie trafia do jara), uruchamiane przez `./gradlew runGametest`. Testują schronienie, zapis mapy bazy, A* omijający obsydian, jeden It, zapis stanu świata, klastry chunków i stałe numery stanów AI.
 
 ## 🟡 Częściowo

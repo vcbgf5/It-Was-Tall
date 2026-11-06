@@ -171,6 +171,30 @@ public class ItWasTallGameTests implements FabricGameTest {
         ctx.complete();
     }
 
+    /** OUTSPACE: floor and ceiling everywhere, and every room has at least one way out (no sealed cells). */
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void outspaceMazeIsClosed(TestContext ctx) {
+        long seed = 1_311_666L;
+        for (int cx = -40; cx <= 40; cx++) {
+            for (int cz = -40; cz <= 40; cz++) {
+                int x0 = cx * com.itwastall.world.OutspaceMaze.CELL, z0 = cz * com.itwastall.world.OutspaceMaze.CELL;
+                ctx.assertTrue(com.itwastall.world.OutspaceMaze.block(seed, x0 + 3, com.itwastall.world.OutspaceMaze.FLOOR, z0 + 3).isSolidBlock(ctx.getWorld(), BlockPos.ORIGIN), "no floor in cell " + cx + " " + cz);
+                ctx.assertTrue(com.itwastall.world.OutspaceMaze.block(seed, x0 + 3, com.itwastall.world.OutspaceMaze.CEILING, z0 + 3).isSolidBlock(ctx.getWorld(), BlockPos.ORIGIN), "no ceiling in cell " + cx + " " + cz);
+                ctx.assertTrue(com.itwastall.world.OutspaceMaze.block(seed, x0 + 3, com.itwastall.world.OutspaceMaze.FLOOR + 1, z0 + 3).isAir(), "the middle of cell " + cx + " " + cz + " is blocked");
+                // a way out: any of the four walls has an opening at room height
+                int exits = 0;
+                for (int k = 1; k < com.itwastall.world.OutspaceMaze.CELL; k++) {
+                    if (com.itwastall.world.OutspaceMaze.wall(seed, x0, z0 + k) == 0) exits++;
+                    if (com.itwastall.world.OutspaceMaze.wall(seed, x0 + com.itwastall.world.OutspaceMaze.CELL, z0 + k) == 0) exits++;
+                    if (com.itwastall.world.OutspaceMaze.wall(seed, x0 + k, z0) == 0) exits++;
+                    if (com.itwastall.world.OutspaceMaze.wall(seed, x0 + k, z0 + com.itwastall.world.OutspaceMaze.CELL) == 0) exits++;
+                }
+                ctx.assertTrue(exits > 0, "cell " + cx + " " + cz + " is sealed");
+            }
+        }
+        ctx.complete();
+    }
+
     /** New AI states are appended: the saved ordinals of the old ones must never move. */
     @GameTest(templateName = EMPTY_STRUCTURE)
     public void savedModeOrdinalsAreStable(TestContext ctx) {

@@ -161,6 +161,17 @@ def animations():
         "right_arm": {"rotation": cyc(1.0, -3, 3, 0.75)},
         "left_arm": {"rotation": cyc(1.0, -3, 3, 0.25)},
     })
+    # the dream hunt (OUTSPACE): a stiff, too-fast sprint, leaning forward, arms pumping
+    lean = kf((0.0, [10, 0, 0]), (0.5, [10, 0, 0]))
+    A["run"] = dict(loop=True, animation_length=0.5, bones={
+        "half_right": {"rotation": lean}, "half_left": {"rotation": lean},
+        "right_leg": {"rotation": cyc(0.5, -48, 48, 0.25)},
+        "left_leg": {"rotation": cyc(0.5, -48, 48, 0.75)},
+        "right_arm": {"rotation": cyc(0.5, -42, 42, 0.75)},
+        "left_arm": {"rotation": cyc(0.5, -42, 42, 0.25)},
+        "head_right": {"rotation": kf((0.0, [-12, 0, 0]), (0.5, [-12, 0, 0]))},
+        "head_left": {"rotation": kf((0.0, [-12, 0, 0]), (0.5, [-12, 0, 0]))},
+    })
     L = 2.4
     sh = shudder(0.0, 0.45, 4, axis=0, seed=3)   # X only, so the halves shake together
     # 0-0.45 it shudders; 0.45-0.7 a crack opens down the middle (head first); 0.7-1.45 the two halves

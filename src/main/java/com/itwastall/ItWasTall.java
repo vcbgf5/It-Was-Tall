@@ -42,6 +42,8 @@ public class ItWasTall implements ModInitializer {
         ModSounds.init();
         ModEntities.init();
         ModItems.init();
+        // OUTSPACE, the dream world: the chunk generator type must exist before worlds load
+        com.itwastall.registry.ModDimensions.init();
         ModNetworking.init();
         MineEvents.init();
         AmbientSounds.init();
@@ -58,6 +60,7 @@ public class ItWasTall implements ModInitializer {
         LoreBooks.init();
         // the server-wide journal: books everyone has read + the shared NOTES board
         com.itwastall.world.SharedJournal.init();
+        com.itwastall.entity.Outspace.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -82,6 +85,7 @@ public class ItWasTall implements ModInitializer {
             DynamicStructures.forget(uuid);
             com.itwastall.entity.EventGate.forget(uuid);
             com.itwastall.world.SharedJournal.forget(uuid);
+            com.itwastall.entity.Outspace.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...
