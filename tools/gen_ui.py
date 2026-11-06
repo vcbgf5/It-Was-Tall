@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """It Was Tall UI — the built-in resource pack "It Was Tall UI" (enabled by default, can be switched off in
-Resource Packs): every Minecraft button, slider, text field and checkbox in the mod's style (dark stitched
-leather, ink-red edges, the journal's checkbox), the title logo "IT WAS TALL" with running blood, the line
+Resource Packs): every Minecraft button, slider, text field and checkbox in the mod's style (dark
+leather, ink-red edges, the journal's checkbox), the menu list backgrounds, separators, tabs, scroller,
+popups, the advancements window, tabs and toast, the It Was Tall advancement background, the title logo "IT WAS TALL" with running blood, the line
 under it, plus the title-screen background (assets/itwastall/textures/gui/title_background.png).
 
 Writes into the repo. Never touches textures/gui/journal.png (hand-edited). The Tall One silhouette for
 the background is rendered from the real model (tools/build_icon.py) in a temporary folder.
-Run: python3 tools/gen_ui.py
+Run: python3 tools/gen_ui.py   (add --background to also redraw the menu background)
 """
 import json, math, os, random, shutil, sys, tempfile
 from PIL import Image, ImageDraw, ImageFilter
@@ -52,16 +53,7 @@ def button(state):
     for x in range(2, w - 2):
         img.putpixel((x, 2), tuple(min(255, c + 18) for c in img.getpixel((x, 2))[:3]) + (255,))
         img.putpixel((x, h - 3), tuple(max(0, c - 18) for c in img.getpixel((x, h - 3))[:3]) + (255,))
-    # the stitch, 2 px inside (dashed), like the journal's binding
-    sc = {'normal': STITCH, 'hover': (196, 120, 96, 255), 'disabled': (92, 86, 80, 255)}[state]
-    for x in range(4, w - 4):
-        if (x // 2) % 2 == 0:
-            img.putpixel((x, 3), sc)
-            img.putpixel((x, h - 4), sc)
-    for y in range(4, h - 4):
-        if (y // 2) % 2 == 0:
-            img.putpixel((3, y), sc)
-            img.putpixel((w - 4, y), sc)
+    # (no stitch: the light dashed seam read as white lines on the button sides)
     if state != 'disabled':
         # a few dried blood specks (look fine when the centre tiles)
         for _ in range(9):
@@ -119,6 +111,8 @@ FONT = {
     "O": ["01110", "10001", "10001", "10001", "10001", "10001", "01110"], "M": ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
     "E": ["11111", "10000", "10000", "11110", "10000", "10000", "11111"], "H": ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
     "N": ["10001", "11001", "10101", "10011", "10001", "10001", "10001"], "G": ["01111", "10000", "10000", "10111", "10001", "10001", "01110"],
+    "P": ["11110", "10001", "10001", "11110", "10000", "10000", "10000"], "U": ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
+    "D": ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
     "C": ["01111", "10000", "10000", "10000", "10000", "10000", "01111"], " ": ["000"] * 7, ".": ["0", "0", "0", "0", "0", "0", "1"],
 }
 
@@ -333,12 +327,169 @@ def background(sil=None, meta=None):
         vd.ellipse([-W * 0.25 + k * 12, -H * 0.3 + k * 7, W * 1.25 - k * 12, H * 1.3 - k * 7], fill=a)
     return Image.composite(img, Image.new('RGBA', (W, H), (0, 0, 0, 255)), vig.filter(ImageFilter.GaussianBlur(60)))
 
+# ---------------------------------------------------------------- menus, lists, tabs, popups
+PARCH = (213, 195, 157)
+INK = (42, 25, 16, 255)
+
+def separator(top):
+    """The 32x2 line above (header) / below (footer) a list. Vanilla: black + a white line -> ours: ink + dried red."""
+    img = Image.new('RGBA', (32, 2))
+    dark, red = (8, 4, 3, 200), (104, 18, 14, 150)
+    for x in range(32):
+        img.putpixel((x, 0), dark if top else red)
+        img.putpixel((x, 1), red if top else dark)
+    return img
+
+def tint_tile(base, alpha, var, seed):
+    """16x16 seamless, translucent dark leather tile (menu / list backgrounds)."""
+    rr = random.Random(seed)
+    img = Image.new('RGBA', (16, 16))
+    for x in range(16):
+        for y in range(16):
+            n = rr.randint(-var, var)
+            img.putpixel((x, y), tuple(max(0, min(255, base[i] + n)) for i in range(3)) + (max(0, min(255, alpha + rr.randint(-6, 6))),))
+    return img
+
+def tab(selected, hover):
+    """130x24 tab of the create-world screen; nine-slice borders left/top/right 2, bottom 0."""
+    w, h = 130, 24
+    img = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    edge = (150, 30, 22, 255) if hover else (8, 4, 3, 220)
+    inner = (110, 20, 15, 200) if (selected or hover) else (70, 40, 28, 120)
+    if not selected:
+        lt = leather(w, h, (26, 15, 11), var=4, seed=21)
+        for x in range(w):
+            for y in range(h):
+                c = lt.getpixel((x, y)); img.putpixel((x, y), c[:3] + (210,))
+    for x in range(w): img.putpixel((x, 0), edge); img.putpixel((x, 1), inner)
+    for y in range(h):
+        img.putpixel((0, y), edge); img.putpixel((w - 1, y), edge)
+        img.putpixel((1, y), inner); img.putpixel((w - 2, y), inner)
+    return img
+
+def scroller():
+    """6x32 handle: a bone splint, like the slider handle."""
+    rr = random.Random(31)
+    img = Image.new('RGBA', (6, 32))
+    for x in range(6):
+        for y in range(32):
+            n = rr.randint(-6, 6)
+            img.putpixel((x, y), (196 + n, 184 + n, 158 + n, 255))
+    d = ImageDraw.Draw(img); d.rectangle([0, 0, 5, 31], outline=OUTLINE)
+    for y in range(1, 31): img.putpixel((4, y), (130, 116, 94, 255))
+    return img
+
+def scroller_track():
+    img = Image.new('RGBA', (6, 32), (12, 7, 6, 255))
+    d = ImageDraw.Draw(img); d.rectangle([0, 0, 5, 31], outline=(4, 2, 2, 255))
+    return img
+
+def popup():
+    """236x34 popup background (nine-slice border 6): dark leather, ink outline, red inner line."""
+    w, h = 236, 34
+    img = leather(w, h, (30, 18, 13), var=5, seed=41)
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, w - 1, h - 1], outline=OUTLINE)
+    d.rectangle([2, 2, w - 3, h - 3], outline=(104, 18, 14, 255))
+    return img
+
+# ---------------------------------------------------------------- advancements
+def parchment(w, h, seed):
+    rr = random.Random(seed)
+    img = Image.new('RGBA', (w, h))
+    for x in range(w):
+        for y in range(h):
+            n = rr.randint(-7, 7) + int(3 * math.sin(x * 0.21 + y * 0.9))
+            img.putpixel((x, y), tuple(max(0, min(255, PARCH[i] + n)) for i in range(3)) + (255,))
+    for _ in range(w * h // 120):
+        x, y = rr.randrange(w), rr.randrange(h)
+        img.putpixel((x, y), tuple(PARCH[i] - 30 for i in range(3)) + (255,))
+    return img
+
+def adv_window():
+    """256x256 atlas, the window is the top-left 252x140. The game draws the tab's content in the hole
+    (9,18)-(243,131) and the tab title in dark grey at (8,6): so the frame is parchment (readable) with a
+    leather edge, and the hole gets a soft inner shadow like vanilla's."""
+    img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
+    W, H = 252, 140
+    img.paste(parchment(W, H, 51), (0, 0))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, W - 1, H - 1], outline=OUTLINE)
+    d.rectangle([1, 1, W - 2, H - 2], outline=(58, 34, 22, 255))
+    d.rectangle([2, 2, W - 3, H - 3], outline=(150, 128, 96, 255))
+    # inner frame: an ink line around the hole
+    x0, y0, x1, y1 = 9, 18, 243, 131
+    d.rectangle([x0 - 1, y0 - 1, x1, y1], outline=INK)
+    shadow = (109, 78, 52, 31, 15, 5)
+    for x in range(x0, x1):
+        for y in range(y0, y1):
+            k = min(x - x0, y - y0, x1 - 1 - x, y1 - 1 - y)
+            img.putpixel((x, y), (10, 5, 4, shadow[k]) if k < len(shadow) else (0, 0, 0, 0))
+    # a dried blood smudge in a corner of the frame
+    for _ in range(40):
+        x, y = 232 + r.randint(-6, 6), 8 + r.randint(-3, 3)
+        if 3 <= x < W - 3 and 3 <= y < 17: img.putpixel((x, y), (110, 20, 16, 255))
+    return img
+
+def adv_tab(selected):
+    """28x32 tab above the window (the bottom 4 px overlap the frame). Other directions are rotations."""
+    w, h = 28, 32
+    img = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    body = parchment(w, h, 61) if selected else leather(w, h, (44, 27, 19), var=6, seed=62)
+    hgt = h if selected else h - 3
+    img.paste(body.crop((0, 0, w, hgt)), (0, 0))
+    d = ImageDraw.Draw(img)
+    d.line([0, 2, 0, hgt - 1], fill=OUTLINE); d.line([w - 1, 2, w - 1, hgt - 1], fill=OUTLINE)
+    d.line([2, 0, w - 3, 0], fill=OUTLINE); img.putpixel((1, 1), OUTLINE[:3] + (255,)); img.putpixel((w - 2, 1), OUTLINE[:3] + (255,))
+    img.putpixel((0, 0), (0, 0, 0, 0)); img.putpixel((1, 0), (0, 0, 0, 0)); img.putpixel((0, 1), (0, 0, 0, 0))
+    img.putpixel((w - 1, 0), (0, 0, 0, 0)); img.putpixel((w - 2, 0), (0, 0, 0, 0)); img.putpixel((w - 1, 1), (0, 0, 0, 0))
+    if not selected: d.line([1, hgt - 1, w - 2, hgt - 1], fill=OUTLINE)
+    else: d.line([1, 1, w - 2, 1], fill=(104, 18, 14, 255))
+    return img
+
+def adv_toast():
+    """160x32 advancement toast: the title is drawn in the frame colour, the text in white -> dark leather."""
+    w, h = 160, 32
+    img = leather(w, h, (28, 17, 12), var=5, seed=71)
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, w - 1, h - 1], outline=OUTLINE)
+    d.rectangle([1, 1, w - 2, h - 2], outline=(104, 18, 14, 255))
+    # a parchment patch behind the icon (x 8..24)
+    patch = parchment(20, 20, 72); img.paste(patch, (6, 6)); d.rectangle([5, 5, 26, 26], outline=INK)
+    return img
+
+def adv_background():
+    """16x16 tiled background of the It Was Tall advancement tab: night forest floor, mist, a pair of eyes."""
+    rr = random.Random(81)
+    img = Image.new('RGBA', (16, 16))
+    for x in range(16):
+        for y in range(16):
+            n = rr.randint(-3, 3)
+            img.putpixel((x, y), (12 + n, 15 + n, 22 + n, 255))
+    for (x, y) in ((2, 3), (11, 9), (6, 13), (14, 2)):   # needles / leaves
+        img.putpixel((x, y), (20, 26, 30, 255)); img.putpixel((x + 1, y), (18, 22, 28, 255))
+    for x in range(16):                                   # a thin band of mist
+        img.putpixel((x, 7), tuple(min(255, c + 6) for c in img.getpixel((x, 7))[:3]) + (255,))
+    img.putpixel((9, 4), (150, 24, 18, 255)); img.putpixel((11, 4), (150, 24, 18, 255))   # eyes in the dark
+    return img
+
+def paused():
+    size = (512, 64)
+    m = letter_mask("PAUSED", 6, size, 10)
+    return carve(size, m, (128, 122, 128), (52, 48, 56), (96, 10, 8, 255), (10, 2, 2, 255), 1, 3, 5, 13)
+
+
 NINE_SLICE = {
     "button": (200, 20, 3), "button_highlighted": (200, 20, 3), "button_disabled": (200, 20, 3),
     "slider": (200, 20, 1), "slider_highlighted": (200, 20, 1),
     "text_field": (200, 20, 1), "text_field_highlighted": (200, 20, 1),
     "slider_handle": (8, 20, {"left": 2, "top": 2, "right": 2, "bottom": 3}),
     "slider_handle_highlighted": (8, 20, {"left": 2, "top": 2, "right": 2, "bottom": 3}),
+    "scroller": (6, 32, 1), "scroller_background": (6, 32, 1),
+    "tab": (130, 24, {"left": 2, "top": 2, "right": 2, "bottom": 0}),
+    "tab_highlighted": (130, 24, {"left": 2, "top": 2, "right": 2, "bottom": 0}),
+    "tab_selected": (130, 24, {"left": 2, "top": 2, "right": 2, "bottom": 0}),
+    "tab_selected_highlighted": (130, 24, {"left": 2, "top": 2, "right": 2, "bottom": 0}),
 }
 
 
@@ -366,13 +517,39 @@ def main():
     for name, (w, h, border) in NINE_SLICE.items():
         with open(os.path.join(OUT, W + name + '.png.mcmeta'), 'w') as fh:
             json.dump({"gui": {"scaling": {"type": "nine_slice", "width": w, "height": h, "border": border}}}, fh, indent=2)
+    save(scroller(), W + 'scroller.png'); save(scroller_track(), W + 'scroller_background.png')
+    save(tab(False, False), W + 'tab.png'); save(tab(False, True), W + 'tab_highlighted.png')
+    save(tab(True, False), W + 'tab_selected.png'); save(tab(True, True), W + 'tab_selected_highlighted.png')
+    G = 'assets/minecraft/textures/gui/'
+    for pre in ('', 'inworld_'):
+        save(separator(True), G + pre + 'header_separator.png'); save(separator(False), G + pre + 'footer_separator.png')
+        save(tint_tile((22, 12, 9), 84, 4, 91), G + pre + 'menu_background.png')
+        save(tint_tile((14, 8, 6), 132, 3, 92), G + pre + 'menu_list_background.png')
+    save(popup(), G + 'sprites/popup/background.png')
+    with open(os.path.join(OUT, G + 'sprites/popup/background.png.mcmeta'), 'w') as fh:
+        json.dump({"gui": {"scaling": {"type": "nine_slice", "width": 236, "height": 34, "border": 6}}}, fh, indent=2)
+    save(adv_window(), G + 'advancements/window.png')
+    A = G + 'sprites/advancements/'
+    for sel in (False, True):
+        t = adv_tab(sel); suf = '_selected' if sel else ''
+        for pos in ('left', 'middle', 'right'):
+            save(t, A + 'tab_above_' + pos + suf + '.png')
+            save(t.transpose(Image.FLIP_TOP_BOTTOM), A + 'tab_below_' + pos + suf + '.png')
+        for pos in ('top', 'middle', 'bottom'):
+            save(t.rotate(90, expand=True), A + 'tab_left_' + pos + suf + '.png')
+            save(t.rotate(-90, expand=True), A + 'tab_right_' + pos + suf + '.png')
+    save(adv_toast(), G + 'sprites/toast/advancement.png')
+    adv_bg = adv_background()
+    adv_bg.save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/advancements/forest.png'))
+    paused().save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/paused.png'))
     save(logo(), 'assets/minecraft/textures/gui/title/minecraft.png')
     save(edition(), 'assets/minecraft/textures/gui/title/edition.png')
     with open(os.path.join(OUT, 'pack.mcmeta'), 'w') as fh:
         json.dump({"pack": {"pack_format": 34, "description": "It Was Tall UI: buttons, title logo and checkboxes in the mod's style"}}, fh, indent=2)
-    sil, meta = render_silhouette()
-    bg = background(sil, meta).convert('RGB')
-    bg.save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/title_background.png'), optimize=True)
+    if '--background' in sys.argv:   # the menu background needs the 3D silhouette render (Playwright)
+        sil, meta = render_silhouette()
+        bg = background(sil, meta).convert('RGB')
+        bg.save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/title_background.png'), optimize=True)
     print('ui written')
 
 
