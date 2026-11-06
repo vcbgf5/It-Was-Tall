@@ -55,7 +55,9 @@ public final class JournalScreen extends Screen {
     // BOOKS tab: page of the list and the clickable rows drawn this frame (book space: x, y, w, h, index)
     private static int booksPage;
     private final List<int[]> bookHits = new java.util.ArrayList<>();
-    private static final int BOOKS_LEFT = 8, BOOKS_RIGHT = 8, BOOK_ROW = 22;
+    private static final int BOOKS_LEFT = 7, BOOKS_RIGHT = 7, BOOK_ROW = 22;
+    /** The right page starts below the close X so long lines never run under it. */
+    private static final int RIGHT_TOP = PAGE_TOP + 14;
     // NOTES tab: scroll of the board, the text field and the clickable bits
     private static int notesScroll;
     private static String draft = "";
@@ -179,7 +181,9 @@ public final class JournalScreen extends Screen {
             for (int i = 0; i < Math.min(4, history.size()); i++) {
                 String h = history.get(i);
                 int col = h.endsWith("failed") ? INK_RED : h.endsWith("done") ? INK : INK_FADED;
-                ctx.drawText(textRenderer, textRenderer.trimToWidth(h.replace("Night ", "N"), PAGE_W), R_X, ry, col, false);
+                String line = h.replace("Night ", "N");
+                if (textRenderer.getWidth(line) > PAGE_W) line = textRenderer.trimToWidth(line, PAGE_W - textRenderer.getWidth("...")) + "...";
+                ctx.drawText(textRenderer, line, R_X, ry, col, false);
                 ry += 10;
             }
             ry += 6;
@@ -224,7 +228,7 @@ public final class JournalScreen extends Screen {
         int pages = Math.max(1, (all.size() + perPage - 1) / perPage);
         booksPage = Math.max(0, Math.min(booksPage, pages - 1));
         int start = booksPage * perPage;
-        int ry = PAGE_TOP;
+        int ry = RIGHT_TOP;
         for (int k = 0; k < perPage && start + k < all.size(); k++) {
             var bk = all.get(start + k);
             boolean left = k < BOOKS_LEFT;
@@ -387,7 +391,7 @@ public final class JournalScreen extends Screen {
             if (y + h > PAGE_BOTTOM) {
                 if (x == R_X) break;
                 x = R_X;
-                y = PAGE_TOP;
+                y = RIGHT_TOP;
             }
             y = para(ctx, x, y, e, INK) + 5;
         }

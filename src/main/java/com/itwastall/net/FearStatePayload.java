@@ -20,7 +20,7 @@ public record FearStatePayload(int phase, int stage, float tension, String task,
             PacketCodecs.VAR_INT, FearStatePayload::phase,
             PacketCodecs.VAR_INT, FearStatePayload::stage,
             PacketCodecs.FLOAT, FearStatePayload::tension,
-            PacketCodecs.string(96), FearStatePayload::task,
+            PacketCodecs.string(200), FearStatePayload::task,
             PacketCodecs.collection(java.util.ArrayList::new, PacketCodecs.string(96)),
             FearStatePayload::loreIds,
             FearStatePayload::new);

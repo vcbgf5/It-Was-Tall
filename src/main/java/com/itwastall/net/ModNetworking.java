@@ -46,7 +46,7 @@ public final class ModNetworking {
                 if (!ServerPlayNetworking.canSend(player, FearStatePayload.ID)) continue;
                 ServerPlayNetworking.send(player, new FearStatePayload(
                         Director.phase(), Director.stageIndex(), (float) Director.tension(),
-                        com.itwastall.task.TaskManager.status(player.getUuid()),
+                        com.itwastall.task.TaskManager.journalLine(player.getUuid(), server.getOverworld().getTime()),
                         java.util.List.copyOf(state.loreBookIds(player.getUuid()))));
                 // red chase overlay: on/off every second (the start is also sent instantly)
                 sendChase(player, isChased(player));
@@ -113,7 +113,7 @@ public final class ModNetworking {
         if (ServerPlayNetworking.canSend(player, FearStatePayload.ID)) {
             ItWasTallState state = ItWasTallState.getOrCreate(server);
             ServerPlayNetworking.send(player, new FearStatePayload(Director.phase(), Director.stageIndex(), (float) Director.tension(),
-                    com.itwastall.task.TaskManager.status(uuid), java.util.List.copyOf(state.loreBookIds(uuid))));
+                    com.itwastall.task.TaskManager.journalLine(uuid, server.getOverworld().getTime()), java.util.List.copyOf(state.loreBookIds(uuid))));
         }
         sendJournal(player);
         com.itwastall.world.SharedJournal.sync(player);

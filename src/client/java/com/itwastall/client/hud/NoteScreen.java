@@ -84,7 +84,7 @@ public final class NoteScreen extends Screen {
         }
         // the close X in the top-right corner of the page
         boolean xHover = closeHit(mouseX, mouseY);
-        ctx.drawText(textRenderer, "X", CLOSE_X, CLOSE_Y, xHover ? INK_RED : INK_FADED, false);
+        ctx.drawText(textRenderer, "X", CLOSE_X, CLOSE_Y, xHover ? 0xFFB01810 : INK_RED, false);
         if (lines.size() > visible) {
             String more = (scroll + visible < lines.size() ? "▼" : " ") + "  " + (scroll > 0 ? "▲" : " ");
             ctx.drawText(textRenderer, more, TEXT_X + TEXT_W - textRenderer.getWidth(more), TEXT_BOTTOM + 4, INK_FADED, false);
@@ -92,7 +92,7 @@ public final class NoteScreen extends Screen {
         ctx.getMatrices().pop();
     }
 
-    private static final int CLOSE_X = TEXT_X + TEXT_W - 2, CLOSE_Y = TEXT_Y - 22;
+    private static final int CLOSE_X = TEXT_X + TEXT_W - 8, CLOSE_Y = TEXT_Y - 12;
 
     private boolean closeHit(double mouseX, double mouseY) {
         double px = (mouseX - left) / scale, py = (mouseY - top) / scale;

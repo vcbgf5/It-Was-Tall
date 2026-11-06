@@ -123,6 +123,22 @@ public final class TaskManager {
         return task == null ? "no task" : taskDescription(task);
     }
 
+    /** The journal's "What it wants" line: plain words and the time left, e.g. "Don't go outside. 24 s left." */
+    public static String journalLine(UUID player, long now) {
+        Task task = ACTIVE.get(player);
+        if (task == null) return "no task";
+        long left = Math.max(0, (task.expiresAt - now) / 20);
+        return switch (task.kind) {
+            case STAY_INSIDE -> "Don't go outside. Stay in the base or under a roof. " + left + " s left.";
+            case DOUSE_LIGHTS -> "Put out " + task.lights.size() + " light" + (task.lights.size() == 1 ? "" : "s") + " in the house. " + left + " s left.";
+            case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "Hide. It starts looking in " + left + " s."
+                    : "It is walking the rooms. Stay hidden. " + left + " s left.";
+            case DONT_LOOK -> "Something stands behind you. Do not turn around. " + left + " s left.";
+            case SACRIFICE -> "Put " + task.offerCount + "x " + task.offerItem.getName().getString() + " in the chest at "
+                    + task.offerChest.getX() + " " + task.offerChest.getY() + " " + task.offerChest.getZ() + ". " + left + " s left.";
+        };
+    }
+
     /** Force an assignment (commands); returns false when the context refuses it. */
     public static boolean forceAssign(ServerPlayerEntity player, @Nullable Kind requested) {
         // test command: works on every stage; replaces a running task
@@ -336,7 +352,7 @@ public final class TaskManager {
         Task task = new Task(Kind.STAY_INSIDE, now + 20L * seconds, List.of(), List.of());
         task.seconds = seconds;
         ACTIVE.put(uuid, task);
-        logTask(player, task, "in progress (it saw you at the window)", false);
+        logTask(player, task, "now (the window)", false);
         sendToast(player, TaskToastPayload.KIND_NEW, "IT SAW YOU.", "You looked at it. Stay inside for " + seconds + "s.");
         ItWasTall.LOGGER.info("{} looked at the window figure: {} s inside.", player.getName().getString(), seconds);
     }
@@ -537,7 +553,7 @@ public final class TaskManager {
             task.seconds = cfg.taskStayInsideSeconds;
         }
         ACTIVE.put(player.getUuid(), task);
-        logTask(player, task, "in progress", false);
+        logTask(player, task, "now", false);
         sendToast(player, TaskToastPayload.KIND_NEW, TITLE_NEW, newToastText(kind, task));
         ItWasTall.LOGGER.info("Task assigned to {}: {} ({} light(s), {} corner(s)).",
                 player.getName().getString(), task.kind, task.lights.size(), task.corners.size());
