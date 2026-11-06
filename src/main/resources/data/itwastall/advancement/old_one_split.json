@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:old_one",
+  "display": {
+    "icon": {
+      "id": "minecraft:bone"
+    },
+    "title": {
+      "translate": "advancements.itwastall.old_one_split.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.old_one_split.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -41,6 +41,8 @@ public final class JournalScreen extends Screen {
     private static final String[] TABS = {"STATUS", "BOOKS", "BASE", "EVENTS", "NOTES"};
     private static final int[] RIBBON_X = {40, 112, 184, 256, 328};
     private static final int TAB_BOOKS = 1, TAB_NOTES = 4;
+    /** The extra ribbon on the right: opens the advancements screen (L) on the It Was Tall tab. */
+    private static final int AWARDS_X = 372;
 
     /** Mirror of the server's LoreBooks.BOOKS order (§9.2). */
     private static final String[] KNOWN_BOOK_IDS = {
@@ -122,6 +124,10 @@ public final class JournalScreen extends Screen {
             int color = active ? 0xFFE8D9B8 : hover ? 0xFFCDBB98 : 0xFF8F7C62;
             ctx.drawText(textRenderer, label, rx + 10 - lw / 2, active ? -46 : -40, color, true);
         }
+        boolean awardsHover = awardsHit(bx, by);
+        ctx.drawTexture(TEX, AWARDS_X, awardsHover ? -30 : -26, 400, 0, 20, 34, TEX_W, TEX_H);
+        int aw = textRenderer.getWidth("AWARDS");
+        ctx.drawText(textRenderer, "AWARDS", AWARDS_X + 10 - aw / 2, -40, awardsHover ? 0xFFE8D9B8 : 0xFF8F7C62, true);
         ctx.drawTexture(TEX, 0, 0, 0, 0, BOOK_W, BOOK_H, TEX_W, TEX_H);
 
         // close X in the corner of the right page
@@ -139,6 +145,11 @@ public final class JournalScreen extends Screen {
         RenderSystem.disableBlend();
         ctx.getMatrices().pop();
         if (tab == TAB_NOTES && noteField != null) noteField.render(ctx, mouseX, mouseY, delta);
+        if (awardsHover) ctx.drawTooltip(textRenderer, Text.literal("Achievements (L)"), mouseX, mouseY);
+    }
+
+    private static boolean awardsHit(float bx, float by) {
+        return bx >= AWARDS_X - 6 && bx <= AWARDS_X + 30 && by >= -50 && by <= 4;
     }
 
     // ------------------------------------------------------------------------ pages ----
@@ -468,6 +479,10 @@ public final class JournalScreen extends Screen {
                 setTab(i);
                 return true;
             }
+        }
+        if (awardsHit(bx, by)) {
+            AchievementsLink.openItWasTallTab(null);
+            return true;
         }
         if (tab == TAB_BOOKS) {
             for (int[] hit : bookHits) {

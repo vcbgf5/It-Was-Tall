@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:first_book",
+  "display": {
+    "icon": {
+      "id": "minecraft:bookshelf"
+    },
+    "title": {
+      "translate": "advancements.itwastall.librarian.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.librarian.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

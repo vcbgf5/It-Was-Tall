@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:it_joined",
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_door"
+    },
+    "title": {
+      "translate": "advancements.itwastall.knock_knock.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.knock_knock.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

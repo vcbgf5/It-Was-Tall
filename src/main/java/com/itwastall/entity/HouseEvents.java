@@ -196,6 +196,7 @@ public final class HouseEvents {
         if (!shadow && Director.stageIndex() >= 5 && player.getRandom().nextDouble() < ItWasTallConfig.INSTANCE.realKnockChance
                 && realKnock(player, door, outside)) {
             JournalLog.add(player, "Something knocked on my door. Through the gap I saw how tall it was.");
+            com.itwastall.advancement.Achievements.grant(player, "knock_knock");
             return true;
         }
         Vec3d knockAt = Vec3d.ofCenter(door).add(0, 0.4, 0);
@@ -211,6 +212,7 @@ public final class HouseEvents {
             for (int k = 0; k < 6; k++) later(player, 70 + k * 8, p -> shadowUnder(p, inside));
             later(player, 120, p -> MineEvents.playTo(p, ModSounds.AMBIENT_BREATH, out.add(0, 1.6, 0), 0.7f, 0.8f));
         }
+        com.itwastall.advancement.Achievements.grant(player, "knock_knock");
         JournalLog.add(player, shadow ? "Knocking on the door. Something dark crept in under it."
                 : "Three knocks on my door. I didn't open.");
         return true;
@@ -276,6 +278,7 @@ public final class HouseEvents {
         }
         later(player, 80, p -> MineEvents.playTo(p, ModSounds.AMBIENT_WHISPER, at, 0.6f, 0.8f));
         JournalLog.add(player, "Someone knocked. From inside the house.");
+        com.itwastall.advancement.Achievements.grant(player, "knock_knock");
         return true;
     }
 

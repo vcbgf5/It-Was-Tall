@@ -76,6 +76,7 @@ public final class SharedJournal {
         book.putLong("day", server.getOverworld().getTimeOfDay() / 24000L + 1);
         state.addSharedBook(book);
         JournalLog.add(reader, "I read \"" + t + "\". It is in the journal now.");
+        com.itwastall.advancement.Achievements.grant(reader, "first_book");
         Text msg = Text.literal("[Journal] ").formatted(Formatting.DARK_RED)
                 .append(Text.literal(reader.getName().getString() + " found \"" + t + "\" — open your journal (J) to read it.")
                         .formatted(Formatting.GRAY, Formatting.ITALIC));

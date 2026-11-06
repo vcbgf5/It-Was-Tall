@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:first_sighting",
+  "display": {
+    "icon": {
+      "id": "minecraft:spyglass"
+    },
+    "title": {
+      "translate": "advancements.itwastall.dont_blink.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.dont_blink.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

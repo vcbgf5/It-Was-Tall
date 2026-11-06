@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:root",
+  "display": {
+    "icon": {
+      "id": "minecraft:black_bed"
+    },
+    "title": {
+      "translate": "advancements.itwastall.outspace.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.outspace.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

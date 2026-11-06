@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:it_joined",
+  "display": {
+    "icon": {
+      "id": "minecraft:player_head"
+    },
+    "title": {
+      "translate": "advancements.itwastall.guest.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.guest.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

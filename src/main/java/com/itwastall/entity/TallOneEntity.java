@@ -430,6 +430,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (watchedNow) {
             setMode(Mode.WATCHED);
+            if (player instanceof ServerPlayerEntity sp) com.itwastall.advancement.Achievements.grant(sp, "first_sighting");
         } else if (canStalk(player)) {
             setMode(Mode.STALK);
         } else if (Director.currentStage().ordinal() >= 2 && cfg.moveUnseen && distanceTo(player) > 22
@@ -487,7 +488,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private void tickDisappear(@Nullable PlayerEntity player) {
         freeze();
         if (player != null) faceTowards(player);
-        if (player == null || !visibleTo(player, getPos().add(0, 2.5, 0)) || modeTicks > 60) discard();
+        if (player == null || !visibleTo(player, getPos().add(0, 2.5, 0)) || modeTicks > 60) {
+            if (player instanceof ServerPlayerEntity sp && modeTicks <= 60) com.itwastall.advancement.Achievements.grant(sp, "dont_blink");
+            discard();
+        }
     }
 
     // ------------------------------------------------------------------ FEINT ----
@@ -670,6 +674,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         }
 
         if (ShelterCheck.isSheltered(getWorld(), player.getBlockPos())) {
+            if (player instanceof ServerPlayerEntity sp) com.itwastall.advancement.Achievements.grant(sp, "survive_chase");
             // SINK is unlocked from ETAP 4 (PHASES §3 row "SINK"); earlier stages end the chase quietly
             finishEncounter();
             return;

@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:it_joined",
+  "display": {
+    "icon": {
+      "id": "minecraft:clock"
+    },
+    "title": {
+      "translate": "advancements.itwastall.stage_3.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.stage_3.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

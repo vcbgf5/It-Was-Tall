@@ -137,6 +137,7 @@ public final class Outspace {
         DREAMERS.put(player.getUuid(), new Dream(bedDim, bed, fallback, now + 20L * seconds, now + 60));
         player.teleportTo(new TeleportTarget(out, start, Vec3d.ZERO, random.nextFloat() * 360f, 0f, TeleportTarget.NO_OP));
         ModNetworking.sendScareText(player, "you are dreaming.");
+        com.itwastall.advancement.Achievements.grant(player, "outspace");
         JournalLog.add(player, "I fell asleep and woke up somewhere else. Wooden halls. Torches. No way out.");
         ItWasTall.LOGGER.info("{} was pulled into outspace for {} s.", player.getName().getString(), seconds);
         return true;
@@ -149,6 +150,7 @@ public final class Outspace {
         Dream d = DREAMERS.remove(player.getUuid());
         for (OldOneEntity one : dreamOldOnes(player)) one.discard();
         sendHome(player, d);
+        com.itwastall.advancement.Achievements.grant(player, "wake_up");
         JournalLog.add(player, caught ? "It caught me in the dream. I woke up in my bed, screaming."
                 : "I dreamed of endless wooden halls. Then I woke up.");
     }

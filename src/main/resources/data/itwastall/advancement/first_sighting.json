@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:root",
+  "display": {
+    "icon": {
+      "id": "minecraft:ender_eye"
+    },
+    "title": {
+      "translate": "advancements.itwastall.first_sighting.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.first_sighting.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

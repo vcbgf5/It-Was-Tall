@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:task_done",
+  "display": {
+    "icon": {
+      "id": "minecraft:red_bed"
+    },
+    "title": {
+      "translate": "advancements.itwastall.task_stay_inside.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.task_stay_inside.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -425,10 +425,6 @@ def adv_window():
         for y in range(y0, y1):
             k = min(x - x0, y - y0, x1 - 1 - x, y1 - 1 - y)
             img.putpixel((x, y), (10, 5, 4, shadow[k]) if k < len(shadow) else (0, 0, 0, 0))
-    # a dried blood smudge in a corner of the frame
-    for _ in range(40):
-        x, y = 232 + r.randint(-6, 6), 8 + r.randint(-3, 3)
-        if 3 <= x < W - 3 and 3 <= y < 17: img.putpixel((x, y), (110, 20, 16, 255))
     return img
 
 def adv_tab(selected):
@@ -459,7 +455,8 @@ def adv_toast():
     return img
 
 def adv_background():
-    """16x16 tiled background of the It Was Tall advancement tab: night forest floor, mist, a pair of eyes."""
+    """16x16 tiled background of the It Was Tall advancement tab: night forest floor and a thin band of mist
+    (no eyes: the game tiles it every 16 px, a pair of eyes would repeat all over the tree)."""
     rr = random.Random(81)
     img = Image.new('RGBA', (16, 16))
     for x in range(16):
@@ -470,7 +467,6 @@ def adv_background():
         img.putpixel((x, y), (20, 26, 30, 255)); img.putpixel((x + 1, y), (18, 22, 28, 255))
     for x in range(16):                                   # a thin band of mist
         img.putpixel((x, 7), tuple(min(255, c + 6) for c in img.getpixel((x, 7))[:3]) + (255,))
-    img.putpixel((9, 4), (150, 24, 18, 255)); img.putpixel((11, 4), (150, 24, 18, 255))   # eyes in the dark
     return img
 
 def paused():

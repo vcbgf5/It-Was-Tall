@@ -70,6 +70,7 @@ public class ItWasTall implements ModInitializer {
         BaseTracker.init();
         // tasks (PHASES Poziom 8: MODPLAN §15) — stage 3 unlocks the stay-inside / douse pairs
         TaskManager.init();
+        com.itwastall.advancement.Achievements.init();
         // multiplayer: forget per-player timers when someone leaves
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             var uuid = handler.getPlayer().getUuid();

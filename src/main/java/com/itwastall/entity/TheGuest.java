@@ -163,6 +163,7 @@ public final class TheGuest {
                 leave(p, v);
                 if (reached) {
                     leaveNote(p, v);
+                    com.itwastall.advancement.Achievements.grant(p, "guest");
                     JournalLog.add(p, "A player called " + v.name + " stood with its back to me. When I got close, it left the game.");
                 }
             }

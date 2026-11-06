@@ -1,0 +1,177 @@
+{
+  "parent": "itwastall:root",
+  "display": {
+    "icon": {
+      "id": "minecraft:compass"
+    },
+    "title": {
+      "translate": "advancements.itwastall.explorer.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.explorer.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "abandoned_cabin": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:abandoned_cabin"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "roadside_shrine": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:roadside_shrine"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "torch_tunnel": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:torch_tunnel"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "sign_room": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:sign_room"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "crystal_grotto": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:crystal_grotto"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "deep_lair": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:deep_lair"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "counting_stones": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:counting_stones"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "guest_house": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:guest_house"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "dream_well": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "itwastall:dream_well"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "abandoned_cabin",
+      "roadside_shrine",
+      "torch_tunnel",
+      "sign_room",
+      "crystal_grotto",
+      "deep_lair",
+      "counting_stones",
+      "guest_house",
+      "dream_well"
+    ]
+  ]
+}

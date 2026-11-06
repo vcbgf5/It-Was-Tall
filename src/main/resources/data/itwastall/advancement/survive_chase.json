@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:first_sighting",
+  "display": {
+    "icon": {
+      "id": "minecraft:leather_boots"
+    },
+    "title": {
+      "translate": "advancements.itwastall.survive_chase.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.survive_chase.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

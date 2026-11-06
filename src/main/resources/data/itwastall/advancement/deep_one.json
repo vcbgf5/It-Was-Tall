@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:it_joined",
+  "display": {
+    "icon": {
+      "id": "itwastall:deep_one_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.itwastall.deep_one.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.deep_one.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

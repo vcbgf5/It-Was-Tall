@@ -128,6 +128,7 @@ public class SleeperEntity extends PathAwareEntity {
         MineEvents.playTo(player, ModSounds.AMBIENT_STING, getEyePos(), 1.0f, 0.7f);
         MineEvents.playTo(player, ModSounds.SCARE_BREATH, getEyePos(), 1.0f, 0.8f);
         JournalLog.add(player, "The one in the bed had my face. It sat up and looked at me.");
+        com.itwastall.advancement.Achievements.grant(player, "sleeper");
         if (player.getWorld().getRegistryKey() == ModDimensions.OUTSPACE) {
             for (OldOneEntity one : ((ServerWorld) getWorld()).getEntitiesByType(ModEntities.OLD_ONE,
                     e -> e.isDream() && player.getUuid().equals(e.victimUuid()))) {

@@ -176,6 +176,7 @@ public class DeepOneEntity extends HostileEntity implements GeoEntity {
         }
         MineEvents.playTo(player, ModSounds.SCARE_BREATH, getPos(), 0.8f, 0.7f);
         JournalLog.add(player, journal);
+        com.itwastall.advancement.Achievements.grant(player, "deep_one");
         discard();
     }
 

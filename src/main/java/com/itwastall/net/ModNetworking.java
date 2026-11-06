@@ -164,6 +164,7 @@ public final class ModNetworking {
             if (ServerPlayNetworking.canSend(player, ItJoinedPayload.ID)) {
                 ServerPlayNetworking.send(player, new ItJoinedPayload(4000));
                 com.itwastall.world.JournalLog.add(player, "Something joined this world.");
+                com.itwastall.advancement.Achievements.grant(player, "it_joined");
             }
         }
     }
@@ -179,6 +180,7 @@ public final class ModNetworking {
 
     public static void sendJumpscare(ServerPlayerEntity player) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        com.itwastall.advancement.Achievements.grant(player, "caught");
         if (scaresDisabled(player.getUuid())) return; // the warning screen's toggle is absolute
         ItWasTall.LOGGER.debug("Jumpscare -> {}", player.getName().getString());
         if (ServerPlayNetworking.canSend(player, JumpscarePayload.ID)) {
@@ -200,6 +202,7 @@ public final class ModNetworking {
                                             float yaw, int durationTicks, boolean window, boolean dontlook) {
         if (!ServerPlayNetworking.canSend(player, FalsePresencePayload.ID)) return false;
         ServerPlayNetworking.send(player, new FalsePresencePayload(x, y, z, yaw, durationTicks, window, dontlook));
+        if (window) com.itwastall.advancement.Achievements.grant(player, "knock_knock");
         com.itwastall.world.JournalLog.add(player, window ? "It knocked on my window. It was looking in."
                 : dontlook ? "It stood right behind me. I didn't turn around."
                 : "A tall shape in the distance. Then nothing.");

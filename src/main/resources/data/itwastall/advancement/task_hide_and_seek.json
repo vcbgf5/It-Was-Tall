@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:task_done",
+  "display": {
+    "icon": {
+      "id": "minecraft:barrel"
+    },
+    "title": {
+      "translate": "advancements.itwastall.task_hide_and_seek.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.task_hide_and_seek.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

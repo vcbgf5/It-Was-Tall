@@ -343,6 +343,7 @@ public final class TaskManager {
      * an active task stays untouched, and the usual task cooldown does not block it.
      */
     public static void onWindowLooked(ServerPlayerEntity player) {
+        com.itwastall.advancement.Achievements.grant(player, "in_the_window");
         if (Director.phase() == 0) return;      // PHASE PRE: total silence
         UUID uuid = player.getUuid();
         if (ACTIVE.containsKey(uuid)) return;   // already working: no double assignment
@@ -566,6 +567,7 @@ public final class TaskManager {
         ACTIVE.remove(player.getUuid());
         logTask(player, task, "done", true);
         sendToast(player, TaskToastPayload.KIND_COMPLETED, TITLE_DONE, taskTitle(task) + " — done.");
+        com.itwastall.advancement.Achievements.taskCompleted(player, task.kind.name());
         // PHASES §2: wykonane zadanie -8 "It grows quiet" — no fleeting victory, tension falls
         if (Director.phase() == 1) Director.addTension(-8.0);
         putCooldown(player);
@@ -576,6 +578,7 @@ public final class TaskManager {
         ACTIVE.remove(player.getUuid());
         logTask(player, task, "failed", true);
         sendToast(player, TaskToastPayload.KIND_FAILED, TITLE_FAILED, taskTitle(task) + " — failed.");
+        com.itwastall.advancement.Achievements.grant(player, "task_failed");
         // PHASES §2: niewykonane zadanie +5
         if (Director.phase() == 1) Director.addTension(+5.0);
         // MODPLAN 15.1: "Wyjście może uruchomić atak" — on the hunter stages this wakes It up

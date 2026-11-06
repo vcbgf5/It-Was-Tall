@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:outspace",
+  "display": {
+    "icon": {
+      "id": "itwastall:sleeper_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.itwastall.sleeper.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.sleeper.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

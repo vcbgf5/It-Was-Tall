@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:stage_3",
+  "display": {
+    "icon": {
+      "id": "minecraft:wither_rose"
+    },
+    "title": {
+      "translate": "advancements.itwastall.it_was_tall.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.it_was_tall.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

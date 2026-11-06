@@ -151,6 +151,9 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         face(player);
         double dist = distanceTo(player);
+        if (dist < 24 && player instanceof ServerPlayerEntity sp && ticks % 20 == 0 && isBeingWatchedBy(player)) {
+            com.itwastall.advancement.Achievements.grant(sp, "old_one");
+        }
         if (dist < Math.max(1.5, cfg.oldOneSplitDistance)) {
             startSplit(player);
             return;
@@ -225,7 +228,11 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
         getNavigation().stop();
         setVelocity(Vec3d.ZERO);
         getWorld().playSound(null, getBlockPos(), ModSounds.OLD_ONE_TEAR, getSoundCategory(), ModSounds.vol(1.6f), 1.0f);
-        if (player instanceof ServerPlayerEntity sp) JournalLog.add(sp, "It looked like a player. It wasn't. Something climbed out of it.");
+        if (player instanceof ServerPlayerEntity sp) {
+            JournalLog.add(sp, "It looked like a player. It wasn't. Something climbed out of it.");
+            com.itwastall.advancement.Achievements.grant(sp, "old_one");
+            com.itwastall.advancement.Achievements.grant(sp, "old_one_split");
+        }
     }
 
     private void tickSplit(@Nullable PlayerEntity player) {

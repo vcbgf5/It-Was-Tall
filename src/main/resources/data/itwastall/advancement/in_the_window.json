@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:knock_knock",
+  "display": {
+    "icon": {
+      "id": "minecraft:glass_pane"
+    },
+    "title": {
+      "translate": "advancements.itwastall.in_the_window.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.in_the_window.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

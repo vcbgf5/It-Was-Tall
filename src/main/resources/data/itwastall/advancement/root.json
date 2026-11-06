@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "itwastall:lore_book"
+    },
+    "title": {
+      "translate": "advancements.itwastall.root.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "itwastall:textures/gui/advancements/forest.png"
+  },
+  "criteria": {
+    "joined": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

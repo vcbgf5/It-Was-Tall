@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:outspace",
+  "display": {
+    "icon": {
+      "id": "minecraft:torch"
+    },
+    "title": {
+      "translate": "advancements.itwastall.wake_up.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.wake_up.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:root",
+  "display": {
+    "icon": {
+      "id": "itwastall:tall_one_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.itwastall.it_joined.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.it_joined.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

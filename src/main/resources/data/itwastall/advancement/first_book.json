@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:root",
+  "display": {
+    "icon": {
+      "id": "itwastall:lore_book"
+    },
+    "title": {
+      "translate": "advancements.itwastall.first_book.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.first_book.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

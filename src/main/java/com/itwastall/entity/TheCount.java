@@ -77,6 +77,7 @@ public final class TheCount {
                 ACTIVE.remove(uuid);
                 ModNetworking.sendScareText(p, "...");
                 JournalLog.add(p, "Something was counting. I made it under a roof. It stopped.");
+                com.itwastall.advancement.Achievements.grant(p, "counted");
                 if (Director.phase() == 1) Director.addTension(-2.0);
                 continue;
             }
@@ -146,6 +147,7 @@ public final class TheCount {
             ModNetworking.sendScareText(p, "...miss.");
             MineEvents.playTo(p, ModSounds.SCARE_BREATH, p.getEyePos().add(p.getRotationVec(1f).multiply(-1.2)), 1.0f, 0.9f);
             JournalLog.add(p, "It counted down to zero. I didn't move. It walked right past me.");
+            com.itwastall.advancement.Achievements.grant(p, "counted");
             return;
         }
         ModNetworking.sendScareText(p, WORDS[0]);
