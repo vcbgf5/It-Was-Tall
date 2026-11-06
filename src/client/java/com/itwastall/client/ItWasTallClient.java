@@ -39,6 +39,12 @@ public class ItWasTallClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // the built-in pack "It Was Tall UI": every Minecraft button / slider / checkbox and the title logo in the
+        // mod's style; enabled by default, can be switched off in Options > Resource Packs
+        net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(com.itwastall.ItWasTall.MOD_ID).ifPresent(mod ->
+                net.fabricmc.fabric.api.resource.ResourceManagerHelper.registerBuiltinResourcePack(
+                        com.itwastall.ItWasTall.id("itwastall_ui"), mod, net.minecraft.text.Text.literal("It Was Tall UI"),
+                        net.fabricmc.fabric.api.resource.ResourcePackActivationType.DEFAULT_ENABLED));
 
         journalKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.open_journal", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J,

@@ -120,6 +120,8 @@ public final class ItWasTallConfig {
         public int minEventCooldown = 25;
         /** Nothing the mod spawns or places may be farther than this from the player it is meant for (blocks). */
         public int maxEventRange = 100;
+        /** The title screen shows the night clearing with the Tall One instead of the panorama (client side). */
+        public boolean customTitleScreen = true;
         /** Lets players without operator rights use /itwastall debug ... (read-only views). */
         public boolean debugAllowedForNonOps = false;
 

@@ -89,6 +89,19 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
   - Dom gościa (dom dla dwóch z listą graczy na ścianie);
   - Studnia snów (sucha studnia z łóżkiem na dnie).
   W każdej skrzynia z naszą książką-podpowiedzią (THE DEEP ONE, THE COUNT, A GUEST, THE SLEEPER).
+- **Nowe UI (wbudowany pakiet „It Was Tall UI”)**:
+  - wszystkie przyciski, suwaki, pola tekstowe i checkboxy Minecrafta w stylu moda: ciemna skóra z przeszyciem, czerwona obwódka po najechaniu, checkbox z journala;
+  - logo „IT WAS TALL” z krwią i podpisem „SOMETHING TALL IS WATCHING.”;
+  - menu główne: zamiast panoramy rozmyta nocna polana z Tall One (ostre oczy), powolne „oddychanie”, winieta;
+  - ekran WARNING na kartce z checkboxem i przyciskami ACCEPT TERMS / QUIT;
+  - pakiet można wyłączyć w Resource Packs, a nowe menu główne w configu (`customTitleScreen`); tekstury generuje `tools/gen_ui.py`.
+- **Naprawy (zdarzenia, pościg, struktury)**:
+  - It z komendy i jajka zawsze goni (wcześniej przed IT JOINED stał zamrożony);
+  - It i wszystkie sylwetki zawsze patrzą na gracza;
+  - komendy testowe działają za każdym razem;
+  - limit jednego Ita nie blokuje już na długo;
+  - luźniejsze limity zdarzeń (config v2 sam aktualizuje stare pliki);
+  - struktury generują się częściej, `/itwastall event build <nazwa>` stawia każdą przed graczem, a 3 nowe naziemne pojawiają się też nocą w starych światach.
 - **GameTesty** (§24.2): osobny source set `src/gametest` (nie trafia do jara), uruchamiane przez `./gradlew runGametest`. Testują schronienie, zapis mapy bazy, A* omijający obsydian, jeden It, zapis stanu świata, klastry chunków i stałe numery stanów AI.
 
 ## 🟡 Częściowo
