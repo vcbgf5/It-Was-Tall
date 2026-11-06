@@ -45,5 +45,7 @@
   "item.itwastall.lore_book": "Strange Book",
   "dimension.itwastall.outspace": "Outspace",
   "entity.itwastall.deep_one": "The Deep One",
-  "item.itwastall.deep_one_spawn_egg": "The Deep One Spawn Egg"
+  "item.itwastall.deep_one_spawn_egg": "The Deep One Spawn Egg",
+  "entity.itwastall.sleeper": "The Sleeper",
+  "item.itwastall.sleeper_spawn_egg": "The Sleeper Spawn Egg"
 }

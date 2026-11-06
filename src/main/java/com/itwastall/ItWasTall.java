@@ -64,6 +64,7 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.entity.TheCount.init();
         com.itwastall.entity.DeepOneEntity.init();
         com.itwastall.entity.TheGuest.init();
+        com.itwastall.entity.SleeperEntity.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();

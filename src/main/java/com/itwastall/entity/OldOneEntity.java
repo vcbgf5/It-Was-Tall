@@ -67,6 +67,8 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
     private UUID victim;
     private int ticks;
     private int splitTicks;
+    /** Dream mode: ticks of the extra speed after the Sleeper woke up. */
+    private int boostTicks;
 
     public OldOneEntity(EntityType<? extends HostileEntity> type, World world) {
         super(type, world);
@@ -179,7 +181,8 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
             return;
         }
         face(sp);
-        if (ticks % 10 == 1 || getNavigation().isIdle()) getNavigation().startMovingTo(sp, 1.35);
+        if (boostTicks > 0) boostTicks--;
+        if (ticks % 10 == 1 || getNavigation().isIdle()) getNavigation().startMovingTo(sp, boostTicks > 0 ? 1.8 : 1.35);
         if (ticks % 80 == 40) MineEvents.playTo(sp, ModSounds.AMBIENT_BREATH, getEyePos(), 0.8f, 0.9f);
         if (distanceTo(sp) < 1.6) {
             ModNetworking.sendJumpscare(sp);
@@ -188,6 +191,29 @@ public class OldOneEntity extends HostileEntity implements GeoEntity {
             return;
         }
         if (ticks > 20 * 90) discard();
+    }
+
+    /**
+     * The Sleeper woke up: it knows where you are. Faster for 10 s and, if it is far away and you cannot see
+     * it, it is suddenly two rooms closer.
+     */
+    public void alert(ServerPlayerEntity player) {
+        if (!isDream()) return;
+        boostTicks = 200;
+        if (distanceTo(player) <= 18 || player.canSee(this)) return;
+        int pcx = Math.floorDiv(player.getBlockX(), com.itwastall.world.OutspaceMaze.CELL);
+        int pcz = Math.floorDiv(player.getBlockZ(), com.itwastall.world.OutspaceMaze.CELL);
+        int mcx = Math.floorDiv(getBlockX(), com.itwastall.world.OutspaceMaze.CELL);
+        int mcz = Math.floorDiv(getBlockZ(), com.itwastall.world.OutspaceMaze.CELL);
+        int dx = Integer.signum(pcx - mcx), dz = Integer.signum(pcz - mcz);
+        for (int k = 2; k >= 1; k--) {
+            double x = com.itwastall.world.OutspaceMaze.cellCenterX(mcx + dx * k), z = com.itwastall.world.OutspaceMaze.cellCenterZ(mcz + dz * k);
+            net.minecraft.util.math.Box moved = getBoundingBox().offset(x - getX(), 0, z - getZ());
+            if (!getWorld().isSpaceEmpty(this, moved)) continue;
+            refreshPositionAndAngles(x, getY(), z, getYaw(), 0f);
+            getNavigation().stop();
+            return;
+        }
     }
 
     public void startSplit(PlayerEntity player) {

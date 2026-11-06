@@ -78,6 +78,17 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
   - po 30 s budzisz się sam (5 s przed końcem napis „wake up.”); w niektórych pokojach skrzynie: książki snu (trafiają do wspólnego journala), pochodnie, rzadko Kryształ Odpędzający, a znalezione rzeczy zostają;
   - kto wyjdzie z gry w trakcie snu, po powrocie budzi się w domu;
   - komendy `/itwastall outspace [gracz]` i `/itwastall outspace wake [gracz]`, config `outspace*`, GameTest `outspaceMazeIsClosed`.
+- **Nowe potwory** (każdy ma książkę-podpowiedź w nowej strukturze):
+  - **Ten, Który Liczy** (etap 2+, noc, sam na otwartym terenie): na ekranie odliczanie od „ten.” do „one.” z szeptem, a z każdą liczbą sylwetka stoi bliżej. Ratuje dach przed zerem albo bezruch przez całe liczenie. Przy zerze jumpscare, a od etapu 4 może przyjść prawdziwy It. `/itwastall event count`.
+  - **Głębinowy** (etap 3+, pod ziemią poniżej Y=0): nowy model GeckoLib (`tools/gen_deep_one.py`). Pełza do góry nogami po suficie jaskini i znika, gdy spojrzysz prosto; widać go tylko kątem oka. Gasi pochodnie za plecami, słyszy bieg i chodzenie, ale nie skradanie. Gdy cię dopadnie, blok z ręki wypada na ziemię. `/itwastall event deepone`, jajo spawnujące.
+  - **Gość** (etap 4+): obcy nick dołącza do TWOJEJ listy graczy („guest” albo ktoś z journala, kogo nie ma online) i powtarza na czacie twoje stare wiadomości. Potem stoi daleko jako zwykły gracz, tyłem. Gdy podejdziesz: „left the game”, a w twojej skrzyni leży notatka. `/itwastall event guest`.
+  - **Śpiący** (świat snu): w dużych salach labiryntu leży w łóżku postać z twarzą tego, kto patrzy (twój skin). Cicho, na kucaka, przejdziesz obok. Bieg, skok albo otwarcie skrzyni ją budzi, a wtedy Old One ze snu przyspiesza i przeskakuje bliżej. Przy łóżku skrzynia z Kryształem Odpędzającym i dywan z wełny. `/itwastall event sleeper`, jajo spawnujące.
+- **4 nowe struktury** (`tools/gen_structures.py`):
+  - Głębinowa nora (pod ziemią: sculk, ścieżka z wełny, porzucone bloki);
+  - Krąg liczących kamieni (10 słupów z numerami);
+  - Dom gościa (dom dla dwóch z listą graczy na ścianie);
+  - Studnia snów (sucha studnia z łóżkiem na dnie).
+  W każdej skrzynia z naszą książką-podpowiedzią (THE DEEP ONE, THE COUNT, A GUEST, THE SLEEPER).
 - **GameTesty** (§24.2): osobny source set `src/gametest` (nie trafia do jara), uruchamiane przez `./gradlew runGametest`. Testują schronienie, zapis mapy bazy, A* omijający obsydian, jeden It, zapis stanu świata, klastry chunków i stałe numery stanów AI.
 
 ## 🟡 Częściowo

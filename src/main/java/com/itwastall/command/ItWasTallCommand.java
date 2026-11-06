@@ -222,6 +222,9 @@ public final class ItWasTallCommand {
                 .then(eventKind("deepone", p -> {
                     if (!com.itwastall.entity.DeepOneEntity.spawnFor(p)) throw new IllegalStateException("no ceiling in sight to hang from");
                 }))
+                .then(eventKind("sleeper", p -> {
+                    if (!com.itwastall.entity.SleeperEntity.placeFor(p)) throw new IllegalStateException("no room for a bed 3 blocks in front of the player");
+                }))
                 .then(eventKind("guest", p -> {
                     if (!com.itwastall.entity.TheGuest.start(p)) throw new IllegalStateException("a guest is already visiting");
                 }))
@@ -423,6 +426,14 @@ public final class ItWasTallCommand {
                 String line = "It " + it.getUuidAsString().substring(0, 8) + " in " + w.getRegistryKey().getValue()
                         + " at " + it.getBlockPos().toShortString() + " — " + it.getMode() + " for " + it.modeTicks() / 20 + " s, after " + who
                         + (it.isInvisible() ? ", invisible" : "");
+                source.sendFeedback(() -> Text.literal(line), false);
+            }
+            for (com.itwastall.entity.SleeperEntity sl : w.getEntitiesByType(ModEntities.SLEEPER, e -> true)) {
+                String line = "Sleeper at " + sl.getBlockPos().toShortString() + " in " + w.getRegistryKey().getValue() + (sl.isAwake() ? " — awake" : " — asleep");
+                source.sendFeedback(() -> Text.literal(line), false);
+            }
+            for (com.itwastall.entity.DeepOneEntity d : w.getEntitiesByType(ModEntities.DEEP_ONE, e -> true)) {
+                String line = "Deep One at " + d.getBlockPos().toShortString();
                 source.sendFeedback(() -> Text.literal(line), false);
             }
             for (com.itwastall.entity.OldOneEntity one : w.getEntitiesByType(ModEntities.OLD_ONE, e -> true)) {

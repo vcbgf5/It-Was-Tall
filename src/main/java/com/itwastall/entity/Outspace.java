@@ -254,6 +254,7 @@ public final class Outspace {
             for (int dz = -2; dz <= 2; dz++) {
                 int cx = pcx + dx, cz = pcz + dz;
                 long h = mix(seed, cx, cz);
+                trySleeperRoom(world, seed, cx, cz);
                 if ((h & 0xFFFF) / 65536.0 >= chance) continue;
                 BlockPos at = new BlockPos(cx * OutspaceMaze.CELL + 1, OutspaceMaze.FLOOR + 1, cz * OutspaceMaze.CELL + 1);
                 if (!world.isChunkLoaded(at) || !world.getBlockState(at).isAir()) continue;   // already there (or blocked)
@@ -266,6 +267,54 @@ public final class Outspace {
                     chest.markDirty();
                 }
             }
+        }
+    }
+
+    /**
+     * The Sleeper's room: in the top-left cell of some great halls, a bed in the corner with someone in it,
+     * a wool rug (wool swallows footsteps) and a chest with a Warding Crystal. Rebuilt for every dreamer:
+     * if the bed is there but its sleeper is gone, a new one lies down.
+     */
+    private static void trySleeperRoom(ServerWorld world, long seed, int cx, int cz) {
+        if (Math.floorMod(cx, 2) != 0 || Math.floorMod(cz, 2) != 0 || !OutspaceMaze.hall(seed, cx, cz)) return;
+        long h = mix(seed ^ 0x5133_1EE7L, cx, cz);
+        if ((h & 0xFFFF) / 65536.0 >= MathHelper.clamp(ItWasTallConfig.INSTANCE.outspaceSleeperChance, 0.0, 1.0)) return;
+        int x0 = cx * OutspaceMaze.CELL, z0 = cz * OutspaceMaze.CELL, y = OutspaceMaze.FLOOR + 1;
+        BlockPos head = new BlockPos(x0 + 2, y, z0 + 1), foot = head.south();
+        if (!world.isChunkLoaded(head) || !world.isChunkLoaded(foot.south(2))) return;
+        boolean bedThere = world.getBlockState(head).getBlock() instanceof BedBlock;
+        if (!bedThere) {
+            if (!world.getBlockState(head).isAir() || !world.getBlockState(foot).isAir()) return;
+            SleeperEntity s = SleeperEntity.makeBed(world, head, Direction.NORTH);
+            if (s == null) return;
+            BlockPos chestPos = head.east();
+            if (world.getBlockState(chestPos).isAir()) {
+                world.setBlockState(chestPos, Blocks.CHEST.getDefaultState().with(ChestBlock.FACING, Direction.SOUTH), 2);
+                if (world.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+                    chest.setStack(13, new ItemStack(ModItems.WARDING_CRYSTAL));
+                    chest.setStack(11, ModItems.loreBook("dream_face", "IT HAS YOUR FACE",
+                            "I found my own bed in the dream.\n\nSomeone was sleeping in it.\n\nI did not run. I did not breathe.\n\nI took the blue stone and walked away on the wool.\n\nIt did not wake up.\n\nThis time."));
+                    chest.markDirty();
+                }
+            }
+            for (int dz = 0; dz <= 2; dz++) {
+                BlockPos rug = foot.south().add(-1, 0, dz - 1);
+                for (int dx = 0; dx <= 2; dx++) {
+                    BlockPos r = rug.add(dx, 0, 0);
+                    if (world.getBlockState(r).isAir()) world.setBlockState(r, Blocks.WHITE_CARPET.getDefaultState(), 2);
+                }
+            }
+            BlockPos candle = head.west();
+            if (world.getBlockState(candle).isAir()) world.setBlockState(candle, Blocks.CANDLE.getDefaultState(), 2);
+            return;
+        }
+        // the bed is there: make sure someone sleeps in it
+        if (world.getEntitiesByType(ModEntities.SLEEPER, new net.minecraft.util.math.Box(head).expand(8), e -> true).isEmpty()) {
+            SleeperEntity s = ModEntities.SLEEPER.create(world);
+            if (s == null) return;
+            s.refreshPositionAndAngles(head.getX() + 0.5, head.getY() + 0.6875, head.getZ() + 0.5, 180f, 0f);
+            world.spawnEntity(s);
+            s.lieIn(head);
         }
     }
 

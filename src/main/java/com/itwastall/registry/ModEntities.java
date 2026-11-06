@@ -38,6 +38,16 @@ public final class ModEntities {
                     .maxTrackingRange(10)
                     .build("deep_one"));
 
+    /** THE SLEEPER: lies in a bed in the dream world, wearing the face of whoever looks at it. */
+    public static final EntityType<com.itwastall.entity.SleeperEntity> SLEEPER = Registry.register(
+            Registries.ENTITY_TYPE,
+            ItWasTall.id("sleeper"),
+            EntityType.Builder.create(com.itwastall.entity.SleeperEntity::new, SpawnGroup.MISC)
+                    .dimensions(0.6f, 1.8f)
+                    .eyeHeight(1.62f)
+                    .maxTrackingRange(10)
+                    .build("sleeper"));
+
     private ModEntities() {
     }
 
@@ -45,5 +55,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(TALL_ONE, TallOneEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(OLD_ONE, com.itwastall.entity.OldOneEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(DEEP_ONE, com.itwastall.entity.DeepOneEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(SLEEPER, com.itwastall.entity.SleeperEntity.createAttributes());
     }
 }

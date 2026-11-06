@@ -102,6 +102,8 @@ public final class ItWasTallConfig {
         public int outspaceSeconds = 30;
         /** Chance that a room of the maze holds a chest (dream books, torches, rarely a Warding Crystal). */
         public double outspaceLootChance = 0.08;
+        /** Share of the great halls of the dream that hold the Sleeper's bed (with a Warding Crystal by it). */
+        public double outspaceSleeperChance = 0.35;
 
         // ---- comfort / server settings (MODPLAN §19) ----
         /** Softer visuals: no flashing frames, gentler vignette and chase pulse, jumpscare image replaced by a dark fade. */
