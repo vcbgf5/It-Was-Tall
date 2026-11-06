@@ -8,3 +8,4 @@ run/
 tools/preview/shots/
 run2/
 tools/preview/old_one_preview.html
+__pycache__/
