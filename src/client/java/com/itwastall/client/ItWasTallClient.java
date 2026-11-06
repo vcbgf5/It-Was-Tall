@@ -80,6 +80,7 @@ public class ItWasTallClient implements ClientModInitializer {
             return net.minecraft.util.TypedActionResult.success(stack, world.isClient);
         });
         BaseDebugRenderer.init();
+        com.itwastall.client.render.TaskTargetRenderer.init();
 
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.ChasePayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.hud.ChaseHud.setActive(payload.active())));

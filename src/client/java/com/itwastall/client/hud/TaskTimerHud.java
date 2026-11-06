@@ -34,6 +34,7 @@ public final class TaskTimerHud {
 
     public static void update(TaskTimerPayload p) {
         boolean nowActive = !p.title().isEmpty();
+        com.itwastall.client.render.TaskTargetRenderer.set(nowActive ? p.target().orElse(null) : null);
         if (nowActive != active) changedAt = Util.getMeasuringTimeMs();
         active = nowActive;
         if (nowActive) {   // keep the last text while sliding out
@@ -47,6 +48,7 @@ public final class TaskTimerHud {
     }
 
     public static void clear() {
+        com.itwastall.client.render.TaskTargetRenderer.set(null);
         active = false;
         changedAt = 0;
         title = detail = "";

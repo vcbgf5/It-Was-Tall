@@ -13,8 +13,10 @@ import net.minecraft.network.packet.CustomPayload;
  * @param left   seconds left in the current phase
  * @param total  length of the current phase in seconds (for the shrinking bar)
  * @param danger true when running out of time loses the task (douse the lights, the offering)
+ * @param target a block the client outlines through walls (the offering's chest)
  */
-public record TaskTimerPayload(String title, String detail, int left, int total, boolean danger) implements CustomPayload {
+public record TaskTimerPayload(String title, String detail, int left, int total, boolean danger,
+                               java.util.Optional<net.minecraft.util.math.BlockPos> target) implements CustomPayload {
     public static final CustomPayload.Id<TaskTimerPayload> ID = new CustomPayload.Id<>(ItWasTall.id("task_timer"));
     public static final PacketCodec<RegistryByteBuf, TaskTimerPayload> CODEC = PacketCodec.tuple(
             PacketCodecs.string(48), TaskTimerPayload::title,
@@ -22,9 +24,10 @@ public record TaskTimerPayload(String title, String detail, int left, int total,
             PacketCodecs.VAR_INT, TaskTimerPayload::left,
             PacketCodecs.VAR_INT, TaskTimerPayload::total,
             PacketCodecs.BOOL, TaskTimerPayload::danger,
+            PacketCodecs.optional(net.minecraft.util.math.BlockPos.PACKET_CODEC), TaskTimerPayload::target,
             TaskTimerPayload::new);
 
-    public static final TaskTimerPayload NONE = new TaskTimerPayload("", "", 0, 0, false);
+    public static final TaskTimerPayload NONE = new TaskTimerPayload("", "", 0, 0, false, java.util.Optional.empty());
 
     @Override
     public Id<? extends CustomPayload> getId() {

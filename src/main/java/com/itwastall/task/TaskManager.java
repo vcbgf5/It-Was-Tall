@@ -126,7 +126,7 @@ public final class TaskManager {
     }
 
     /** What the TASK TIMER in the corner of the screen shows. */
-    public record Timer(String title, String detail, int left, int total, boolean danger) {
+    public record Timer(String title, String detail, int left, int total, boolean danger, @org.jetbrains.annotations.Nullable BlockPos target) {
     }
 
     /** The TASK TIMER of a player's running task, or null when there is none. */
@@ -154,7 +154,8 @@ public final class TaskManager {
         };
         if (detail.length() > 90) detail = detail.substring(0, 90);
         boolean danger = task.kind == Kind.DOUSE_LIGHTS || task.kind == Kind.SACRIFICE;
-        return new Timer(title, detail, left, total, danger);
+        BlockPos target = task.kind == Kind.SACRIFICE ? task.offerChest : null;
+        return new Timer(title, detail, left, total, danger, target);
     }
 
     /** The journal's "What it wants" line: plain words and the time left, e.g. "Don't go outside. 24 s left." */

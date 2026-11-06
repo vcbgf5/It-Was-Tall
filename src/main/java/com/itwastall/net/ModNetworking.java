@@ -129,7 +129,7 @@ public final class ModNetworking {
         com.itwastall.task.TaskManager.Timer t = com.itwastall.task.TaskManager.timerFor(player.getUuid(),
                 player.getServer().getOverworld().getTime());
         ServerPlayNetworking.send(player, t == null ? TaskTimerPayload.NONE
-                : new TaskTimerPayload(t.title(), t.detail(), t.left(), t.total(), t.danger()));
+                : new TaskTimerPayload(t.title(), t.detail(), t.left(), t.total(), t.danger(), java.util.Optional.ofNullable(t.target())));
     }
 
     /** The player's own journal pages: BASE, EVENTS and the task history. */
