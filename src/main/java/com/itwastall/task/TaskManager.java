@@ -118,6 +118,31 @@ public final class TaskManager {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(TaskManager::tick);
+        // the offering's chest cannot be broken while the task runs (either half of a double chest)
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
+            if (!isOfferingChest(world, pos)) return true;
+            player.sendMessage(net.minecraft.text.Text.literal("It does not let you. Put the offering in.")
+                    .formatted(net.minecraft.util.Formatting.DARK_RED), true);
+            return false;
+        });
+    }
+
+    /** True when that block is (part of) the chest a running offering task points at. */
+    public static boolean isOfferingChest(World world, BlockPos pos) {
+        if (world.isClient || world.getRegistryKey() != World.OVERWORLD) return false;
+        for (Task task : ACTIVE.values()) {
+            if (task.kind != Kind.SACRIFICE || task.offerChest == null) continue;
+            if (task.offerChest.equals(pos)) return true;
+            if (task.offerChest.getManhattanDistance(pos) == 1 && task.offerChest.getY() == pos.getY()
+                    && world.getBlockState(pos).getBlock() instanceof net.minecraft.block.ChestBlock
+                    && world.getBlockState(pos).getBlock() == world.getBlockState(task.offerChest).getBlock()) {
+                // the other half of the same double chest
+                net.minecraft.block.BlockState st = world.getBlockState(pos);
+                if (st.get(net.minecraft.block.ChestBlock.CHEST_TYPE) != net.minecraft.block.enums.ChestType.SINGLE
+                        && pos.offset(net.minecraft.block.ChestBlock.getFacing(st)).equals(task.offerChest)) return true;
+            }
+        }
+        return false;
     }
 
     public static void forget(UUID player) {
@@ -316,8 +341,10 @@ public final class TaskManager {
      */
     private static void tickSacrifice(ServerPlayerEntity player, Task task, long now,
                                       World world, MinecraftServer server) {
-        if (world.getBlockState(task.offerChest).isAir()
-                || !(world.getBlockEntity(task.offerChest) instanceof net.minecraft.block.entity.LootableContainerBlockEntity chest)) {
+        // the whole container at that spot: both halves of a double chest count
+        net.minecraft.inventory.Inventory chest = world.getBlockState(task.offerChest).isAir() ? null
+                : net.minecraft.block.entity.HopperBlockEntity.getInventoryAt(world, task.offerChest);
+        if (chest == null) {
             fail(player, task, server);   // the agreed altar is gone
             return;
         }
@@ -596,8 +623,26 @@ public final class TaskManager {
         return chests.isEmpty() ? null : chests.get(player.getRandom().nextInt(Math.min(2, chests.size())));
     }
 
-    /** The required offering — the first valid item from config (falling back to bread). */
+    /**
+     * The required offering: a RANDOM item from the player's own inventory (It wants something of yours).
+     * The mod's own items (journal books, notes, crystals) are never asked for. Empty inventory: the
+     * first valid item from config (falling back to bread).
+     */
     private static net.minecraft.item.Item pickOfferItem(ItWasTallConfig.Values cfg, ServerPlayerEntity player) {
+        List<net.minecraft.item.Item> owned = new ArrayList<>();
+        var inv = player.getInventory();
+        for (int slot = 0; slot < inv.main.size(); slot++) {
+            var stack = inv.main.get(slot);
+            if (stack.isEmpty()) continue;
+            net.minecraft.util.Identifier id = net.minecraft.registry.Registries.ITEM.getId(stack.getItem());
+            if (ItWasTall.MOD_ID.equals(id.getNamespace())) continue;
+            if (!owned.contains(stack.getItem())) owned.add(stack.getItem());
+        }
+        if (!owned.isEmpty()) return owned.get(player.getRandom().nextInt(owned.size()));
+        return configOfferItem(cfg);
+    }
+
+    private static net.minecraft.item.Item configOfferItem(ItWasTallConfig.Values cfg) {
         for (String raw : cfg.taskSacrificeItems.split(",")) {
             String name = raw.trim().toLowerCase(java.util.Locale.ROOT);
             if (name.isEmpty()) continue;
@@ -644,9 +689,12 @@ public final class TaskManager {
             net.minecraft.util.math.BlockPos chest = pickChest(player);
             if (chest == null) return false;              // no mapped storage to mark an altar in
             net.minecraft.item.Item item = pickOfferItem(cfg, player);
+            // ask for no more than the player actually carries
+            int carried = player.getInventory().count(item);
+            int count = Math.max(1, carried > 0 ? Math.min(carried, Math.max(1, cfg.taskSacrificeCount)) : cfg.taskSacrificeCount);
             task = new Task(Kind.SACRIFICE,
                     now + 20L * cfg.taskSacrificeSeconds, List.of(), List.of(),
-                    item, Math.max(1, cfg.taskSacrificeCount), chest);
+                    item, count, chest);
             ItWasTall.LOGGER.info("Sacrifice altar at {} for {} x{}.",
                     chest.toShortString(), item, task.offerCount);
         } else {

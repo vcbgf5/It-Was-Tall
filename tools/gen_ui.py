@@ -475,6 +475,26 @@ def paused():
     return carve(size, m, (128, 122, 128), (52, 48, 56), (96, 10, 8, 255), (10, 2, 2, 255), 1, 3, 5, 13)
 
 
+def padlock():
+    """16x16 icon on the offering chest: a dark iron padlock with a red keyhole."""
+    img = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.arc([4, 1, 11, 10], 180, 360, fill=(150, 150, 156, 255), width=2)          # shackle
+    d.line([4, 5, 4, 7], fill=(150, 150, 156, 255), width=2); d.line([10, 5, 10, 7], fill=(150, 150, 156, 255), width=2)
+    d.rectangle([2, 7, 13, 15], fill=(58, 58, 64, 255), outline=(14, 10, 10, 255))   # body
+    d.line([3, 8, 12, 8], fill=(96, 96, 104, 255))
+    d.rectangle([7, 10, 8, 11], fill=(200, 30, 22, 255)); d.point((7, 12), fill=(200, 30, 22, 255)); d.point((8, 12), fill=(200, 30, 22, 255))
+    return img
+
+def down_arrow():
+    """16x16 icon above the offering chest: a blood-red arrow pointing down."""
+    img = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.polygon([(5, 0), (10, 0), (10, 7), (14, 7), (7, 15), (8, 15), (1, 7), (5, 7)], fill=(14, 4, 3, 255))
+    d.polygon([(6, 1), (9, 1), (9, 8), (12, 8), (7, 13), (8, 13), (3, 8), (6, 8)], fill=(196, 34, 24, 255))
+    d.line([6, 1, 6, 8], fill=(232, 90, 70, 255))
+    return img
+
 NINE_SLICE = {
     "button": (200, 20, 3), "button_highlighted": (200, 20, 3), "button_disabled": (200, 20, 3),
     "slider": (200, 20, 1), "slider_highlighted": (200, 20, 1),
@@ -537,6 +557,8 @@ def main():
     save(adv_toast(), G + 'sprites/toast/advancement.png')
     adv_bg = adv_background()
     adv_bg.save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/advancements/forest.png'))
+    padlock().save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/task_padlock.png'))
+    down_arrow().save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/task_arrow.png'))
     paused().save(os.path.join(ROOT, 'src/main/resources/assets/itwastall/textures/gui/paused.png'))
     save(logo(), 'assets/minecraft/textures/gui/title/minecraft.png')
     save(edition(), 'assets/minecraft/textures/gui/title/edition.png')

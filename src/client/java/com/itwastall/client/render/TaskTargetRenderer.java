@@ -21,7 +21,7 @@ import java.util.OptionalDouble;
 
 /**
  * THE OFFERING: the chest It wants the items in glows through walls (a dark-red translucent block with a
- * pulsing outline, drawn with the depth test off) for as long as the task runs, so it can be found from
+ * pulsing outline, a padlock on it and a red arrow bobbing above, drawn with the depth test off) for as long as the task runs, so it can be found from
  * anywhere in the house. Same render path as the base viewer (vertex consumers after the translucent pass).
  */
 public final class TaskTargetRenderer {
@@ -47,6 +47,24 @@ public final class TaskTargetRenderer {
                     .cull(RenderPhase.DISABLE_CULLING)
                     .writeMaskState(RenderPhase.COLOR_MASK)
                     .build(false));
+
+    private static final net.minecraft.util.Identifier PADLOCK = com.itwastall.ItWasTall.id("textures/gui/task_padlock.png");
+    private static final net.minecraft.util.Identifier ARROW = com.itwastall.ItWasTall.id("textures/gui/task_arrow.png");
+    private static final RenderLayer XRAY_PADLOCK = icon("itwastall_xray_padlock", PADLOCK);
+    private static final RenderLayer XRAY_ARROW = icon("itwastall_xray_arrow", ARROW);
+
+    /** A textured, camera-facing icon that ignores the depth buffer. */
+    private static RenderLayer icon(String name, net.minecraft.util.Identifier texture) {
+        return RenderLayer.of(name, VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS, 64, false, true,
+                RenderLayer.MultiPhaseParameters.builder()
+                        .program(RenderPhase.POSITION_TEXTURE_PROGRAM)
+                        .texture(new RenderPhase.Texture(texture, false, false))
+                        .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
+                        .depthTest(RenderPhase.ALWAYS_DEPTH_TEST)
+                        .cull(RenderPhase.DISABLE_CULLING)
+                        .writeMaskState(RenderPhase.COLOR_MASK)
+                        .build(false));
+    }
 
     @Nullable
     private static BlockPos target;
@@ -91,12 +109,38 @@ public final class TaskTargetRenderer {
 
         VertexConsumer lines = consumers.getBuffer(XRAY_LINES);
         WorldRenderer.drawBox(matrices, lines, x0, y0, z0, x1, y1, z1, 0.95f, 0.22f, 0.16f, 0.55f + 0.45f * pulse);
+
+        // a padlock on the chest (on the side you look at) and a red arrow bobbing above it
+        net.minecraft.util.math.Vec3d center = pos.toCenterPos();
+        net.minecraft.util.math.Vec3d toCam = cam.subtract(center);
+        net.minecraft.util.math.Vec3d flat = new net.minecraft.util.math.Vec3d(toCam.x, 0, toCam.z);
+        net.minecraft.util.math.Vec3d face = flat.lengthSquared() < 1.0E-4 ? net.minecraft.util.math.Vec3d.ZERO : flat.normalize().multiply(0.56);
+        billboard(matrices, consumers.getBuffer(XRAY_PADLOCK), context.camera(), center.add(face), 0.28f);
+        double bob = com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode ? 0
+                : 0.12 * Math.sin(Util.getMeasuringTimeMs() / 1000.0 * Math.PI * 1.6);
+        billboard(matrices, consumers.getBuffer(XRAY_ARROW), context.camera(), center.add(0, 1.35 + bob, 0), 0.4f);
         matrices.pop();
 
         if (consumers instanceof VertexConsumerProvider.Immediate immediate) {
             immediate.draw(XRAY_FILL);
             immediate.draw(XRAY_LINES);
+            immediate.draw(XRAY_PADLOCK);
+            immediate.draw(XRAY_ARROW);
         }
+    }
+
+    /** A square icon at a world position (matrices already camera-relative), always turned to the camera. */
+    private static void billboard(MatrixStack matrices, VertexConsumer buf, net.minecraft.client.render.Camera camera,
+                                  net.minecraft.util.math.Vec3d at, float half) {
+        matrices.push();
+        matrices.translate(at.x, at.y, at.z);
+        matrices.multiply(camera.getRotation());
+        Matrix4f m = matrices.peek().getPositionMatrix();
+        buf.vertex(m, -half, -half, 0).texture(0f, 1f);
+        buf.vertex(m, half, -half, 0).texture(1f, 1f);
+        buf.vertex(m, half, half, 0).texture(1f, 0f);
+        buf.vertex(m, -half, half, 0).texture(0f, 0f);
+        matrices.pop();
     }
 
     private static void quad(VertexConsumer buf, Matrix4f m,
