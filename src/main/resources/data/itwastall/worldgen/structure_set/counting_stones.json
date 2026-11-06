@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "itwastall:counting_stones",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 44,
+    "separation": 18,
+    "salt": 74611307
+  }
+}

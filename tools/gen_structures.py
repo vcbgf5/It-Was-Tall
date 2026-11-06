@@ -6,6 +6,10 @@
   torch_tunnel      underground                           old mine tunnel, dying torches, a dead end
   sign_room         underground                           a buried room whose walls are covered in signs
   crystal_grotto    underground                           blue-lit grotto, GUARANTEED Warding Crystal
+  deep_lair         deep underground (below Y 0)          the Deep One's den: sculk that listens, a wool trail, dropped blocks
+  counting_stones   surface   plains / forests            ten numbered stones in a ring, counting down to a cold fire
+  guest_house       surface   plains / forests            a small house set for two; the second guest never left
+  dream_well        surface   plains / meadows            a dry well with a bed at the bottom
 
 For each one it writes: structure template (.nbt), worldgen/structure, worldgen/structure_set,
 worldgen/template_pool, the biome tag and the chest loot table. Requires nbtlib (pip install nbtlib).
@@ -321,12 +325,180 @@ def crystal_grotto():
     return t
 
 
+def deep_lair():
+    """13 x 7 x 13 low cavern, the Deep One's den (MODPLAN extension): sculk that hears you, a wool trail
+    that does not, blocks lying around where it shook them out of someone's hands, the hint chest."""
+    t = Template(13, 7, 13, 77)
+    r = t.rng
+    cx, cy, cz = 6, 2, 6
+    for x in range(13):
+        for y in range(7):
+            for z in range(13):
+                d = ((x - cx) / 6.2) ** 2 + ((y - cy) / 2.6) ** 2 + ((z - cz) / 6.2) ** 2
+                if d < 0.8 + r.uniform(-0.07, 0.07) and y >= 1:
+                    t.set(x, y, z, "air")
+                elif d < 1.3:
+                    t.set(x, y, z, r.choice(["deepslate", "cobbled_deepslate", "tuff", "deepslate"]))
+    t.fill(1, 0, 1, 11, 0, 11, "deepslate")
+    # sculk everywhere it can listen, sensors around the edge
+    for _ in range(40):
+        x, z = r.randrange(1, 12), r.randrange(1, 12)
+        if t.get(x, 1, z) == "minecraft:air":
+            t.set(x, 0, z, "sculk")
+    for (x, z) in ((2, 4), (10, 8), (4, 10), (8, 2)):
+        t.set(x, 1, z, "sculk_sensor", {"sculk_sensor_phase": "inactive", "power": "0", "waterlogged": "false"})
+    # the safe way: a wool carpet trail from the crack to the chest (wool does not make a sound)
+    for z in range(6, 13):
+        t.set(6, 1, z, "gray_carpet")
+    # cobwebs on the ceiling, where it hangs
+    for _ in range(14):
+        x, z = r.randrange(2, 11), r.randrange(2, 11)
+        for y in (4, 3):
+            if t.get(x, y, z) == "minecraft:air" and t.get(x, y + 1, z) not in (None, "minecraft:air"):
+                t.set(x, y, z, "cobweb")
+                break
+    # what it shook out of people's hands: odd single blocks on the floor, a dead torch (no flame)
+    for name in ("cobblestone", "oak_planks", "dirt", "crafting_table", "torch", "stone_bricks", "glass"):
+        x, z = r.randrange(2, 11), r.randrange(2, 11)
+        if t.get(x, 1, z) == "minecraft:air":
+            t.set(x, 1, z, "redstone_torch" if name == "torch" else name, {"lit": "false"} if name == "torch" else None)
+    chest(t, 6, 1, 5, "south", "deep_lair")
+    t.set(6, 1, 6, "gray_carpet")
+    # the crack in from the caves
+    for y in (1, 2):
+        t.set(6, y, 12, "air")
+        t.set(6, y, 11, "air")
+    return t
+
+
+def counting_stones():
+    """13 x 6 x 13: ten mossy pillars in a ring with signs 10 .. 1, counting down to a cold campfire
+    and the hint chest in the middle."""
+    t = Template(13, 6, 13, 88)
+    r = t.rng
+    import math
+    for x in range(13):
+        for z in range(13):
+            if (x - 6) ** 2 + (z - 6) ** 2 <= 36:
+                t.set(x, 0, z, r.choice(["coarse_dirt", "podzol", "coarse_dirt", "gravel"]))
+                for y in range(1, 6):
+                    t.set(x, y, z, "air")
+    facings = {(0, -1): "north", (0, 1): "south", (1, 0): "east", (-1, 0): "west"}
+    for i in range(10):
+        a = -math.pi / 2 + i * 2 * math.pi / 10
+        x, z = 6 + round(math.cos(a) * 5), 6 + round(math.sin(a) * 5)
+        h = 2 + (i % 3)
+        for y in range(1, h + 1):
+            t.set(x, y, z, r.choice(["mossy_stone_bricks", "mossy_cobblestone", "cracked_stone_bricks"]))
+        # the number faces the middle
+        dx, dz = 6 - x, 6 - z
+        step = (0 if abs(dx) < abs(dz) else (1 if dx > 0 else -1), 0 if abs(dx) >= abs(dz) else (1 if dz > 0 else -1))
+        sx, sz = x + step[0], z + step[1]
+        face = facings[step]
+        wall_sign(t, sx, 2, sz, face, ["", str(10 - i), "", ""], wood="spruce", color="red")
+    t.set(6, 1, 6, "campfire", {"lit": "false", "signal_fire": "false", "facing": "north", "waterlogged": "false"})
+    chest(t, 6, 1, 8, "north", "counting_stones")
+    return t
+
+
+def guest_house():
+    """9 x 7 x 9 little house set for two: two beds, two chairs, two plates — and signs on the wall like a
+    player list. The hint chest stands by the second bed."""
+    t = Template(9, 7, 9, 99)
+    r = t.rng
+    t.fill(0, 0, 0, 8, 0, 8, "cobblestone")
+    for x in range(1, 8):
+        for z in range(1, 8):
+            t.set(x, 0, z, "spruce_planks")
+            edge = x in (1, 7) or z in (1, 7)
+            for y in range(1, 4):
+                t.set(x, y, z, ("spruce_log" if (x in (1, 7) and z in (1, 7)) else "spruce_planks") if edge else "air")
+    for (x, z) in ((1, 4), (7, 4), (4, 1)):
+        t.set(x, 2, z, "glass_pane")
+    # flat roof with a lip
+    t.fill(0, 4, 0, 8, 4, 8, "dark_oak_slab")
+    for x in range(1, 8):
+        for z in range(1, 8):
+            t.set(x, 4, z, "dark_oak_planks")
+    # the door (south)
+    t.set(4, 1, 7, "spruce_door", {"facing": "south", "half": "lower", "hinge": "left", "open": "false", "powered": "false"})
+    t.set(4, 2, 7, "spruce_door", {"facing": "south", "half": "upper", "hinge": "left", "open": "false", "powered": "false"})
+    # two beds, side by side
+    for x in (2, 6):
+        t.set(x, 1, 2, "white_bed" if x == 2 else "gray_bed", {"facing": "south", "part": "head", "occupied": "false"})
+        t.set(x, 1, 3, "white_bed" if x == 2 else "gray_bed", {"facing": "south", "part": "foot", "occupied": "false"})
+    # a table for two
+    t.set(4, 1, 4, "oak_fence")
+    t.set(4, 2, 4, "oak_pressure_plate")
+    t.set(3, 1, 4, "oak_stairs", stairs("west"))
+    t.set(5, 1, 4, "oak_stairs", stairs("east"))
+    # the "player list" on the wall
+    wall_sign(t, 3, 2, 2, "south", ["PLAYERS:", "you", "guest", ""], wood="spruce", color="black")
+    wall_sign(t, 5, 2, 2, "south", ["guest:", "\"welcome", "back\"", ""], wood="spruce", color="red")
+    t.set(6, 1, 5, "candle", {"candles": "2", "lit": "false", "waterlogged": "false"})
+    chest(t, 6, 1, 4, "west", "guest_house")
+    return t
+
+
+def dream_well():
+    """7 x 9 x 7: a dry stone well; at the bottom, three blocks down, someone made a bed. White flowers
+    around it. The hint chest leans on the well."""
+    t = Template(7, 9, 7, 111)
+    r = t.rng
+    G = 4                                            # ground row
+    for x in range(7):
+        for z in range(7):
+            t.set(x, G, z, "grass_block", {"snowy": "false"})
+            for y in range(G + 1, 9):
+                t.set(x, y, z, "air")
+            for y in range(0, G):
+                t.set(x, y, z, "dirt")
+    # the shaft: 3 x 3 inside, stone bricks, bottom at y 1
+    for x in range(1, 6):
+        for z in range(1, 6):
+            for y in range(0, G + 2):
+                inner = 2 <= x <= 4 and 2 <= z <= 4
+                if inner and 1 <= y <= G + 1:
+                    t.set(x, y, z, "air")
+                elif not inner and y >= 0:
+                    t.set(x, y, z, r.choice(["stone_bricks", "mossy_stone_bricks", "cracked_stone_bricks"]))
+    t.fill(2, 0, 2, 4, 0, 4, "moss_block")
+    t.set(3, 1, 2, "red_bed", {"facing": "north", "part": "head", "occupied": "false"})
+    t.set(3, 1, 3, "red_bed", {"facing": "north", "part": "foot", "occupied": "false"})
+    # the roof over the well
+    for (x, z) in ((1, 1), (5, 1), (1, 5), (5, 5)):
+        for y in (G + 2, G + 3):
+            t.set(x, y, z, "spruce_fence")
+    for x in range(1, 6):
+        for z in range(1, 6):
+            t.set(x, G + 4, z, "spruce_slab")
+    t.set(3, G + 3, 3, "chain", {"axis": "y", "waterlogged": "false"})
+    # white flowers
+    for _ in range(9):
+        x, z = r.randrange(0, 7), r.randrange(0, 7)
+        if not (1 <= x <= 5 and 1 <= z <= 5):
+            t.set(x, G + 1, z, r.choice(["lily_of_the_valley", "oxeye_daisy", "azure_bluet"]))
+    wall_sign(t, 3, G + 1, 0, "north", ["", "don't wake", "it", ""], wood="spruce", color="red")
+    chest(t, 6, G + 1, 3, "west", "dream_well")
+    return t
+
+
 # =========================================================================== data files
 NOTE = lambda nid, title, body: {
     "type": "minecraft:item", "name": f"{NS}:note",
     "functions": [
         {"function": "minecraft:set_custom_data",
          "tag": "{note_id:\"%s\",note_title:\"%s\",note_body:\"%s\",itwastall_cave_note:1b}"
+                % (nid, title.replace('"', "'"), body.replace('"', "'"))},
+        {"function": "minecraft:set_name", "name": title, "target": "item_name"},
+    ]}
+
+
+BOOK = lambda nid, title, body: {
+    "type": "minecraft:item", "name": f"{NS}:lore_book",
+    "functions": [
+        {"function": "minecraft:set_custom_data",
+         "tag": "{note_id:\"%s\",note_title:\"%s\",note_body:\"%s\"}"
                 % (nid, title.replace('"', "'"), body.replace('"', "'"))},
         {"function": "minecraft:set_name", "name": title, "target": "item_name"},
     ]}
@@ -378,6 +550,24 @@ LOOT = {
         {"rolls": 1, "entries": [NOTE("grotto_1", "THE BLUE GLOW", "It does not come near the blue light.|I don't know why.|I took the crystal.|Now it doesn't come near ME.|Don't lose it. Don't ever lose it.")]},
         {"rolls": {"type": "minecraft:uniform", "min": 2, "max": 4}, "entries": [
             item("amethyst_shard", 2, 6, 3), item("lapis_lazuli", 3, 9, 3), item("diamond", 1, 2, 1), item("soul_torch", 2, 5, 2)]}]},
+    # ---- the hint books for the new creatures ----
+    "deep_lair": {"type": "minecraft:chest", "pools": [
+        {"rolls": 1, "entries": [BOOK("hint_deep_one", "THE DEEP ONE", "Below the bedrock line the tunnels are not empty.|It crawls on the ceiling. Long. Thin. On all fours.|You only ever see it from the corner of your eye. Look straight at it and it is gone.|It puts the torches out behind you.|It hears you RUN. It does not hear you sneak.|Walk on wool if you can.|And hold on to what you carry. It shakes the blocks right out of your hands.")]},
+        {"rolls": {"type": "minecraft:uniform", "min": 2, "max": 4}, "entries": [
+            item("white_wool", 2, 6, 3), item("torch", 2, 6, 2), item("echo_shard", 1, 1, 1), item("raw_iron", 1, 4, 2)]},
+        crystal_pool(0.2)]},
+    "counting_stones": {"type": "minecraft:chest", "pools": [
+        {"rolls": 1, "entries": [BOOK("hint_counter", "THE COUNT", "If you hear counting at night, out in the open:|ten. nine. eight.|Every number, it is closer. You will see it between the trees.|Do not run around. Get under a roof before it says zero.|Or turn your back to it and do not move until it is done.|I was too slow once. I still hear the zero.")]},
+        {"rolls": {"type": "minecraft:uniform", "min": 2, "max": 3}, "entries": [
+            item("candle", 1, 3, 3), item("coal", 2, 5, 2), item("bone", 1, 3, 2)]}]},
+    "guest_house": {"type": "minecraft:chest", "pools": [
+        {"rolls": 1, "entries": [BOOK("hint_guest", "A GUEST", "There was a name in the player list I did not know.|It wrote in the chat. It wrote what I wrote yesterday.|Then I saw it. Far away. Its back to me. It never turned around.|I walked up to it. It was gone.|In my chest there was a note I did not write.|We are two in this world. The list says three.")]},
+        {"rolls": {"type": "minecraft:uniform", "min": 2, "max": 4}, "entries": [
+            item("bread", 1, 3, 3), item("cookie", 2, 4, 2), item("candle", 1, 2, 2), item("name_tag", 1, 1, 1)]}]},
+    "dream_well": {"type": "minecraft:chest", "pools": [
+        {"rolls": 1, "entries": [BOOK("hint_sleeper", "THE SLEEPER", "In the dream there is a room with a bed. Someone sleeps in it.|It has your face. Your clothes. Your hands.|Walk past it quietly. Do not run. Do not open anything near it.|If it sits up, the Old One knows exactly where you are.|There is something blue by its bed. Take it, slowly.")]},
+        {"rolls": {"type": "minecraft:uniform", "min": 1, "max": 3}, "entries": [
+            item("white_wool", 1, 3, 2), item("lily_of_the_valley", 1, 3, 2), item("feather", 1, 3, 2)]}]},
 }
 
 SURFACE_FOREST = ["minecraft:forest", "minecraft:birch_forest", "minecraft:dark_forest", "minecraft:taiga",
@@ -387,12 +577,16 @@ SURFACE_OPEN = ["minecraft:plains", "minecraft:sunflower_plains", "minecraft:mea
                 "minecraft:birch_forest", "minecraft:taiga", "minecraft:savanna", "minecraft:snowy_plains"]
 
 STRUCTURES = {
-    # name: (builder, surface?, biomes, spacing, separation, salt, y-range for underground)
+    # name: (builder, surface?, biomes, spacing, separation, salt, y-range underground / start offset surface)
     "abandoned_cabin": (abandoned_cabin, True, SURFACE_FOREST, 40, 16, 74611301, None),
     "roadside_shrine": (roadside_shrine, True, SURFACE_OPEN, 32, 12, 74611302, None),
     "torch_tunnel": (torch_tunnel, False, "#minecraft:is_overworld", 36, 14, 74611303, (-24, 36)),
     "sign_room": (sign_room, False, "#minecraft:is_overworld", 52, 22, 74611304, (-40, 20)),
     "crystal_grotto": (crystal_grotto, False, "#minecraft:is_overworld", 44, 18, 74611305, (-50, 0)),
+    "deep_lair": (deep_lair, False, "#minecraft:is_overworld", 40, 16, 74611306, (-56, -10)),
+    "counting_stones": (counting_stones, True, SURFACE_OPEN, 44, 18, 74611307, None),
+    "guest_house": (guest_house, True, SURFACE_FOREST, 48, 20, 74611308, None),
+    "dream_well": (dream_well, True, SURFACE_OPEN, 50, 20, 74611309, -5),   # surface: 4 rows of shaft go below ground
 }
 
 
@@ -423,7 +617,8 @@ def main():
             "use_expansion_hack": False,
         }
         if surface:
-            structure["start_height"] = {"absolute": -1}
+            # yr for a surface structure = how far below the surface the template starts (default 1 row)
+            structure["start_height"] = {"absolute": yr if isinstance(yr, int) else -1}
             structure["project_start_to_heightmap"] = "WORLD_SURFACE_WG"
         else:
             structure["start_height"] = {"type": "minecraft:uniform",
