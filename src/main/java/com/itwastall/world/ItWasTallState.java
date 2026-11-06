@@ -58,14 +58,14 @@ public final class ItWasTallState extends PersistentState {
      * MODPLAN §4: the one real Tall One, remembered in the world data so the server limit also counts
      * an It standing in an UNLOADED chunk and no duplicate survives a restart. {@code activeItSeen} is
      * the Overworld time of its last tick; a record that has not ticked for {@link #ACTIVE_IT_STALE_TICKS}
-     * no longer blocks new hauntings (and if that old It ever loads again, it removes itself).
+     * no longer blocks new hauntings after 30 s (and if that old It ever loads again, it removes itself).
      */
     @org.jetbrains.annotations.Nullable
     private UUID activeIt;
     private String activeItDim = "";
     private long activeItPos;
     private long activeItSeen;
-    public static final long ACTIVE_IT_STALE_TICKS = 20L * 60 * 10;
+    public static final long ACTIVE_IT_STALE_TICKS = 20L * 30;
 
     /** Time spent per chunk (ChunkScores, MODPLAN §8 notes): player -> chunk -> dwell points. */
     private final Map<UUID, Map<Long, Float>> chunkDwell = new HashMap<>();

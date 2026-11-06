@@ -267,7 +267,7 @@ public class DeepOneEntity extends HostileEntity implements GeoEntity {
             if (next != null && now < next) continue;
             if (!p.getServerWorld().getEntitiesByType(ModEntities.DEEP_ONE, p.getBoundingBox().expand(64), e -> true).isEmpty()) continue;
             if (p.getRandom().nextDouble() >= MathHelper.clamp(cfg.deepOneChance, 0.0, 1.0)) continue;
-            if (spawnFor(p)) NEXT.put(p.getUuid(), now + 20L * 60 * (6 + p.getRandom().nextInt(5)));
+            if (spawnFor(p)) NEXT.put(p.getUuid(), now + 20L * 60 * (4 + p.getRandom().nextInt(4)));
         }
     }
 

@@ -132,12 +132,12 @@ public final class FalsePresences {
         return world.getTimeOfDay() / 24000L;
     }
 
-    /** PHASES §3: 1 per night up to ETAP 3, 3 in ETAP 4, 5 in ETAP 5 ("różnice per gracz"). */
+    /** Per night: 2 up to ETAP 3, 4 in ETAP 4, 6 in ETAP 5 (more than PHASES §3 — fewer felt like it stopped working). */
     private static int maxPerNight(Stage st) {
         return switch (st.ordinal()) {
-            case 4 -> 3;
-            case 5 -> 5;
-            default -> 1;
+            case 4 -> 4;
+            case 5 -> 6;
+            default -> 2;
         };
     }
 

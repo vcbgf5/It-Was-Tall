@@ -84,7 +84,13 @@ public class SleeperEntity extends PathAwareEntity {
         if (!(getWorld() instanceof ServerWorld world)) return;
         if (isAwake()) {
             PlayerEntity p = world.getClosestPlayer(this, 24);
-            if (p != null) getLookControl().lookAt(p, 30f, 30f);
+            if (p != null) {
+                float yaw = (float) (MathHelper.atan2(p.getZ() - getZ(), p.getX() - getX()) * MathHelper.DEGREES_PER_RADIAN) - 90f;
+                setYaw(yaw);
+                setBodyYaw(yaw);
+                setHeadYaw(yaw);
+                getLookControl().lookAt(p, 30f, 30f);
+            }
             if (++awakeTicks > 20 * 20) discard();          // it stood up, stared, and is gone
             return;
         }

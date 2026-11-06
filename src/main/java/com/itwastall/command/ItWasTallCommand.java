@@ -74,7 +74,9 @@ public final class ItWasTallCommand {
                                         .executes(ctx -> spawn(ctx.getSource(), EntityArgumentType.getPlayer(ctx, "player"),
                                                 IntegerArgumentType.getInteger(ctx, "distance")))))))
                 .then(op(forPlayers("haunt", p -> {
-                    if (!HauntDirector.spawnStare(p)) throw new IllegalStateException("no free spot");
+                    HauntDirector.clearForCommand(p.getServer());
+                    if (!HauntDirector.spawnStare(p)) throw new IllegalStateException("no free spot with a clear view in front of the player");
+                    HauntDirector.markNewForced(p.getServer());
                 })))
                 .then(op(forPlayers("jumpscare", p -> ModNetworking.sendJumpscare(p))))
                 .then(op(forPlayers("scare", p -> ScareSounds.playRandomScare(p))))
@@ -206,18 +208,21 @@ public final class ItWasTallCommand {
                     if (!WindowKnocks.trigger(p)) throw new IllegalStateException("no window near the player's base");
                 }))
                 .then(eventKind("feint", p -> {
-                    if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
+                    HauntDirector.clearForCommand(p.getServer());
                     TallOneEntity it = spawnAt(p, 22);
-                    if (it == null) throw new IllegalStateException("no room in front of the player");
+                    if (it == null) throw new IllegalStateException("no room 22 blocks in front of the player");
+                    it.setForced(true);
                     it.beginFeint(p);
                 }))
                 .then(eventKind("tree", p -> {
-                    if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
-                    if (!HauntDirector.spawnBehindTree(p, 10, 40)) throw new IllegalStateException("no suitable tree in front of the player");
+                    HauntDirector.clearForCommand(p.getServer());
+                    if (!HauntDirector.spawnBehindTree(p, 10, 40)) throw new IllegalStateException("no tree with a 3-log trunk 10-40 blocks in front of the player");
+                    HauntDirector.markNewForced(p.getServer());
                 }))
                 .then(eventKind("realknock", p -> {
-                    if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
-                    if (!com.itwastall.entity.HouseEvents.realKnockNearest(p)) throw new IllegalStateException("no mapped door with room outside");
+                    HauntDirector.clearForCommand(p.getServer());
+                    if (!com.itwastall.entity.HouseEvents.realKnockNearest(p)) throw new IllegalStateException("no door near the player with room outside (base or area map)");
+                    HauntDirector.markNewForced(p.getServer());
                 }))
                 .then(eventKind("deepone", p -> {
                     if (!com.itwastall.entity.DeepOneEntity.spawnFor(p)) throw new IllegalStateException("no ceiling in sight to hang from");
@@ -226,10 +231,12 @@ public final class ItWasTallCommand {
                     if (!com.itwastall.entity.SleeperEntity.placeFor(p)) throw new IllegalStateException("no room for a bed 3 blocks in front of the player");
                 }))
                 .then(eventKind("guest", p -> {
-                    if (!com.itwastall.entity.TheGuest.start(p)) throw new IllegalStateException("a guest is already visiting");
+                    com.itwastall.entity.TheGuest.stop(p);
+                    if (!com.itwastall.entity.TheGuest.start(p)) throw new IllegalStateException("could not start the guest");
                 }))
                 .then(eventKind("count", p -> {
-                    if (!com.itwastall.entity.TheCount.start(p)) throw new IllegalStateException("already counting");
+                    com.itwastall.entity.TheCount.stop(p);
+                    if (!com.itwastall.entity.TheCount.start(p)) throw new IllegalStateException("could not start counting");
                 }))
                 .then(eventKind("oldone", p -> {
                     if (!com.itwastall.entity.OldOneDirector.spawnFor(p)) throw new IllegalStateException("no free spot near the player");
@@ -456,12 +463,20 @@ public final class ItWasTallCommand {
         return 1;
     }
 
+    private static String nearestIt(ServerPlayerEntity p) {
+        double best = Double.MAX_VALUE;
+        for (TallOneEntity it : p.getServerWorld().getEntitiesByType(ModEntities.TALL_ONE, e -> true)) best = Math.min(best, it.distanceTo(p));
+        return best == Double.MAX_VALUE ? "" : " (nearest It " + (int) best + " m away)";
+    }
+
     private static int debugEvents(ServerCommandSource source, ServerPlayerEntity p) {
         long now = p.getServerWorld().getServer().getOverworld().getTime();
         java.util.UUID u = p.getUuid();
         java.util.function.LongFunction<String> in = at -> at < 0 ? "not scheduled" : at <= now ? "due now" : "in " + (at - now) / 20 + " s";
         List<String> lines = List.of(
                 "Events of " + p.getName().getString() + " — phase " + (Director.phase() == 0 ? "PRE" : "ACTIVE") + ", stage " + Director.stageIndex(),
+                "  real It counted against the limit: " + HauntDirector.countActive(p.getServer()) + " / " + Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)
+                        + nearestIt(p),
                 "  shared event gap (minEventCooldown): " + (com.itwastall.entity.EventGate.secondsLeft(p) == 0 ? "ready" : com.itwastall.entity.EventGate.secondsLeft(p) + " s left"),
                 "  haunting (It in the distance): " + in.apply(HauntDirector.nextAt(u)),
                 "  Old One: " + in.apply(com.itwastall.entity.OldOneDirector.nextAt(u)),
@@ -485,7 +500,9 @@ public final class ItWasTallCommand {
         for (MineEvents.Kind kind : MineEvents.Kind.values()) {
             String name = kind.name().toLowerCase(Locale.ROOT);
             PlayerAction action = p -> {
-                if (!MineEvents.trigger(p, kind)) throw new IllegalStateException("can't start " + name + " here");
+                if (kind == MineEvents.Kind.DIG || kind == MineEvents.Kind.PEEK) HauntDirector.clearForCommand(p.getServer());
+                if (!MineEvents.trigger(p, kind)) throw new IllegalStateException("can't start " + name + " here (needs to be underground)");
+                HauntDirector.markNewForced(p.getServer());
             };
             root.then(literal(name)
                     .executes(ctx -> each(ctx, List.of(ctx.getSource().getPlayerOrThrow()), "mine " + name, action))
@@ -525,12 +542,7 @@ public final class ItWasTallCommand {
     }
 
     private static int spawn(ServerCommandSource source, ServerPlayerEntity player, int distance) throws CommandSyntaxException {
-        int active = HauntDirector.countActive(source.getServer());
-        int limit = Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts);
-        if (active >= limit) {
-            source.sendError(Text.literal("Cannot spawn It: the server limit is already reached (" + active + "/" + limit + ")."));
-            return 0;
-        }
+        HauntDirector.clearForCommand(source.getServer());   // a test command replaces the current It
         ServerWorld world = player.getServerWorld();
         float yawRad = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
         double x = player.getX() - MathHelper.sin(yawRad) * distance;
@@ -542,6 +554,7 @@ public final class ItWasTallCommand {
         it.refreshPositionAndAngles(x, y, z, player.getYaw() + 180f, 0f);
         it.setVictim(player);
         it.setPersistent();
+        it.setForced(true);
         world.spawnEntity(it);
         source.sendFeedback(() -> Text.literal("It is watching " + player.getName().getString() + " (" + distance + " blocks)."), false);
         return 1;

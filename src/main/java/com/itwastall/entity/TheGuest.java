@@ -108,6 +108,12 @@ public final class TheGuest {
         }
     }
 
+    /** Ends a running visit at once (test command restarts it). */
+    public static void stop(ServerPlayerEntity p) {
+        Visit v = VISITS.get(p.getUuid());
+        if (v != null) leave(p, v);
+    }
+
     /** Begins a visit (also /itwastall event guest). */
     public static boolean start(ServerPlayerEntity p) {
         if (VISITS.containsKey(p.getUuid())) return false;
@@ -119,7 +125,7 @@ public final class TheGuest {
         long now = server.getOverworld().getTime();
         v.nextAt = now + 20L * 20;
         VISITS.put(p.getUuid(), v);
-        NEXT.put(p.getUuid(), now + 20L * 60 * (40 + p.getRandom().nextInt(31)));
+        NEXT.put(p.getUuid(), now + 20L * 60 * (25 + p.getRandom().nextInt(21)));
         EventGate.mark(p);
         addToList(p, v);
         p.sendMessage(Text.translatable("multiplayer.player.joined", v.name).formatted(Formatting.YELLOW), false);

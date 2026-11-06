@@ -20,7 +20,12 @@ public final class ItWasTallConfig {
 
     public static Values INSTANCE = new Values();
 
+    /** Bumped when defaults change in a way old config files should pick up (see {@link #migrate}). */
+    private static final int CONFIG_VERSION = 2;
+
     public static final class Values {
+        /** Do not edit: lets the mod update old config files to new defaults. */
+        public int configVersion = CONFIG_VERSION;
         /** Show the full-screen jumpscare image (false = sound only). */
         public boolean jumpscares = true;
         /** How long the jumpscare image stays on screen. */
@@ -112,7 +117,7 @@ public final class ItWasTallConfig {
         public double effectsVolume = 1.0;
         /** Minimum seconds between two bigger events (house events, window knocks, false presences, Old One,
          *  dynamic structures) for the same player. 0 = no global gap, only the per-event cooldowns. */
-        public int minEventCooldown = 45;
+        public int minEventCooldown = 25;
         /** Nothing the mod spawns or places may be farther than this from the player it is meant for (blocks). */
         public int maxEventRange = 100;
         /** Lets players without operator rights use /itwastall debug ... (read-only views). */
@@ -131,8 +136,8 @@ public final class ItWasTallConfig {
         public int oldOneMinStage = 2;
         /** Minutes (per player) before the first one / between two of them. */
         public int oldOneFirstMinutes = 8;
-        public int oldOneMinMinutes = 20;
-        public int oldOneMaxMinutes = 40;
+        public int oldOneMinMinutes = 12;
+        public int oldOneMaxMinutes = 24;
         /** Only after dark (false = any time; it looks more wrong in daylight). */
         public boolean oldOneOnlyAtNight = false;
         /** How close you get before it tears open. */
@@ -144,7 +149,7 @@ public final class ItWasTallConfig {
         /** Chance per second (at night, near your base, stage 2+) that one house event starts. */
         public double houseEventChancePerSecond = 0.012;
         /** Minimum seconds between two house events for one player. */
-        public int houseEventCooldownSeconds = 300;
+        public int houseEventCooldownSeconds = 150;
         /** A wooden door of your base opens by itself (stage 3+); it may slam shut again (stage 4+). */
         public boolean doorEvents = true;
         /** A few stacks inside one of your chests swap places (stage 3+). Items are never removed. */
@@ -339,12 +344,28 @@ public final class ItWasTallConfig {
     private ItWasTallConfig() {
     }
 
+    /**
+     * Version 2: the event limits felt like "it works once, then never again" — the old, tight values in
+     * existing config files are loosened once (values the player set by hand to something else stay).
+     */
+    private static Values migrate(Values v) {
+        if (v.configVersion < 2) {
+            if (v.minEventCooldown == 45) v.minEventCooldown = 25;
+            if (v.houseEventCooldownSeconds == 300) v.houseEventCooldownSeconds = 150;
+            if (v.oldOneMinMinutes == 20) v.oldOneMinMinutes = 12;
+            if (v.oldOneMaxMinutes == 40) v.oldOneMaxMinutes = 24;
+            ItWasTall.LOGGER.info("It Was Tall config updated to version 2 (looser event limits).");
+        }
+        v.configVersion = CONFIG_VERSION;
+        return v;
+    }
+
     public static void load() {
         try {
             if (Files.exists(FILE)) {
                 try (Reader r = Files.newBufferedReader(FILE)) {
                     Values v = GSON.fromJson(r, Values.class);
-                    if (v != null) INSTANCE = v;
+                    if (v != null) INSTANCE = migrate(v);
                 }
             }
             save();

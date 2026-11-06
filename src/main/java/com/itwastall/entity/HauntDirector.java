@@ -100,18 +100,22 @@ public final class HauntDirector {
     }
 
     /**
-     * Real Its on the server (MODPLAN §4): every loaded one, plus the one remembered in the world data
-     * when it is not loaded right now (standing in an unloaded chunk) and ticked recently enough.
+     * Real Its on the server (MODPLAN §4) that actually matter: loaded ones that ticked in the last 5 s
+     * and are within 160 blocks of a player, plus the one remembered in the world data for 30 s after its
+     * last tick (an It standing in a chunk that just unloaded). A forgotten It far away never blocks.
      */
     public static int countActive(MinecraftServer server) {
         int n = 0;
         UUID recorded = com.itwastall.world.ItWasTallState.getOrCreate(server).activeIt();
         boolean recordedLoaded = false;
+        long now = server.getOverworld().getTime();
         for (ServerWorld w : server.getWorlds()) {
             for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> true)) {
                 if (it.isRemoved()) continue;
-                n++;
                 if (it.getUuid().equals(recorded)) recordedLoaded = true;
+                boolean ticking = it.age < 100 || now - it.lastTickTime() < 100;
+                boolean nearSomeone = w.getClosestPlayer(it, 160) != null;
+                if (ticking && nearSomeone) n++;
             }
         }
         if (!recordedLoaded && com.itwastall.world.ItWasTallState.getOrCreate(server).activeItFresh(server.getOverworld().getTime())) n++;
@@ -121,6 +125,21 @@ public final class HauntDirector {
     /** Spawns It standing in the distance in front of the player, on open ground. The spawn
      *  distance range comes live from the stage table (PHASES §3 "Haunt dystans") — the old
      *  hard-coded 28-45 only served ETAP 2-ish values. */
+    /** Test commands: the current It (if any) quietly leaves so the new one can come. */
+    public static void clearForCommand(MinecraftServer server) {
+        for (ServerWorld w : server.getWorlds()) {
+            for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> true)) it.discard();
+        }
+        com.itwastall.world.ItWasTallState.getOrCreate(server).forgetActiveIt();
+    }
+
+    /** Test commands: every It that just appeared (younger than 5 ticks) does its full routine. */
+    public static void markNewForced(MinecraftServer server) {
+        for (ServerWorld w : server.getWorlds()) {
+            for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> e.age < 5)) it.setForced(true);
+        }
+    }
+
     public static boolean spawnStare(ServerPlayerEntity player) {
         ServerWorld world = player.getServerWorld();
         Random random = player.getRandom();

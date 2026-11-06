@@ -171,7 +171,12 @@ public final class WindowKnocks {
         if (!ShelterCheck.isSheltered(world, player.getBlockPos())) return false; // gracz w bazie
         Ledger ledger = LEDGERS.get(player.getUuid());
         if (ledger == null) return true;
-        return ledger.night != nightIndex(world) || ledger.count == 0; // 0 knocks tonight
+        int perNight = switch (Director.stageIndex()) {     // stage 2-3: once a night, 4: twice, 5: three times
+            case 4 -> 2;
+            case 5 -> 3;
+            default -> 1;
+        };
+        return ledger.night != nightIndex(world) || ledger.count < perNight;
     }
 
     private static long nightIndex(World world) {

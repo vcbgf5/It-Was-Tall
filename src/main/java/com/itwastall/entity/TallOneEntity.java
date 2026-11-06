@@ -114,6 +114,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private boolean feintRolled;
     /** Slot in the world data (MODPLAN §4) claimed at least once. */
     private boolean slotClaimed;
+    /** Spawned by a command or a spawn egg: always chases when triggered, whatever the stage says. */
+    private boolean forced;
+    /** Overworld time of its last AI tick (an It that does not tick does not block the server limit). */
+    private long lastTickTime;
     // TREE: where it hides (directly behind the trunk) once you have seen it
     @Nullable
     private Vec3d treeHide;
@@ -176,6 +180,26 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         return modeTicks;
     }
 
+    public boolean isForced() {
+        return forced;
+    }
+
+    /** Commands and spawn eggs: the It always does its full routine (chase, sink, jumpscare). */
+    public void setForced(boolean forced) {
+        this.forced = forced;
+    }
+
+    public long lastTickTime() {
+        return lastTickTime;
+    }
+
+    @Override
+    public net.minecraft.entity.EntityData initialize(net.minecraft.world.ServerWorldAccess world, net.minecraft.world.LocalDifficulty difficulty,
+                                                      net.minecraft.entity.SpawnReason spawnReason, @Nullable net.minecraft.entity.EntityData entityData) {
+        if (spawnReason == net.minecraft.entity.SpawnReason.SPAWN_EGG || spawnReason == net.minecraft.entity.SpawnReason.COMMAND) forced = true;
+        return super.initialize(world, difficulty, spawnReason, entityData);
+    }
+
     public Mode getMode() {
         return Mode.values()[MathHelper.clamp(this.dataTracker.get(MODE), 0, Mode.values().length - 1)];
     }
@@ -202,6 +226,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         nbt.putInt("Mode", getMode().ordinal());
         if (victim != null) nbt.putUuid("Victim", victim);
         if (knockDoor != null) nbt.putLong("KnockDoor", knockDoor.asLong());
+        nbt.putBoolean("Forced", forced);
     }
 
     @Override
@@ -211,6 +236,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         setNoGravity(getMode() == Mode.DIG);
         if (nbt.containsUuid("Victim")) victim = nbt.getUuid("Victim");
         if (nbt.contains("KnockDoor")) knockDoor = BlockPos.fromLong(nbt.getLong("KnockDoor"));
+        forced = nbt.getBoolean("Forced");
         // short-lived tricks do not survive a reload: it simply leaves
         Mode m = getMode();
         if (m == Mode.FEINT || m == Mode.TREE || m == Mode.ATTACK || m == Mode.MOVE_UNSEEN) {
@@ -249,11 +275,15 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             }
         }
 
-        // PHASES §1 (FAZA PRE): the mod is quiet before IT JOINED — an entity that exists anyway
-        // (e.g. spawn-egg testing) freezes and quietly disappears after 30 s, without any effect.
-        if (Director.phase() == 0) {
-            if (modeTicks > 600) discard();
-            return;
+        // (FAZA PRE no longer freezes an existing It: natural spawns never happen before IT JOINED anyway,
+        //  and an It from a command or a spawn egg must behave normally — it used to stand frozen.)
+        if (getWorld() instanceof ServerWorld sw) {
+            lastTickTime = sw.getServer().getOverworld().getTime();
+            // nobody within 128 blocks: it has no one to haunt, and it must not block the server limit
+            if (this.age > 40 && sw.getClosestPlayer(this, 128) == null) {
+                discard();
+                return;
+            }
         }
 
         PlayerEntity player = findVictim();
@@ -456,6 +486,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     private void tickDisappear(@Nullable PlayerEntity player) {
         freeze();
+        if (player != null) faceTowards(player);
         if (player == null || !visibleTo(player, getPos().add(0, 2.5, 0)) || modeTicks > 60) discard();
     }
 
@@ -588,6 +619,10 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
      */
     private void maybeStartChase(PlayerEntity player) {
         Stage st = Director.currentStage();
+        if (forced) {                       // command / spawn egg: always the real thing
+            startChase(player);
+            return;
+        }
         if (!st.chaseEnabled() || this.random.nextFloat() >= st.chaseChance()) {
             disappearQuiet();
             return;
@@ -603,7 +638,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     /** Ends an encounter where it had to give up: SINK when the stage allows it, quiet otherwise. */
     private void finishEncounter() {
-        if (Director.currentStage().sinkEnabled()) startSink();
+        if (forced || Director.currentStage().sinkEnabled()) startSink();
         else disappearQuiet();
     }
 
@@ -703,6 +738,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private void tickSink(@Nullable PlayerEntity player) {
         getNavigation().stop();
         setVelocity(0, getVelocity().y, 0);
+        if (player != null && modeTicks < SINK_ANIM_TICKS) faceTowards(player);   // it stares at you as it goes down
         if (getWorld() instanceof ServerWorld sw && modeTicks <= SINK_ANIM_TICKS && modeTicks % 2 == 0) {
             BlockState ground = getWorld().getBlockState(getBlockPos().down());
             if (!ground.isAir()) {
@@ -718,7 +754,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             if (player instanceof ServerPlayerEntity sp) {
                 // Jumpscare is unlocked from ETAP 4 (PHASES §3 row "Jumpscare"); earlier stages
                 // simply discard — the scariest card is played only when the stage allows it.
-                if (Director.currentStage().jumpscareEnabled()) {
+                if (forced || Director.currentStage().jumpscareEnabled()) {
                     ModNetworking.sendJumpscare(sp);
                     if (Director.phase() == 1) Director.addTension(6.0); // PHASES §2: jumpscare +6, 1x na zdarzenie
                     // no jumpscare per config: it still doesn't like that it sank

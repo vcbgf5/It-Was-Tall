@@ -152,6 +152,7 @@ public final class FalsePresenceRenderer {
                     lookedAt = true;   // remove locally alongside the report
                 }
             } else {
+                facePlayer(fake, player);      // every figure keeps its eyes on you, all the time
                 double gross = player.squaredDistanceTo(fake);
                 if (gross < 48.0 * 48.0 && isLookingAt(player, fake)) {
                     lookedAt = true;

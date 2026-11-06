@@ -152,8 +152,16 @@ public final class HouseEvents {
     /** Test trigger (/itwastall event door|doorknock|knockinside|shadow|chest|sign): no chance, no cooldown. */
     public static boolean trigger(ServerPlayerEntity player, Kind kind) {
         if (BaseTracker.eventMapOf(player) == null) return false;
-        return start(player, kind);
+        FORCED = true;                 // test command: no "only while you look away" conditions
+        try {
+            return start(player, kind);
+        } finally {
+            FORCED = false;
+        }
     }
+
+    /** True while a test command runs an event (relaxes the sneaky conditions so it always works). */
+    private static boolean FORCED;
 
     private static boolean start(ServerPlayerEntity player, Kind kind) {
         boolean ok = switch (kind) {
@@ -279,7 +287,17 @@ public final class HouseEvents {
         if (door == null) return false;
         ServerWorld world = player.getServerWorld();
         BlockState st = world.getBlockState(door);
-        if (!(st.getBlock() instanceof DoorBlock doorBlock) || st.get(DoorBlock.OPEN)) return false;
+        if (!(st.getBlock() instanceof DoorBlock doorBlock)) return false;
+        if (st.get(DoorBlock.OPEN)) {
+            if (!FORCED) return false;
+            // test command on an open door: it swings shut, then opens again a moment later
+            doorBlock.setOpen(null, world, st, door, false);
+            later(player, 12, p -> {
+                BlockState again = world.getBlockState(door);
+                if (again.getBlock() instanceof DoorBlock d2) d2.setOpen(null, world, again, door, true);
+            });
+            return true;
+        }
         doorBlock.setOpen(null, world, st, door, true);
         if (Director.stageIndex() >= 4 && player.getRandom().nextBoolean()) {
             later(player, 50 + player.getRandom().nextInt(40), p -> {
@@ -408,7 +426,7 @@ public final class HouseEvents {
                 if (!(st.getBlock() instanceof DoorBlock)) continue;
             }
             if (wooden && !st.isIn(BlockTags.WOODEN_DOORS)) continue;
-            if (wooden && dot(player, Vec3d.ofCenter(p)) > 0.3) continue;   // it waits until you look away
+            if (wooden && !FORCED && dot(player, Vec3d.ofCenter(p)) > 0.3) continue;   // it waits until you look away
             double d = p.getSquaredDistance(player.getBlockPos());
             if (d < bestDist && d <= (double) range * range) {
                 bestDist = d;

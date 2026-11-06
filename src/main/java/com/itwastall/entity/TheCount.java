@@ -100,6 +100,11 @@ public final class TheCount {
         }
     }
 
+    /** Cancels a running count (test command restarts it). */
+    public static void stop(ServerPlayerEntity p) {
+        ACTIVE.remove(p.getUuid());
+    }
+
     /** Starts the count (also /itwastall event count). */
     public static boolean start(ServerPlayerEntity p) {
         if (ACTIVE.containsKey(p.getUuid())) return false;
@@ -108,7 +113,7 @@ public final class TheCount {
         c.nextAt = now + STEP_TICKS;
         c.anchor = p.getPos();
         ACTIVE.put(p.getUuid(), c);
-        NEXT.put(p.getUuid(), now + 20L * 60 * (25 + p.getRandom().nextInt(16)));
+        NEXT.put(p.getUuid(), now + 20L * 60 * (15 + p.getRandom().nextInt(11)));
         EventGate.mark(p);
         say(p, c, 10);
         ItWasTall.LOGGER.info("The One Who Counts started for {}.", p.getName().getString());
