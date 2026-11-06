@@ -74,6 +74,7 @@ public class ItWasTall implements ModInitializer {
         // tasks (PHASES Poziom 8: MODPLAN §15) — stage 3 unlocks the stay-inside / douse pairs
         TaskManager.init();
         com.itwastall.advancement.Achievements.init();
+        com.itwastall.god.GodMode.init();
         // multiplayer: forget per-player timers when someone leaves
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             var uuid = handler.getPlayer().getUuid();
@@ -97,6 +98,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.TheCount.forget(uuid);
             com.itwastall.entity.HangedTrees.forget(uuid);
             com.itwastall.entity.TallFootprints.forget(uuid);
+            com.itwastall.god.GodMode.forget(uuid);
             com.itwastall.entity.DeepOneEntity.forget(uuid);
             com.itwastall.entity.TheGuest.forget(uuid);
         });

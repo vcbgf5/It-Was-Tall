@@ -31,6 +31,9 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 public class ItWasTallClient implements ClientModInitializer {
     private static KeyBinding journalKey;
+    private static KeyBinding godKey;
+    /** True while this player is the god of the session (/changetogod). */
+    private static boolean god;
 
     /** Lets the journal close itself with the same key that opened it. */
     public static boolean journalKeyMatches(int keyCode, int scanCode) {
@@ -49,6 +52,11 @@ public class ItWasTallClient implements ClientModInitializer {
         journalKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.open_journal", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J,
                 "category.itwastall"));
+        godKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.itwastall.god_panel", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G,
+                "category.itwastall"));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GodStatePayload.ID, (payload, context) ->
+                context.client().execute(() -> god = payload.god()));
 
         EntityRendererRegistry.register(
                 ModEntities.TALL_ONE,
@@ -172,11 +180,16 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
+            while (godKey.wasPressed()) {
+                if (god && client.player != null && client.currentScreen == null) {
+                    client.setScreen(new com.itwastall.client.god.GodPanelScreen());
+                }
+            }
             while (journalKey.wasPressed()) {
                 if (client.player != null && client.currentScreen == null) {
                     client.setScreen(new JournalScreen());

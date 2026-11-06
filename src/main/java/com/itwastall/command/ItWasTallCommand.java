@@ -64,6 +64,13 @@ public final class ItWasTallCommand {
                                 CommandManager.RegistrationEnvironment env) {
         // the root is open to everyone only when debugAllowedForNonOps is on; then only /itwastall debug ...
         // is usable without operator rights (MODPLAN §19), every other branch still needs level 2
+        // GOD MODE: an operator stops playing and runs the night for the others (toggle)
+        dispatcher.register(literal("changetogod")
+                .requires(src -> src.hasPermissionLevel(2))
+                .executes(ctx -> {
+                    com.itwastall.god.GodMode.toggle(ctx.getSource().getPlayerOrThrow());
+                    return 1;
+                }));
         dispatcher.register(literal("itwastall")
                 .requires(src -> src.hasPermissionLevel(2) || ItWasTallConfig.INSTANCE.debugAllowedForNonOps)
                 .then(op(literal("spawn")

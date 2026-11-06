@@ -118,5 +118,6 @@
   "block.itwastall.footprint": "Odcisk buta",
   "block.itwastall.tall_footprint": "Wielki odcisk stopy",
   "block.itwastall.eye_stone": "Kamień z okiem",
-  "entity.itwastall.carcass": "Padlina"
+  "entity.itwastall.carcass": "Padlina",
+  "key.itwastall.god_panel": "Panel boga (tryb boga)"
 }

@@ -124,5 +124,6 @@
   "block.itwastall.footprint": "Footprint",
   "block.itwastall.tall_footprint": "Tall Footprint",
   "block.itwastall.eye_stone": "Eye Stone",
-  "entity.itwastall.carcass": "Carcass"
+  "entity.itwastall.carcass": "Carcass",
+  "key.itwastall.god_panel": "God Panel (god mode)"
 }
