@@ -126,3 +126,8 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 - Ofiara: It żąda losowej rzeczy z ekwipunku gracza (nie więcej, niż ma), skrzynia liczy obie połowy podwójnej skrzyni, nie da się jej zniszczyć w trakcie zadania, ma kłódkę i czerwoną strzałkę nad sobą (widać przez ściany).
 - WISIELEC (`HangedEntity`, `HangedTrees`, `HangedRenderer`): nocą od etapu 2 na gałęzi drzewa 20–45 bloków przed graczem wisi postać z jego skinem, kołysze się na linie, gałąź skrzypi, głowa obraca się do gracza tylko gdy ten nie patrzy; zostaje do rana. Test: `/itwastall event hanged`. Osiągnięcie „It Had My Face”.
 - Pieniek do rąbania: nowe bloki `itwastall:chopping_stump` (pień z wbitą siekierą i krwią) i `itwastall:blood` (plama krwi na ziemi, bez kolizji). Scena `DynamicStructures.Kind.CHOPPING_BLOCK` (nocą, 60–100 bloków za graczem): pieniek, krew wokół, ślad w las, obok głowa gracza (player head z jego skinem). Test: `/itwastall event chopping` (przed tobą), `/itwastall event structure choppingblock`.
+- Nocne sceny (część nocnych struktur, 60–100 bloków za graczem; test: `/itwastall event scene camp|missing|circle|chopping|footprints`):
+  - pusty obóz: palące się ognisko, posłanie, kłoda, skrzynia z kopiami rzeczy gracza, ślady butów (`itwastall:footprint`) w las, które się urywają;
+  - kartki „HAVE YOU SEEN <nick>?” na drzewach (woskowane tabliczki), głębiej w las więcej i dziwniejsze;
+  - krąg martwych zwierząt (`CarcassEntity`: krowa/owca/świnia na boku, łbami do środka) wokół `itwastall:eye_stone`;
+  - wielkie ślady (`TallFootprints`, `itwastall:tall_footprint`): nocą, gdy gracz jest w bazie, ślady z ciemności pod drzwi i pod okna, słychać kroki; znikają za dnia.

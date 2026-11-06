@@ -52,7 +52,7 @@ import java.util.UUID;
  */
 public final class DynamicStructures {
 
-    public enum Kind {CEMETERY, SHRINE, COTTAGE, BLACKCOPY, COUNTING_STONES, GUEST_HOUSE, DREAM_WELL, CHOPPING_BLOCK}
+    public enum Kind {CEMETERY, SHRINE, COTTAGE, BLACKCOPY, COUNTING_STONES, GUEST_HOUSE, DREAM_WELL, CHOPPING_BLOCK, EMPTY_CAMP, MISSING_POSTERS, ANIMAL_CIRCLE}
 
     /** One build per player per night (the §17 frequency limit). */
     private static final Map<UUID, Ledger> LEDGERS = new HashMap<>();
@@ -97,13 +97,16 @@ public final class DynamicStructures {
             if (hasBase(player) && player.getRandom().nextDouble() < clamp01(cfg.blackCopyChance)) {
                 kind = Kind.BLACKCOPY;
             } else {
-                kind = switch (player.getRandom().nextInt(7)) {
+                kind = switch (player.getRandom().nextInt(10)) {
                     case 0 -> Kind.CEMETERY;
                     case 1 -> Kind.SHRINE;
                     case 2 -> Kind.COTTAGE;
                     case 3 -> Kind.COUNTING_STONES;   // the new ones also rise in old worlds, not only in new chunks
                     case 4 -> Kind.GUEST_HOUSE;
                     case 5 -> Kind.CHOPPING_BLOCK;
+                    case 6 -> Kind.EMPTY_CAMP;
+                    case 7 -> Kind.MISSING_POSTERS;
+                    case 8 -> Kind.ANIMAL_CIRCLE;
                     default -> Kind.DREAM_WELL;
                 };
             }
@@ -146,6 +149,8 @@ public final class DynamicStructures {
             case GUEST_HOUSE -> 4;
             case DREAM_WELL -> 3;
             case CHOPPING_BLOCK -> 2;
+            case EMPTY_CAMP, ANIMAL_CIRCLE -> 4;
+            case MISSING_POSTERS -> 3;
         };
         ServerWorld world = player.getServerWorld();
         float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
@@ -197,6 +202,9 @@ public final class DynamicStructures {
             case GUEST_HOUSE -> placeTemplate(world, ground, player, "guest_house");
             case DREAM_WELL -> placeTemplate(world, ground, player, "dream_well");
             case CHOPPING_BLOCK -> buildChoppingBlock(world, ground, player);
+            case EMPTY_CAMP -> buildEmptyCamp(world, ground, player);
+            case MISSING_POSTERS -> buildMissingPosters(world, ground, player);
+            case ANIMAL_CIRCLE -> buildAnimalCircle(world, ground, player);
         }
         // PHASES §2: the world itself grew stranger tonight
         if (Director.phase() == 1) Director.addTension(1.0);
@@ -281,13 +289,183 @@ public final class DynamicStructures {
 
     /** /itwastall event chopping: builds the scene a few blocks in front of the player. */
     public static boolean buildChoppingInFront(ServerPlayerEntity player) {
+        return buildInFront(player, Kind.CHOPPING_BLOCK, 5);
+    }
+
+    /** /itwastall event scene X: builds that scene {@code distance} blocks in front of the player (tests). */
+    public static boolean buildInFront(ServerPlayerEntity player, Kind kind, int distance) {
         ServerWorld world = player.getServerWorld();
-        net.minecraft.util.math.Vec3d look = player.getRotationVec(1f).multiply(1, 0, 1).normalize().multiply(5);
+        net.minecraft.util.math.Vec3d look = player.getRotationVec(1f).multiply(1, 0, 1).normalize().multiply(distance);
         BlockPos column = BlockPos.ofFloored(player.getX() + look.x, player.getY(), player.getZ() + look.z);
         BlockPos air = surface(world, column);
         if (air == null) return false;
-        buildChoppingBlock(world, air.down(), player);
+        build(player, air.down(), kind);
         return true;
+    }
+
+    // ---------------------------------------------------------------- 1) the empty camp
+
+    /**
+     * THE EMPTY CAMP: a campfire that is still burning, a bedroll, a log to sit on, a backpack (a chest with
+     * copies of a few of YOUR things) — and boot prints leading away into the trees that simply stop.
+     */
+    public static void buildEmptyCamp(ServerWorld world, BlockPos ground, ServerPlayerEntity player) {
+        Random r = player.getRandom();
+        BlockPos c = ground.up();
+        clearPlants(world, c, 3);
+        Direction dir = Direction.Type.HORIZONTAL.random(r);
+        world.setBlockState(c, Blocks.CAMPFIRE.getDefaultState().with(net.minecraft.block.CampfireBlock.LIT, true)
+                .with(net.minecraft.block.CampfireBlock.FACING, dir), Block.NOTIFY_ALL);
+        // the bedroll, two blocks to one side, its head toward the fire
+        Direction side = dir.rotateYClockwise();
+        BlockPos foot = surface(world, c.offset(side, 3));
+        if (foot != null) {
+            BlockPos headPos = foot.offset(side.getOpposite());
+            BlockState bed = Blocks.RED_BED.getDefaultState().with(net.minecraft.block.BedBlock.FACING, side.getOpposite());
+            if (world.getBlockState(headPos).isReplaceable()) {
+                world.setBlockState(foot, bed.with(net.minecraft.block.BedBlock.PART, net.minecraft.block.enums.BedPart.FOOT), Block.NOTIFY_ALL);
+                world.setBlockState(headPos, bed.with(net.minecraft.block.BedBlock.PART, net.minecraft.block.enums.BedPart.HEAD), Block.NOTIFY_ALL);
+            }
+        }
+        // a log to sit on, on the other side
+        BlockPos seat = surface(world, c.offset(side.getOpposite(), 2));
+        if (seat != null) world.setBlockState(seat, Blocks.OAK_LOG.getDefaultState()
+                .with(net.minecraft.block.PillarBlock.AXIS, dir.getAxis()), Block.NOTIFY_ALL);
+        // the backpack: a chest by the fire with copies of some of the player's own things
+        BlockPos pack = surface(world, c.offset(dir.getOpposite(), 2));
+        if (pack != null) {
+            world.setBlockState(pack, Blocks.CHEST.getDefaultState().with(ChestBlock.FACING, dir), Block.NOTIFY_ALL);
+            if (world.getBlockEntity(pack) instanceof net.minecraft.block.entity.ChestBlockEntity chest) {
+                java.util.List<ItemStack> owned = new java.util.ArrayList<>();
+                for (ItemStack st : player.getInventory().main) if (!st.isEmpty()) owned.add(st);
+                java.util.Collections.shuffle(owned, new java.util.Random(r.nextLong()));
+                int n = Math.min(owned.size(), 3 + r.nextInt(3));
+                for (int i = 0; i < n; i++) {
+                    ItemStack copy = owned.get(i).copy();
+                    copy.setCount(Math.max(1, Math.min(copy.getCount(), 1 + r.nextInt(3))));
+                    chest.setStack(r.nextInt(chest.size()), copy);
+                }
+                chest.markDirty();
+            }
+        }
+        // boot prints walking away from the fire into the trees ... and then nothing
+        Direction away = dir;
+        BlockPos.Mutable p = c.mutableCopy().move(away, 2);
+        int steps = 8 + r.nextInt(5);
+        for (int i = 0; i < steps; i++) {
+            BlockPos at = surface(world, p.toImmutable());
+            if (at != null && world.getBlockState(at).isReplaceable()) {
+                world.setBlockState(at, com.itwastall.registry.ModBlocks.FOOTPRINT.getDefaultState()
+                        .with(com.itwastall.block.FootprintBlock.FACING, away), Block.NOTIFY_ALL);
+            }
+            p.move(away);
+            if (r.nextInt(4) == 0) p.move(r.nextBoolean() ? away.rotateYClockwise() : away.rotateYCounterclockwise());
+        }
+        play(world, c, r);
+    }
+
+    // ---------------------------------------------------------------- 6) the missing posters
+
+    private static final String[][] POSTER_TEXT = {
+            {"HAVE YOU SEEN", "%s?", "MISSING SINCE", "NIGHT %d"},
+            {"MISSING", "%s", "LAST SEEN", "IN THESE WOODS"},
+            {"HAVE YOU SEEN", "%s?", "", "PLEASE"},
+            {"%s", "WENT TO LOOK", "FOR WOOD.", "NIGHT %d"},
+            {"HE IS STILL", "OUT HERE", "", "DON'T LOOK UP"},
+            {"HAVE YOU SEEN", "YOURSELF?", "", ""},
+    };
+
+    /**
+     * MISSING: sheets nailed to the trees — "HAVE YOU SEEN <name>?" with the name of someone on the server
+     * (or your own). The deeper into the wood, the more of them, and the stranger the words get.
+     */
+    public static void buildMissingPosters(ServerWorld world, BlockPos ground, ServerPlayerEntity player) {
+        Random r = player.getRandom();
+        java.util.List<ServerPlayerEntity> online = world.getServer().getPlayerManager().getPlayerList();
+        String name = online.get(r.nextInt(online.size())).getName().getString().toUpperCase(java.util.Locale.ROOT);
+        if (name.length() > 15) name = name.substring(0, 15);
+        int night = (int) (world.getTimeOfDay() / 24000L) + 1;
+        // trees around the spot, nearest to the player first
+        java.util.List<BlockPos> trunks = new java.util.ArrayList<>();
+        for (int dx = -12; dx <= 12; dx++) {
+            for (int dz = -12; dz <= 12; dz++) {
+                int x = ground.getX() + dx, z = ground.getZ() + dz;
+                int top = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+                BlockPos t = new BlockPos(x, top, z);
+                if (!world.getBlockState(t).isIn(net.minecraft.registry.tag.BlockTags.LOGS)) continue;
+                BlockPos.Mutable b = t.mutableCopy();
+                int logs = 0;
+                while (world.getBlockState(b).isIn(net.minecraft.registry.tag.BlockTags.LOGS) && logs < 30) { b.move(0, -1, 0); logs++; }
+                if (logs >= 3) trunks.add(b.up(2).toImmutable());   // eye level on the trunk
+            }
+        }
+        trunks.sort(java.util.Comparator.comparingDouble(t -> t.getSquaredDistance(player.getBlockPos())));
+        int placed = 0;
+        for (int i = 0; i < trunks.size() && placed < 14; i++) {
+            int sheets = 1 + i / 4;                              // more of them the deeper you go
+            for (Direction d : Direction.Type.HORIZONTAL) {
+                if (sheets <= 0) break;
+                BlockPos at = trunks.get(i).offset(d);
+                if (!world.getBlockState(at).isAir()) continue;
+                world.setBlockState(at, Blocks.BIRCH_WALL_SIGN.getDefaultState().with(net.minecraft.block.WallSignBlock.FACING, d), Block.NOTIFY_ALL);
+                writePoster(world, at, POSTER_TEXT[Math.min(POSTER_TEXT.length - 1, placed / 3 + (r.nextInt(3) == 0 ? 1 : 0))], name, night);
+                sheets--;
+                placed++;
+            }
+        }
+        // no wood here: the sheets stand on posts in the grass
+        if (placed < 4) {
+            for (int i = 0; i < 6; i++) {
+                BlockPos at = surface(world, ground.add(r.nextInt(9) - 4, 1, r.nextInt(9) - 4));
+                if (at == null || !world.getBlockState(at).isReplaceable()) continue;
+                world.setBlockState(at, Blocks.BIRCH_SIGN.getDefaultState().with(net.minecraft.block.SignBlock.ROTATION, r.nextInt(16)), Block.NOTIFY_ALL);
+                writePoster(world, at, POSTER_TEXT[Math.min(POSTER_TEXT.length - 1, i / 2)], name, night);
+            }
+        }
+        play(world, ground.up(), r);
+    }
+
+    private static void writePoster(ServerWorld world, BlockPos at, String[] lines, String name, int night) {
+        if (!(world.getBlockEntity(at) instanceof net.minecraft.block.entity.SignBlockEntity sign)) return;
+        net.minecraft.block.entity.SignText text = new net.minecraft.block.entity.SignText()
+                .withColor(net.minecraft.util.DyeColor.BLACK);
+        for (int k = 0; k < 4; k++) {
+            String line = lines[k].replace("%s", name).replace("%d", Integer.toString(night));
+            text = text.withMessage(k, Text.literal(line));
+        }
+        sign.setText(text, true);
+        sign.setWaxed(true);
+        sign.markDirty();
+        world.updateListeners(at, world.getBlockState(at), world.getBlockState(at), Block.NOTIFY_ALL);
+    }
+
+    // ---------------------------------------------------------------- 8) the animal circle
+
+    /** THE CIRCLE: dead animals laid in a perfect ring, heads to the middle, around a stone with an eye on it. */
+    public static void buildAnimalCircle(ServerWorld world, BlockPos ground, ServerPlayerEntity player) {
+        Random r = player.getRandom();
+        BlockPos c = ground.up();
+        clearPlants(world, c, 4);
+        world.setBlockState(c, com.itwastall.registry.ModBlocks.EYE_STONE.getDefaultState(), Block.NOTIFY_ALL);
+        int n = 7 + r.nextInt(2);
+        int variant = r.nextInt(3);                              // all the same kind, like a flock
+        double offset = r.nextDouble() * Math.PI * 2;
+        for (int i = 0; i < n; i++) {
+            double a = offset + i * Math.PI * 2 / n;
+            double x = c.getX() + 0.5 + Math.cos(a) * 3.2, z = c.getZ() + 0.5 + Math.sin(a) * 3.2;
+            BlockPos at = surface(world, BlockPos.ofFloored(x, c.getY(), z));
+            if (at == null) continue;
+            CarcassEntity body = com.itwastall.registry.ModEntities.CARCASS.create(world);
+            if (body == null) continue;
+            float yaw = (float) (MathHelper.atan2((c.getZ() + 0.5) - z, (c.getX() + 0.5) - x) * MathHelper.DEGREES_PER_RADIAN) - 90f;
+            body.refreshPositionAndAngles(x, at.getY(), z, yaw, 0f);
+            body.setBodyYaw(yaw);
+            body.setHeadYaw(yaw);
+            body.setVariant(variant);
+            world.spawnEntity(body);
+            placeBlood(world, at);
+        }
+        play(world, c, r);
     }
 
     /** Test/event trigger (/itwastall event structure X): skips chance and the ledger. */

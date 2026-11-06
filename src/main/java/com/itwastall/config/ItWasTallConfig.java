@@ -80,6 +80,8 @@ public final class ItWasTallConfig {
         public boolean countEvents = true;
         /** THE HANGED: someone hangs from a tree at night (stage 2+), wearing your face, until morning. */
         public boolean hangedTrees = true;
+        /** THE FOOTPRINTS: huge prints walk up to your door and under your windows at night (gone by morning). */
+        public boolean tallFootprints = true;
         /** Minutes between two hanged figures for one player (at most one per night). */
         public int hangedMinMinutes = 15;
         public int hangedMaxMinutes = 25;

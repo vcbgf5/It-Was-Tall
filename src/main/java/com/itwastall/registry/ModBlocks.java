@@ -24,6 +24,20 @@ public final class ModBlocks {
             .mapColor(MapColor.DARK_RED).noCollision().breakInstantly().sounds(BlockSoundGroup.HONEY)
             .nonOpaque().pistonBehavior(PistonBehavior.DESTROY)));
 
+    /** A shoe print in the dirt (the empty camp's trail). */
+    public static final Block FOOTPRINT = register("footprint", new com.itwastall.block.FootprintBlock(AbstractBlock.Settings.create()
+            .mapColor(MapColor.BROWN).noCollision().breakInstantly().sounds(BlockSoundGroup.GRAVEL)
+            .nonOpaque().pistonBehavior(PistonBehavior.DESTROY), false));
+
+    /** The tall one's print: long, narrow, far too big. Gone by morning. */
+    public static final Block TALL_FOOTPRINT = register("tall_footprint", new com.itwastall.block.FootprintBlock(AbstractBlock.Settings.create()
+            .mapColor(MapColor.BLACK).noCollision().breakInstantly().sounds(BlockSoundGroup.GRAVEL)
+            .nonOpaque().pistonBehavior(PistonBehavior.DESTROY).ticksRandomly(), true));
+
+    /** A stone with an eye carved into its top (the middle of the animal circle). */
+    public static final Block EYE_STONE = register("eye_stone", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).strength(1.5f, 6.0f).requiresTool().sounds(BlockSoundGroup.STONE)));
+
     private ModBlocks() {}
 
     private static Block register(String name, Block block) {
@@ -36,6 +50,9 @@ public final class ModBlocks {
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
             entries.add(CHOPPING_STUMP);
             entries.add(BLOOD);
+            entries.add(FOOTPRINT);
+            entries.add(TALL_FOOTPRINT);
+            entries.add(EYE_STONE);
         });
     }
 }

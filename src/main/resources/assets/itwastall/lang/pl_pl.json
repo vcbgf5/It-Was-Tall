@@ -114,5 +114,9 @@
   "advancements.itwastall.cartographer.title": "Kartograf strachu",
   "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall",
   "block.itwastall.chopping_stump": "Pieniek z siekierą",
-  "block.itwastall.blood": "Krew"
+  "block.itwastall.blood": "Krew",
+  "block.itwastall.footprint": "Odcisk buta",
+  "block.itwastall.tall_footprint": "Wielki odcisk stopy",
+  "block.itwastall.eye_stone": "Kamień z okiem",
+  "entity.itwastall.carcass": "Padlina"
 }

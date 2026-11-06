@@ -261,7 +261,18 @@ public final class ItWasTallCommand {
                         .then(structureKind("countingstones", com.itwastall.entity.DynamicStructures.Kind.COUNTING_STONES))
                         .then(structureKind("guesthouse", com.itwastall.entity.DynamicStructures.Kind.GUEST_HOUSE))
                         .then(structureKind("dreamwell", com.itwastall.entity.DynamicStructures.Kind.DREAM_WELL))
-                        .then(structureKind("choppingblock", com.itwastall.entity.DynamicStructures.Kind.CHOPPING_BLOCK)))
+                        .then(structureKind("choppingblock", com.itwastall.entity.DynamicStructures.Kind.CHOPPING_BLOCK))
+                        .then(structureKind("emptycamp", com.itwastall.entity.DynamicStructures.Kind.EMPTY_CAMP))
+                        .then(structureKind("missing", com.itwastall.entity.DynamicStructures.Kind.MISSING_POSTERS))
+                        .then(structureKind("animalcircle", com.itwastall.entity.DynamicStructures.Kind.ANIMAL_CIRCLE)))
+                .then(literal("scene")
+                        .then(sceneKind("chopping", com.itwastall.entity.DynamicStructures.Kind.CHOPPING_BLOCK, 5))
+                        .then(sceneKind("camp", com.itwastall.entity.DynamicStructures.Kind.EMPTY_CAMP, 7))
+                        .then(sceneKind("missing", com.itwastall.entity.DynamicStructures.Kind.MISSING_POSTERS, 10))
+                        .then(sceneKind("circle", com.itwastall.entity.DynamicStructures.Kind.ANIMAL_CIRCLE, 8))
+                        .then(eventKind("footprints", p -> {
+                            if (!com.itwastall.entity.TallFootprints.walkToDoor(p)) throw new IllegalStateException("no mapped door in your base");
+                        })))
                 // any of the world-generated structures, right in front of the player (test/explore)
                 .then(literal("build")
                         .then(argument("name", StringArgumentType.word())
@@ -284,6 +295,14 @@ public final class ItWasTallCommand {
                 .then(argument("player", EntityArgumentType.player())
                         .executes(ctx -> each(ctx, List.of(EntityArgumentType.getPlayer(ctx, "player")),
                                 "event " + name, action)));
+    }
+
+    /** /itwastall event scene X [player] — build a night scene a few blocks in front of the player (tests). */
+    private static LiteralArgumentBuilder<ServerCommandSource> sceneKind(
+            String name, com.itwastall.entity.DynamicStructures.Kind kind, int distance) {
+        return eventKind(name, p -> {
+            if (!com.itwastall.entity.DynamicStructures.buildInFront(p, kind, distance)) throw new IllegalStateException("no solid ground in front of the player");
+        });
     }
 
     /** /itwastall event structure X [player] — force-build one of the §17.1 structures. */
@@ -498,6 +517,7 @@ public final class ItWasTallCommand {
                 "  haunting (It in the distance): " + in.apply(HauntDirector.nextAt(u)),
                 "  Old One: " + in.apply(com.itwastall.entity.OldOneDirector.nextAt(u)),
                 "  the hanged: " + in.apply(com.itwastall.entity.HangedTrees.nextAt(u)),
+                "  tall footprints: " + in.apply(com.itwastall.entity.TallFootprints.nextAt(u)),
                 "  house events: " + in.apply(com.itwastall.entity.HouseEvents.nextAt(u)),
                 "  small scare: " + in.apply(ScareSounds.nextScareAt(u)),
                 "  window knocks tonight: " + WindowKnocks.ledgerCount(u),

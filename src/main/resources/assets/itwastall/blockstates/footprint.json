@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "itwastall:block/footprint",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "itwastall:block/footprint",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "itwastall:block/footprint",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "itwastall:block/footprint",
+      "y": 270
+    }
+  }
+}

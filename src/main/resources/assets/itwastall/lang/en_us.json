@@ -120,5 +120,9 @@
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
   "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
   "block.itwastall.chopping_stump": "Chopping Stump",
-  "block.itwastall.blood": "Blood"
+  "block.itwastall.blood": "Blood",
+  "block.itwastall.footprint": "Footprint",
+  "block.itwastall.tall_footprint": "Tall Footprint",
+  "block.itwastall.eye_stone": "Eye Stone",
+  "entity.itwastall.carcass": "Carcass"
 }

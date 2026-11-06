@@ -58,6 +58,16 @@ public final class ModEntities {
                     .maxTrackingRange(10)
                     .build("hanged"));
 
+    /** A dead animal lying on its side (the animal circle). */
+    public static final EntityType<com.itwastall.entity.CarcassEntity> CARCASS = Registry.register(
+            Registries.ENTITY_TYPE,
+            ItWasTall.id("carcass"),
+            EntityType.Builder.create(com.itwastall.entity.CarcassEntity::new, SpawnGroup.MISC)
+                    .dimensions(1.2f, 0.6f)
+                    .eyeHeight(0.3f)
+                    .maxTrackingRange(10)
+                    .build("carcass"));
+
     private ModEntities() {
     }
 
@@ -67,5 +77,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(DEEP_ONE, com.itwastall.entity.DeepOneEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SLEEPER, com.itwastall.entity.SleeperEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(HANGED, com.itwastall.entity.HangedEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(CARCASS, com.itwastall.entity.CarcassEntity.createAttributes());
     }
 }
