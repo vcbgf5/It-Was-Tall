@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "itwastall:block/chopping_stump",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "itwastall:block/chopping_stump",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "itwastall:block/chopping_stump",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "itwastall:block/chopping_stump",
+      "y": 270
+    }
+  }
+}

@@ -118,5 +118,7 @@
   "advancements.itwastall.explorer.title": "Something Built This",
   "advancements.itwastall.explorer.description": "Find an It Was Tall structure",
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
-  "advancements.itwastall.cartographer.description": "Find every It Was Tall structure"
+  "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
+  "block.itwastall.chopping_stump": "Chopping Stump",
+  "block.itwastall.blood": "Blood"
 }

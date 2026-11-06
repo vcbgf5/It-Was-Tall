@@ -41,6 +41,7 @@ public class ItWasTall implements ModInitializer {
         ItWasTallConfig.load();
         ModSounds.init();
         ModEntities.init();
+        com.itwastall.registry.ModBlocks.init();
         ModItems.init();
         // OUTSPACE, the dream world: the chunk generator type must exist before worlds load
         com.itwastall.registry.ModDimensions.init();

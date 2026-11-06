@@ -112,5 +112,7 @@
   "advancements.itwastall.explorer.title": "Ktoś to zbudował",
   "advancements.itwastall.explorer.description": "Znajdź strukturę It Was Tall",
   "advancements.itwastall.cartographer.title": "Kartograf strachu",
-  "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall"
+  "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall",
+  "block.itwastall.chopping_stump": "Pieniek z siekierą",
+  "block.itwastall.blood": "Krew"
 }

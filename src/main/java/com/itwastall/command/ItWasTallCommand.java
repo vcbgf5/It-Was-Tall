@@ -234,6 +234,9 @@ public final class ItWasTallCommand {
                     com.itwastall.entity.TheGuest.stop(p);
                     if (!com.itwastall.entity.TheGuest.start(p)) throw new IllegalStateException("could not start the guest");
                 }))
+                .then(eventKind("chopping", p -> {
+                    if (!com.itwastall.entity.DynamicStructures.buildChoppingInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
+                }))
                 .then(eventKind("hanged", p -> {
                     if (!com.itwastall.entity.HangedTrees.spawnFor(p, 8, 40, false)) throw new IllegalStateException("no tree with a free branch nearby");
                 }))
@@ -257,7 +260,8 @@ public final class ItWasTallCommand {
                         .then(structureKind("blackcopy", com.itwastall.entity.DynamicStructures.Kind.BLACKCOPY))
                         .then(structureKind("countingstones", com.itwastall.entity.DynamicStructures.Kind.COUNTING_STONES))
                         .then(structureKind("guesthouse", com.itwastall.entity.DynamicStructures.Kind.GUEST_HOUSE))
-                        .then(structureKind("dreamwell", com.itwastall.entity.DynamicStructures.Kind.DREAM_WELL)))
+                        .then(structureKind("dreamwell", com.itwastall.entity.DynamicStructures.Kind.DREAM_WELL))
+                        .then(structureKind("choppingblock", com.itwastall.entity.DynamicStructures.Kind.CHOPPING_BLOCK)))
                 // any of the world-generated structures, right in front of the player (test/explore)
                 .then(literal("build")
                         .then(argument("name", StringArgumentType.word())

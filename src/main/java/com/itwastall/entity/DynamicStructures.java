@@ -6,6 +6,7 @@ import com.itwastall.base.BaseTracker;
 import com.itwastall.config.ItWasTallConfig;
 import com.itwastall.director.Director;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ChestBlock;
@@ -51,7 +52,7 @@ import java.util.UUID;
  */
 public final class DynamicStructures {
 
-    public enum Kind {CEMETERY, SHRINE, COTTAGE, BLACKCOPY, COUNTING_STONES, GUEST_HOUSE, DREAM_WELL}
+    public enum Kind {CEMETERY, SHRINE, COTTAGE, BLACKCOPY, COUNTING_STONES, GUEST_HOUSE, DREAM_WELL, CHOPPING_BLOCK}
 
     /** One build per player per night (the §17 frequency limit). */
     private static final Map<UUID, Ledger> LEDGERS = new HashMap<>();
@@ -96,12 +97,13 @@ public final class DynamicStructures {
             if (hasBase(player) && player.getRandom().nextDouble() < clamp01(cfg.blackCopyChance)) {
                 kind = Kind.BLACKCOPY;
             } else {
-                kind = switch (player.getRandom().nextInt(6)) {
+                kind = switch (player.getRandom().nextInt(7)) {
                     case 0 -> Kind.CEMETERY;
                     case 1 -> Kind.SHRINE;
                     case 2 -> Kind.COTTAGE;
                     case 3 -> Kind.COUNTING_STONES;   // the new ones also rise in old worlds, not only in new chunks
                     case 4 -> Kind.GUEST_HOUSE;
+                    case 5 -> Kind.CHOPPING_BLOCK;
                     default -> Kind.DREAM_WELL;
                 };
             }
@@ -143,6 +145,7 @@ public final class DynamicStructures {
             case COUNTING_STONES -> 6;
             case GUEST_HOUSE -> 4;
             case DREAM_WELL -> 3;
+            case CHOPPING_BLOCK -> 2;
         };
         ServerWorld world = player.getServerWorld();
         float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
@@ -193,6 +196,7 @@ public final class DynamicStructures {
             case COUNTING_STONES -> placeTemplate(world, ground, player, "counting_stones");
             case GUEST_HOUSE -> placeTemplate(world, ground, player, "guest_house");
             case DREAM_WELL -> placeTemplate(world, ground, player, "dream_well");
+            case CHOPPING_BLOCK -> buildChoppingBlock(world, ground, player);
         }
         // PHASES §2: the world itself grew stranger tonight
         if (Director.phase() == 1) Director.addTension(1.0);
@@ -203,6 +207,87 @@ public final class DynamicStructures {
         net.minecraft.util.BlockRotation rot = net.minecraft.util.BlockRotation.values()[player.getRandom().nextInt(4)];
         com.itwastall.world.StructureBuilder.placeAt(world, name, ground, rot);
         play(world, ground, player.getRandom());
+    }
+
+    /**
+     * THE CHOPPING BLOCK: a stump with an axe driven into it, blood soaked into the ground around it and a
+     * trail of it leading into the trees, and beside the stump, lying in the grass, a head. The player's own.
+     * {@code ground} is the top solid block the stump stands on.
+     */
+    public static void buildChoppingBlock(ServerWorld world, BlockPos ground, ServerPlayerEntity player) {
+        Random r = player.getRandom();
+        BlockPos stump = ground.up();
+        net.minecraft.util.math.Direction facing = net.minecraft.util.math.Direction.Type.HORIZONTAL.random(r);
+        clearPlants(world, stump, 2);
+        world.setBlockState(stump, com.itwastall.registry.ModBlocks.CHOPPING_STUMP.getDefaultState()
+                .with(com.itwastall.block.ChoppingStumpBlock.FACING, facing), Block.NOTIFY_ALL);
+        // blood: a pool around the stump ...
+        for (int i = 0; i < 7; i++) {
+            placeBlood(world, stump.add(r.nextInt(5) - 2, 0, r.nextInt(5) - 2));
+        }
+        // ... and a trail that drags off into the trees
+        net.minecraft.util.math.Direction away = net.minecraft.util.math.Direction.Type.HORIZONTAL.random(r);
+        BlockPos.Mutable trail = stump.mutableCopy();
+        for (int i = 0; i < 6; i++) {
+            trail.move(away);
+            if (r.nextInt(3) == 0) trail.move(away.rotateYClockwise());
+            placeBlood(world, trail.toImmutable());
+        }
+        // the head: on the grass next to the stump, facing whoever walks up
+        net.minecraft.util.math.Direction side = facing.rotateYClockwise();
+        BlockPos headPos = surface(world, stump.offset(side));
+        if (headPos != null) {
+            int rotation = r.nextInt(16);
+            world.setBlockState(headPos, Blocks.PLAYER_HEAD.getDefaultState().with(net.minecraft.block.SkullBlock.ROTATION, rotation), Block.NOTIFY_ALL);
+            if (world.getBlockEntity(headPos) instanceof net.minecraft.block.entity.SkullBlockEntity skull) {
+                skull.setOwner(new net.minecraft.component.type.ProfileComponent(player.getGameProfile()));
+                skull.markDirty();
+            }
+            placeBlood(world, headPos.offset(side));   // a splash beside it
+        }
+        play(world, stump, r);
+    }
+
+    /** Clears grass and flowers around the scene (they would hide the blood). */
+    private static void clearPlants(ServerWorld world, BlockPos center, int radius) {
+        for (BlockPos p : BlockPos.iterate(center.add(-radius, 0, -radius), center.add(radius, 1, radius))) {
+            BlockState st = world.getBlockState(p);
+            if (st.isReplaceable() && !st.isAir() && st.getFluidState().isEmpty()) world.setBlockState(p, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
+        }
+    }
+
+    /** The first air block above solid ground at that column (within 3 blocks up/down), or null. */
+    @org.jetbrains.annotations.Nullable
+    private static BlockPos surface(ServerWorld world, BlockPos near) {
+        for (int dy = 3; dy >= -3; dy--) {
+            BlockPos p = near.up(dy);
+            BlockState st = world.getBlockState(p);
+            if ((st.isAir() || st.isReplaceable()) && st.getFluidState().isEmpty()
+                    && world.getBlockState(p.down()).isSideSolidFullSquare(world, p.down(), net.minecraft.util.math.Direction.UP)) {
+                return p.toImmutable();
+            }
+        }
+        return null;
+    }
+
+    private static void placeBlood(ServerWorld world, BlockPos near) {
+        BlockPos p = surface(world, near);
+        if (p == null) return;
+        BlockState st = world.getBlockState(p);
+        if (!st.isAir() && !st.isReplaceable()) return;
+        if (st.isOf(Blocks.PLAYER_HEAD)) return;
+        world.setBlockState(p, com.itwastall.registry.ModBlocks.BLOOD.getDefaultState(), Block.NOTIFY_ALL);
+    }
+
+    /** /itwastall event chopping: builds the scene a few blocks in front of the player. */
+    public static boolean buildChoppingInFront(ServerPlayerEntity player) {
+        ServerWorld world = player.getServerWorld();
+        net.minecraft.util.math.Vec3d look = player.getRotationVec(1f).multiply(1, 0, 1).normalize().multiply(5);
+        BlockPos column = BlockPos.ofFloored(player.getX() + look.x, player.getY(), player.getZ() + look.z);
+        BlockPos air = surface(world, column);
+        if (air == null) return false;
+        buildChoppingBlock(world, air.down(), player);
+        return true;
     }
 
     /** Test/event trigger (/itwastall event structure X): skips chance and the ledger. */

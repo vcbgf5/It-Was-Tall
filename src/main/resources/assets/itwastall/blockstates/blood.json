@@ -1,0 +1,54 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "itwastall:block/blood_1",
+        "y": 0
+      },
+      {
+        "model": "itwastall:block/blood_1",
+        "y": 90
+      },
+      {
+        "model": "itwastall:block/blood_1",
+        "y": 180
+      },
+      {
+        "model": "itwastall:block/blood_1",
+        "y": 270
+      },
+      {
+        "model": "itwastall:block/blood_2",
+        "y": 0
+      },
+      {
+        "model": "itwastall:block/blood_2",
+        "y": 90
+      },
+      {
+        "model": "itwastall:block/blood_2",
+        "y": 180
+      },
+      {
+        "model": "itwastall:block/blood_2",
+        "y": 270
+      },
+      {
+        "model": "itwastall:block/blood_3",
+        "y": 0
+      },
+      {
+        "model": "itwastall:block/blood_3",
+        "y": 90
+      },
+      {
+        "model": "itwastall:block/blood_3",
+        "y": 180
+      },
+      {
+        "model": "itwastall:block/blood_3",
+        "y": 270
+      }
+    ]
+  }
+}
