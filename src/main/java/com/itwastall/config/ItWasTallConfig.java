@@ -21,7 +21,7 @@ public final class ItWasTallConfig {
     public static Values INSTANCE = new Values();
 
     /** Bumped when defaults change in a way old config files should pick up (see {@link #migrate}). */
-    private static final int CONFIG_VERSION = 2;
+    private static final int CONFIG_VERSION = 3;
 
     public static final class Values {
         /** Do not edit: lets the mod update old config files to new defaults. */
@@ -198,8 +198,10 @@ public final class ItWasTallConfig {
         public double taskChancePerSecond = 0.02;
         /** Seconds one player sits on the task cooldown after completing/failing one. */
         public int taskCooldownSeconds = 300;
-        /** "Don't go outside": seconds the player has to stay sheltered (MODPLAN 15.1). */
-        public int taskStayInsideSeconds = 120;
+        /** "Don't go outside", step 1: seconds the player has to GET inside (a house / under a roof). */
+        public int taskGetInsideSeconds = 120;
+        /** "Don't go outside", step 2: seconds the player then has to STAY inside (MODPLAN 15.1). */
+        public int taskStayInsideSeconds = 10;
         /** "Douse the lights": how many light markers It picks (up to). */
         public int taskLightsCount = 3;
         /** "Douse the lights": seconds until the assignment expires (dawn also kills it). */
@@ -208,7 +210,7 @@ public final class ItWasTallConfig {
         /** "Hide and seek" (§15.2, ETAP 5): seconds of the initial hide countdown. */
         public int taskHideCountdownSeconds = 30;
         /** Looking at the figure behind a window gives a "don't go outside" task this long (seconds). */
-        public int taskWindowLookSeconds = 30;
+        public int taskWindowLookSeconds = 10;
         /** NIE PATRZ (§15.4, ETAP 4): seconds the watcher stands behind the player. */
         public int taskDontLookSeconds = 30;
         /** OFIARA (§15.5, ETAP 4+): comma-separated possible offering items (vanilla or mod ids). */
@@ -359,6 +361,13 @@ public final class ItWasTallConfig {
             if (v.oldOneMinMinutes == 20) v.oldOneMinMinutes = 12;
             if (v.oldOneMaxMinutes == 40) v.oldOneMaxMinutes = 24;
             ItWasTall.LOGGER.info("It Was Tall config updated to version 2 (looser event limits).");
+        }
+        if (v.configVersion < 3) {
+            // "don't go outside" is now: 120 s to get inside, then a short stay of 10 s
+            if (v.taskStayInsideSeconds == 120) v.taskStayInsideSeconds = 10;
+            if (v.taskWindowLookSeconds == 30) v.taskWindowLookSeconds = 10;
+            if (v.taskGetInsideSeconds <= 0) v.taskGetInsideSeconds = 120;
+            ItWasTall.LOGGER.info("It Was Tall config updated to version 3 (get inside 120 s, stay inside 10 s).");
         }
         v.configVersion = CONFIG_VERSION;
         return v;

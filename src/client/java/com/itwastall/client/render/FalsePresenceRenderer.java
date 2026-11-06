@@ -186,7 +186,41 @@ public final class FalsePresenceRenderer {
         double dot = look.dotProduct(toIt.normalize());
         // slightly stricter than the real entity's cone so the figure does not keep popping
         // in and out when glancing around in the periphery
-        return dot > 1.0 - 0.06 / Math.max(1.0, dist / 8.0) && player.canSee(fake);
+        return dot > 1.0 - 0.06 / Math.max(1.0, dist / 8.0) && seesThroughGlass(player, fake);
+    }
+
+    /**
+     * Line of sight from the eyes to the figure that looks THROUGH glass and glass panes (the window knock is
+     * seen through the window). Vanilla canSee() stops at glass, because glass has a collision shape.
+     */
+    private static boolean seesThroughGlass(PlayerEntity player, TallOneEntity fake) {
+        Vec3d from = player.getEyePos();
+        Vec3d[] targets = {fake.getEyePos(), new Vec3d(fake.getX(), fake.getBodyY(0.6), fake.getZ())};
+        for (Vec3d to : targets) {
+            Vec3d start = from;
+            Vec3d dir = to.subtract(from).normalize();
+            boolean clear = false;
+            for (int pass = 0; pass < 5; pass++) {
+                net.minecraft.util.hit.BlockHitResult hit = player.getWorld().raycast(new net.minecraft.world.RaycastContext(
+                        start, to, net.minecraft.world.RaycastContext.ShapeType.COLLIDER,
+                        net.minecraft.world.RaycastContext.FluidHandling.NONE, player));
+                if (hit.getType() == net.minecraft.util.hit.HitResult.Type.MISS) {
+                    clear = true;
+                    break;
+                }
+                net.minecraft.block.Block block = player.getWorld().getBlockState(hit.getBlockPos()).getBlock();
+                if (!(block instanceof net.minecraft.block.TransparentBlock || block instanceof net.minecraft.block.PaneBlock)) break;
+                // glass: carry on from just behind this block
+                Vec3d next = hit.getPos().add(dir.multiply(0.05));
+                net.minecraft.util.math.BlockPos bp = hit.getBlockPos();
+                while (net.minecraft.util.math.BlockPos.ofFloored(next).equals(bp) && next.squaredDistanceTo(to) > 0.01) {
+                    next = next.add(dir.multiply(0.1));
+                }
+                start = next;
+            }
+            if (clear) return true;
+        }
+        return false;
     }
 
     private static void clearAll() {

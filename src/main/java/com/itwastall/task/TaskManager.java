@@ -78,6 +78,12 @@ public final class TaskManager {
         int seconds;
         /** World time the current phase began (task start; hide-and-seek: again when the seeking starts). */
         long phaseStart;
+        /** STAY_INSIDE: false while the player still has to GET inside (phase A), true for the short stay (phase B). */
+        boolean inside;
+        /** True while the player is away from the Overworld: the task waits (its clocks are pushed back). */
+        boolean paused;
+        /** HIDE_AND_SEEK: distance from the player to the corner It checked last (blocks, -1 = none yet). */
+        double lastCheckDist = -1;
         /** SACRIFICE (§15.5): what must be offered and where. */
         final net.minecraft.item.Item offerItem;
         final int offerCount;
@@ -138,22 +144,25 @@ public final class TaskManager {
         int total = (int) Math.max(1, (task.expiresAt - start + 19) / 20);
         int lights = task.lights.size();
         String title = switch (task.kind) {
-            case STAY_INSIDE -> "DON'T GO OUTSIDE";
+            case STAY_INSIDE -> task.inside ? "STAY INSIDE" : "GET INSIDE";
             case DOUSE_LIGHTS -> "DOUSE THE LIGHTS";
             case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "HIDE" : "STAY HIDDEN";
             case DONT_LOOK -> "DON'T LOOK BACK";
             case SACRIFICE -> "THE OFFERING";
         };
         String detail = switch (task.kind) {
-            case STAY_INSIDE -> "stay under a roof";
+            case STAY_INSIDE -> task.inside ? "don't go out" : "a house or under a roof";
             case DOUSE_LIGHTS -> lights + " light" + (lights == 1 ? "" : "s") + " left";
-            case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "It starts looking soon"
-                    : task.checked + " corner" + (task.checked == 1 ? "" : "s") + " checked";
+            case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "get inside, find a corner"
+                    : task.lastCheckDist >= 0 && task.lastCheckDist <= 8 ? "It is close. Corner " + task.checked + "/" + task.corners.size()
+                    : "It checks corner " + task.checked + "/" + task.corners.size();
             case DONT_LOOK -> "do not turn around";
             case SACRIFICE -> task.offerCount + "x " + task.offerItem.getName().getString();
         };
+        if (task.paused) detail = "paused (away)";
         if (detail.length() > 90) detail = detail.substring(0, 90);
-        boolean danger = task.kind == Kind.DOUSE_LIGHTS || task.kind == Kind.SACRIFICE;
+        boolean danger = task.kind == Kind.DOUSE_LIGHTS || task.kind == Kind.SACRIFICE
+                || (task.kind == Kind.STAY_INSIDE && !task.inside);
         BlockPos target = task.kind == Kind.SACRIFICE ? task.offerChest : null;
         return new Timer(title, detail, left, total, danger, target);
     }
@@ -164,10 +173,11 @@ public final class TaskManager {
         if (task == null) return "no task";
         long left = Math.max(0, (task.expiresAt - now) / 20);
         return switch (task.kind) {
-            case STAY_INSIDE -> "Don't go outside. Stay in the base or under a roof. " + left + " s left.";
+            case STAY_INSIDE -> task.inside ? "Stay inside. Don't go out. " + left + " s left."
+                    : "Get inside: a house or under a roof. " + left + " s left.";
             case DOUSE_LIGHTS -> "Put out " + task.lights.size() + " light" + (task.lights.size() == 1 ? "" : "s") + " in the house. " + left + " s left.";
             case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "Hide. It starts looking in " + left + " s."
-                    : "It is walking the rooms. Stay hidden. " + left + " s left.";
+                    : "It is walking the rooms (corner " + task.checked + "/" + task.corners.size() + "). Stay hidden. " + left + " s left.";
             case DONT_LOOK -> "Something stands behind you. Do not turn around. " + left + " s left.";
             case SACRIFICE -> "Put " + task.offerCount + "x " + task.offerItem.getName().getString() + " in the chest at "
                     + task.offerChest.getX() + " " + task.offerChest.getY() + " " + task.offerChest.getZ() + ". " + left + " s left.";
@@ -186,24 +196,52 @@ public final class TaskManager {
 
     private static void tick(MinecraftServer server) {
         if (server.getTicks() % 20 != 0) return; // one decision tick per second is plenty
-        if (Director.phase() == 0) return;       // PHASE PRE: total silence
+        long now = server.getOverworld().getTime();
 
+        // 1) a RUNNING task always runs to its end: on every stage, in every phase and game mode (a task given
+        //    by a command used to freeze on low stages / in creative: the timer sat at 0:00 forever)
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            Task task = ACTIVE.get(player.getUuid());
+            if (task == null || !player.isAlive() || player.isSpectator()) continue;
+            if (player.getWorld().getRegistryKey() != World.OVERWORLD) {
+                // away (Nether, the dream): the task waits for you, its clocks stand still
+                task.paused = true;
+                task.expiresAt += 20;
+                task.phaseStart += 20;
+                if (task.nextCheckAt > 0) task.nextCheckAt += 20;
+                continue;
+            }
+            task.paused = false;
+            tickTask(player, task, now, server);
+        }
+
+        // 2) new assignments keep all their rules
+        if (Director.phase() == 0) return;       // PHASE PRE: total silence
         Stage st = Director.currentStage();
         int flag = st.tasksFlag();               // live read: /itwastall stage works next tick
         if (flag <= 0) return;
-
-        long now = server.getOverworld().getTime();
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (!player.isAlive() || player.isCreative() || player.isSpectator()) continue;
             if (player.getWorld().getRegistryKey() != World.OVERWORLD) continue;
-
-            Task task = ACTIVE.get(player.getUuid());
-            if (task != null) {
-                tickTask(player, task, now, server);
-                continue;
-            }
+            if (ACTIVE.containsKey(player.getUuid())) continue;
             maybeAssign(player, st, flag, now);
         }
+    }
+
+    /**
+     * "Don't go outside" in two steps: first GET inside (taskGetInsideSeconds, 120 s), then STAY inside for a
+     * short while (seconds, 10 s). Already inside when it starts: straight to the short stay.
+     */
+    private static Task newStayInside(ServerPlayerEntity player, long now, int seconds) {
+        Task task = new Task(Kind.STAY_INSIDE, 0, List.of(), List.of());
+        task.seconds = Math.max(3, seconds);
+        if (isInside(player)) {
+            task.inside = true;
+            task.expiresAt = now + 20L * task.seconds;
+        } else {
+            task.expiresAt = now + 20L * Math.max(10, ItWasTallConfig.INSTANCE.taskGetInsideSeconds);
+        }
+        return task;
     }
 
     /** Seconds outside before "don't go outside" / hiding fails (walking through your own door is fine). */
@@ -220,7 +258,21 @@ public final class TaskManager {
         task.outsideSeconds = sheltered ? 0 : task.outsideSeconds + 1;
         switch (task.kind) {
             case STAY_INSIDE -> {
-                // MODPLAN 15.1: leaving fails — in the base or under a roof counts as inside,
+                if (!task.inside) {
+                    // phase A: GET inside (base or under a roof) before the time runs out
+                    if (sheltered) {
+                        task.inside = true;
+                        task.outsideSeconds = 0;
+                        task.phaseStart = now;
+                        task.expiresAt = now + 20L * task.seconds;
+                        ModNetworking.sendTaskTimer(player);
+                        sendToast(player, TaskToastPayload.KIND_NEW, "STAY INSIDE.", "Don't go out for " + task.seconds + "s.");
+                    } else if (now >= task.expiresAt) {
+                        fail(player, task, server);   // never made it inside
+                    }
+                    return;
+                }
+                // phase B (MODPLAN 15.1): leaving fails — in the base or under a roof counts as inside,
                 // and a few seconds of grace cover stepping through a doorway
                 if (task.outsideSeconds > OUTSIDE_GRACE_SECONDS) {
                     fail(player, task, server);
@@ -316,15 +368,15 @@ public final class TaskManager {
                                         World world, boolean sheltered, MinecraftServer server) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (task.seekStartAt == 0) {
-            // ---- phase A: the 30 s hide countdown ----
-            if (task.outsideSeconds > OUTSIDE_GRACE_SECONDS) {
-                fail(player, task, server);   // slipped out while the hide counter ran
-                return;
-            }
+            // ---- phase A: the 30 s hide countdown (walk in, find a dark corner) ----
             if (now >= task.expiresAt) {
+                if (!sheltered) {
+                    fail(player, task, server);   // the search starts and you are still outside
+                    return;
+                }
                 double tension = Director.tension();
                 task.seekStartAt = now;
-                task.nextCheckAt = now + cfg.taskSeekCheckSeconds * 20L;
+                task.nextCheckAt = now + 40;   // the first corner right away: you hear (and see) It walk at once
                 task.expiresAt = now + 20L * cfg.taskSeekSeconds; // redefine: survive the seeking
                 task.phaseStart = now;
                 ModNetworking.sendTaskTimer(player);
@@ -346,11 +398,19 @@ public final class TaskManager {
                 return;
             }
             BlockPos checking = task.corners.get(index % task.corners.size());
+            double near = Math.sqrt(checking.getSquaredDistance(player.getBlockPos()));
+            task.lastCheckDist = near;
             // the audible cue: a step and a breath AT the checked corner — the player who
-            // listens knows exactly how close the search has come
+            // listens knows exactly how close the search has come (louder when it is close)
             MineEvents.playTo(player, ModSounds.STEP,
                     new Vec3d(checking.getX() + 0.5, checking.getY() + 0.5, checking.getZ() + 0.5),
-                    0.8f, 0.85f + player.getRandom().nextFloat() * 0.2f);
+                    near <= 8 ? 1.3f : 0.8f, 0.85f + player.getRandom().nextFloat() * 0.2f);
+            // and you can SEE it: It stands in that corner for the length of one check (gone when you look at it)
+            float yaw = (float) (net.minecraft.util.math.MathHelper.atan2(player.getZ() - (checking.getZ() + 0.5), player.getX() - (checking.getX() + 0.5))
+                    * (180.0 / Math.PI)) - 90f;
+            ModNetworking.sendFalsePresence(player, checking.getX() + 0.5, checking.getY(), checking.getZ() + 0.5,
+                    yaw, Math.max(20, cfg.taskSeekCheckSeconds * 20 - 5), false);
+            ModNetworking.sendTaskTimer(player);
             if (player.getRandom().nextBoolean()) {
                 MineEvents.playTo(player, ModSounds.AMBIENT_BREATH,
                         new Vec3d(checking.getX() + 0.5, checking.getY() + 0.5, checking.getZ() + 0.5),
@@ -384,16 +444,17 @@ public final class TaskManager {
         if (Director.phase() == 0) return;      // PHASE PRE: total silence
         UUID uuid = player.getUuid();
         if (ACTIVE.containsKey(uuid)) return;   // already working: no double assignment
-        if (player.isCreative() || player.isSpectator() || !player.isAlive()) return;
-        int seconds = Math.max(5, ItWasTallConfig.INSTANCE.taskWindowLookSeconds);
-        long now = player.getWorld().getTime();
-        Task task = new Task(Kind.STAY_INSIDE, now + 20L * seconds, List.of(), List.of());
-        task.seconds = seconds;
+        if (player.isSpectator() || !player.isAlive()) return;
+        int seconds = Math.max(3, ItWasTallConfig.INSTANCE.taskWindowLookSeconds);
+        long now = player.getServer() != null ? player.getServer().getOverworld().getTime() : player.getWorld().getTime();
+        Task task = newStayInside(player, now, seconds);
         task.phaseStart = now;
         ACTIVE.put(uuid, task);
         ModNetworking.sendTaskTimer(player);
         logTask(player, task, "now (the window)", false);
-        sendToast(player, TaskToastPayload.KIND_NEW, "IT SAW YOU.", "You looked at it. Stay inside for " + seconds + "s.");
+        sendToast(player, TaskToastPayload.KIND_NEW, "IT SAW YOU.", task.inside
+                ? "You looked at it. Stay inside for " + task.seconds + "s."
+                : "You looked at it. Get inside: " + (task.expiresAt - now) / 20 + "s.");
         ItWasTall.LOGGER.info("{} looked at the window figure: {} s inside.", player.getName().getString(), seconds);
     }
 
@@ -589,8 +650,7 @@ public final class TaskManager {
             ItWasTall.LOGGER.info("Sacrifice altar at {} for {} x{}.",
                     chest.toShortString(), item, task.offerCount);
         } else {
-            task = new Task(Kind.STAY_INSIDE, now + 20L * cfg.taskStayInsideSeconds, List.of(), List.of(), null, 0, null);
-            task.seconds = cfg.taskStayInsideSeconds;
+            task = newStayInside(player, now, cfg.taskStayInsideSeconds);
         }
         task.phaseStart = now;
         ACTIVE.put(player.getUuid(), task);
@@ -669,7 +729,8 @@ public final class TaskManager {
     private static String newToastText(Kind kind, Task task) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         return switch (kind) {
-            case STAY_INSIDE -> "It is at the door. Stay inside (base or under a roof) for " + task.seconds + "s.";
+            case STAY_INSIDE -> task.inside ? "It is at the door. Stay inside for " + task.seconds + "s."
+                    : "It is coming. Get inside (a house or under a roof): " + cfg.taskGetInsideSeconds + "s.";
             case DOUSE_LIGHTS -> "Douse the lights (" + task.lights.size() + ").";
             case HIDE_AND_SEEK -> "HIDE. " + cfg.taskHideCountdownSeconds
                     + "s. It will walk every dark corner.";

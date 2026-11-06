@@ -122,3 +122,4 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 - Osiągnięcia: zakładka „It Was Tall” pod L, 29 osiągnięć (`tools/gen_advancements.py`, `Achievements.grant`), własne okno, zakładki i toast. Przycisk „< Journal” na ekranie L i wstążka AWARDS w dzienniku.
 - TASK TIMER w lewym górnym rogu (`TaskTimerHud`, `TaskTimerPayload`, opcja `taskTimerHud`). Skrzynia na ofiarę świeci przez ściany (`TaskTargetRenderer`).
 - Ekran ładowania (pasek z krwi i wskazówki) i pauza (napis PAUSED, przycisk Journal, etap i zadanie).
+- Zadania: trwające zadanie tickuje się zawsze (także z komendy, w kreatywnym, na niskim etapie; poza Overworldem stoi w pauzie). „Don't go outside” = 120 s na wejście do domu (GET INSIDE), potem 10 s w środku (STAY INSIDE). Chowany: sylwetka It w każdym sprawdzanym rogu, opis „corner N/M”. Spojrzenie na postać w oknie działa przez szybę.
