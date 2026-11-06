@@ -29,14 +29,15 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Detects and keeps track of the player's base (MODPLAN §8.1). The anchor is the bed the
- * player right-clicks into (the base's heart); every rescan fills {@link BaseMap} with
- * windows / doors / lights / chests around it. When there is no bed yet, standing sheltered
- * for ten calm seconds at night marks the spot instead — the fear is free, the mapping is a bonus.
+ * Detects and keeps track of the player's base (MODPLAN §8.1) — smartly: the base is where the
+ * player's OWN bed, doors, windows, chests and furnace are, never a villager's house or a dungeon
+ * ({@link Ownership}). The anchor is the player's bed (clicked or placed); without one, the
+ * strongest chunk cluster with a real base kit becomes the base ({@link ChunkScores}).
  *
- * <p>Budgeted: rescans flow through {@link BaseScanner}, sharing {@code scanBlocksPerTick}
- * blocks per tick fairly between all pending scans. Block use near the anchor re-queues a
- * scan with a 15 s debounce (MODPLAN §8.4: update on changes, never rescan rashly).
+ * <p>Fast: while the player is near the base it is rescanned every {@code baseRescanSeconds}
+ * (default 1 s); a full scan is budgeted to finish within about that time
+ * ({@code scanBlocksPerTick} .. {@code scanMaxBlocksPerTick} blocks per tick). Each scan is built in a
+ * scratch map and swapped in when finished, so the map never flickers empty mid-scan.
  *
  * <p>Persistence: the finished map rides inside {@link ItWasTallState} (one saving system,
  * MODPLAN §2) — scans survive restarts, and the map comes back when next asked for.
@@ -46,8 +47,14 @@ public final class BaseTracker {
     private static final Map<UUID, BaseMap> MAPS = new HashMap<>();
     private static final Map<UUID, BaseScanner> SCANS = new HashMap<>();
     private static final Map<UUID, Long> RESCAN_AT = new HashMap<>();
-    /** In-shelter calm seconds, only for players with no bed anchor yet. */
-    private static final Map<UUID, Integer> SHELTER_SECONDS = new HashMap<>();
+    /** The scan in progress is built here and swapped into MAPS when it finishes. */
+    private static final Map<UUID, BaseMap> SCRATCH = new HashMap<>();
+    /** World time of the next periodic rescan. */
+    private static final Map<UUID, Long> NEXT_SCAN_AT = new HashMap<>();
+    /** Something changed during a scan: start a fresh one as soon as it finishes. */
+    private static final java.util.Set<UUID> RESTART = new java.util.HashSet<>();
+    /** World time of an early cluster evaluation (a base block was just placed / used). */
+    private static final Map<UUID, Long> EVAL_AT = new HashMap<>();
 
     @Nullable
     private static MinecraftServer server;
@@ -74,7 +81,11 @@ public final class BaseTracker {
         MAPS.remove(player);
         SCANS.remove(player);
         RESCAN_AT.remove(player);
-        SHELTER_SECONDS.remove(player);
+        SCRATCH.remove(player);
+        NEXT_SCAN_AT.remove(player);
+        RESTART.remove(player);
+        EVAL_AT.remove(player);
+        ChunkScores.forget(player);
     }
 
     // ---------------------------------------------------------------- hooks ----
@@ -90,10 +101,15 @@ public final class BaseTracker {
         if (!state.recordPlacedBlock(player.getUuid(), pos.asLong())) return;
 
         Long anchor = anchorOf(player.getUuid());
-        if (anchor == null && isBaseClue(world.getBlockState(pos))) {
+        BlockState placed = world.getBlockState(pos);
+        // your own bed is the strongest anchor there is
+        if (placed.getBlock() instanceof BedBlock && !state.isBedAnchored(player.getUuid())) {
             setAnchor(player, pos);
+            state.setBedAnchored(player.getUuid(), true);
             return;
         }
+        // any other base block: let the smart evaluation look at it in a second
+        if (ChunkScores.category(placed) != 0) EVAL_AT.put(player.getUuid(), world.getTime() + 20);
 
         if (anchor != null) {
             BaseMap map = MAPS.computeIfAbsent(player.getUuid(), ignored -> new BaseMap(anchor));
@@ -109,22 +125,28 @@ public final class BaseTracker {
         if (world.getRegistryKey() != World.OVERWORLD) return ActionResult.PASS;
         BlockPos pos = hit.getBlockPos();
         BlockState state = world.getBlockState(pos);
+        if (server == null || !(world instanceof ServerWorld sw)) return ActionResult.PASS;
+        ItWasTallState data = ItWasTallState.getOrCreate(server);
+        java.util.Set<Long> owned = data.placedBlocks(sp.getUuid());
         if (state.getBlock() instanceof BedBlock) {
-            setAnchor(sp, pos.toImmutable());
-            if (server != null) ItWasTallState.getOrCreate(server).setBedAnchored(sp.getUuid(), true);
+            // your bed (placed by you, or one that is not part of a village / structure) = your base.
+            // Sleeping in a villager's bed does NOT make the village your base.
+            if (Ownership.counts(owned, sw, pos)) {
+                setAnchor(sp, pos.toImmutable());
+                data.setBedAnchored(sp.getUuid(), true);
+            }
             return ActionResult.PASS;
         }
 
-        // A roof or four complete walls are NOT required to recognise a base.
-        // Interacting with a useful base block is an independent anchor clue:
-        // chests, workstations, furnaces, doors, glass and placed light sources.
-        Long knownAnchor = ANCHORS.get(sp.getUuid());
-        if (knownAnchor == null && isBaseClue(state)) {
-            setAnchor(sp, pos.toImmutable());
-            return ActionResult.PASS;
+        // A roof or four complete walls are NOT required to recognise a base, but one click is not
+        // proof either: using your own chest / furnace / door adds evidence and asks for an early check.
+        Long knownAnchor = anchorOf(sp.getUuid());
+        if (isBaseClue(state) && Ownership.counts(owned, sw, pos)) {
+            data.addChunkDwell(sp.getUuid(), new net.minecraft.util.math.ChunkPos(pos).toLong(), 1.5f);
+            EVAL_AT.put(sp.getUuid(), world.getTime() + 20);
         }
 
-        // any other block interaction near a known anchor = the base changed -> debounced rescan
+        // any other block interaction near a known anchor = the base changed -> rescan
         Long anchor = knownAnchor;
         if (anchor != null && pos.isWithinDistance(BlockPos.fromLong(anchor), 48)) {
             scheduleScan(sp, anchor, false);
@@ -145,40 +167,38 @@ public final class BaseTracker {
     }
 
     private static void tick(MinecraftServer tickingServer) {
-        // calm-shelter anchor inference for players whose base is still unknown
-        boolean oncePerSecond = tickingServer.getTicks() % 20 == 0;
+        ItWasTallState state = ItWasTallState.getOrCreate(tickingServer);
+        long now = tickingServer.getOverworld().getTime();
+        int ticks = tickingServer.getTicks();
         for (ServerPlayerEntity player : tickingServer.getPlayerManager().getPlayerList()) {
-            if (!oncePerSecond) break;
+            if (player.isSpectator() || !player.isAlive() || player.getWorld().getRegistryKey() != World.OVERWORLD) continue;
             UUID uuid = player.getUuid();
-            if (ANCHORS.containsKey(uuid)) continue;
-            if (player.isCreative() || player.isSpectator() || !player.isAlive()) continue;
-            World world = player.getWorld();
-            if (world.getRegistryKey() != World.OVERWORLD) continue;
-            if (!world.isNight()
-                    || !com.itwastall.entity.ShelterCheck.isSheltered(world, player.getBlockPos())) {
-                SHELTER_SECONDS.remove(uuid); // leaving resets the calm count
-                continue;
-            }
-            int calm = SHELTER_SECONDS.merge(uuid, 1, Integer::sum);
-            if (calm >= 10) {
-                setAnchor(player, player.getBlockPos().toImmutable());
-                SHELTER_SECONDS.remove(uuid);
-            }
-        }
-
-        // chunk scores (MODPLAN §8 notes): time spent per chunk every 20 s, cluster check every minute
-        if (tickingServer.getTicks() % 400 == 0) {
-            ItWasTallState state = ItWasTallState.getOrCreate(tickingServer);
-            for (ServerPlayerEntity player : tickingServer.getPlayerManager().getPlayerList()) {
-                if (player.isSpectator() || !player.isAlive() || player.getWorld().getRegistryKey() != World.OVERWORLD) continue;
+            // time spent per chunk, every 20 s
+            if (ticks % 400 == 0) {
                 boolean calmNight = player.getWorld().isNight()
                         && com.itwastall.entity.ShelterCheck.isSheltered(player.getWorld(), player.getBlockPos());
-                ChunkScores.addDwell(state, player.getUuid(), player.getBlockPos(), calmNight);
+                ChunkScores.addDwell(state, uuid, player.getBlockPos(), calmNight);
             }
-        }
-        if (tickingServer.getTicks() % 1200 == 600) {
-            for (ServerPlayerEntity player : tickingServer.getPlayerManager().getPlayerList()) {
-                if (player.getWorld().getRegistryKey() == World.OVERWORLD) evaluateClusters(player);
+            // light probe for an old base (no bed known yet), every 5 s
+            if (ticks % 100 == 50 && !state.isBedAnchored(uuid)) {
+                ChunkScores.probe(player.getServerWorld(), state, uuid, player.getBlockPos());
+            }
+            // smart evaluation every 5 s, or a second after a base block was placed / used
+            Long evalAt = EVAL_AT.get(uuid);
+            if (ticks % 100 == 0 || (evalAt != null && now >= evalAt)) {
+                EVAL_AT.remove(uuid);
+                evaluateClusters(player);
+            }
+            // periodic rescan while the player is near the base (default every second)
+            Long anchor = ANCHORS.get(uuid);
+            if (anchor != null) {
+                BlockPos a = BlockPos.fromLong(anchor);
+                double dx = player.getX() - a.getX(), dz = player.getZ() - a.getZ();
+                BaseScanner scan = SCANS.get(uuid);
+                Long next = NEXT_SCAN_AT.get(uuid);
+                if (dx * dx + dz * dz < 64 * 64 && (scan == null || !scan.active()) && (next == null || now >= next)) {
+                    startScan(uuid, anchor);
+                }
             }
         }
 
@@ -186,34 +206,68 @@ public final class BaseTracker {
     }
 
     /**
-     * No bed? The strongest cluster of chunks (blocks placed + time spent) becomes the base once it is
-     * strong enough; a non-bed base moves when another cluster becomes clearly stronger (they moved house).
+     * The smart part. A bed anchor stays as long as that bed exists and is the player's. Otherwise the
+     * strongest cluster that has a real base kit (your bed / chests / furnace / doors / windows, outside
+     * any generated structure) becomes the base; a non-bed base moves when another cluster is clearly
+     * stronger, and an anchor that turns out to sit in someone else's structure is dropped.
      */
     private static void evaluateClusters(ServerPlayerEntity player) {
         if (server == null) return;
         ItWasTallState state = ItWasTallState.getOrCreate(server);
+        ServerWorld world = player.getServerWorld();
         UUID uuid = player.getUuid();
-        if (state.isBedAnchored(uuid)) return;          // a bed always wins
-        List<ChunkScores.Cluster> clusters = ChunkScores.clusters(player.getServerWorld(), state, uuid);
-        if (clusters.isEmpty()) return;
-        ChunkScores.Cluster best = clusters.get(0);
-        if (best.score() < ChunkScores.BASE_SCORE) return;
         Long anchor = anchorOf(uuid);
+        java.util.Set<Long> owned = state.placedBlocks(uuid);
+
+        if (anchor != null && state.isBedAnchored(uuid)) {
+            BlockPos bed = BlockPos.fromLong(anchor);
+            if (!world.isChunkLoaded(bed)) return;
+            BlockState st = world.getBlockState(bed);
+            if (st.getBlock() instanceof BedBlock && Ownership.counts(owned, world, bed)) return;   // still your bed
+            state.setBedAnchored(uuid, false);       // the bed is gone (or was never yours): look again
+        }
+        List<ChunkScores.Cluster> clusters = ChunkScores.clusters(world, state, uuid);
+        ChunkScores.Cluster best = null;
+        for (ChunkScores.Cluster c : clusters) {
+            if (c.isBase()) {
+                best = c;
+                break;
+            }
+        }
         if (anchor == null) {
-            setAnchor(player, best.center());
-            ItWasTall.LOGGER.info("Base of {} found from chunk scores ({} chunks, score {}).",
-                    player.getName().getString(), best.chunks().size(), Math.round(best.score()));
+            if (best != null) adopt(player, best, "found");
             return;
         }
         BlockPos current = BlockPos.fromLong(anchor);
-        if (best.contains(current)) return;
+        boolean currentValid = !world.isChunkLoaded(current) || Ownership.counts(owned, world, current);
+        if (!currentValid) {
+            // e.g. an old anchor on a villager's chest: that was never your base
+            if (best != null) adopt(player, best, "moved out of a generated structure to");
+            else clearAnchor(player);
+            return;
+        }
+        if (best == null || best.contains(current)) return;
         double currentScore = 0;
         for (ChunkScores.Cluster c : clusters) if (c.contains(current)) currentScore = c.score();
-        if (best.score() >= Math.max(ChunkScores.BASE_SCORE * 2, currentScore * 2.0)) {
-            setAnchor(player, best.center());
-            ItWasTall.LOGGER.info("Base of {} moved to a stronger cluster at {}.", player.getName().getString(),
-                    best.center().toShortString());
-        }
+        if (best.score() >= Math.max(ChunkScores.BASE_SCORE * 2, currentScore * 2.0)) adopt(player, best, "moved to");
+    }
+
+    private static void adopt(ServerPlayerEntity player, ChunkScores.Cluster cluster, String how) {
+        setAnchor(player, cluster.center());
+        if (server != null) ItWasTallState.getOrCreate(server).setBedAnchored(player.getUuid(), cluster.centerIsBed());
+        ItWasTall.LOGGER.info("Base of {} {} {} (score {}, kit: {}).", player.getName().getString(), how,
+                cluster.center().toShortString(), Math.round(cluster.score()), cluster.kitString());
+    }
+
+    /** Forgets the base entirely (no evidence left for it). */
+    private static void clearAnchor(ServerPlayerEntity player) {
+        UUID uuid = player.getUuid();
+        ANCHORS.remove(uuid);
+        MAPS.remove(uuid);
+        SCANS.remove(uuid);
+        SCRATCH.remove(uuid);
+        if (server != null) ItWasTallState.getOrCreate(server).removePlayerBase(uuid);
+        ItWasTall.LOGGER.info("Base of {} forgotten: it was not theirs.", player.getName().getString());
     }
 
     /** Debug lines: the strongest clusters of that player. */
@@ -226,7 +280,8 @@ public final class BaseTracker {
                 + ", base from score " + Math.round(ChunkScores.BASE_SCORE));
         for (int i = 0; i < Math.min(3, clusters.size()); i++) {
             ChunkScores.Cluster c = clusters.get(i);
-            lines.add("  #" + (i + 1) + " score " + Math.round(c.score()) + ", " + c.chunks().size() + " chunks, centre " + c.center().toShortString());
+            lines.add("  #" + (i + 1) + " score " + Math.round(c.score()) + ", " + c.chunks().size() + " chunks, kit: " + c.kitString()
+                    + (c.isBase() ? " — BASE" : c.hasKit() ? " — kit ok, score too low" : " — no base kit") + ", centre " + c.center().toShortString());
         }
         return lines;
     }
@@ -280,14 +335,7 @@ public final class BaseTracker {
     public static boolean triggerRescan(ServerPlayerEntity player) {
         Long anchor = anchorOf(player.getUuid());
         if (anchor == null) return false;
-        BaseScanner scanner = SCANS.computeIfAbsent(player.getUuid(),
-                u -> new BaseScanner(ItWasTallConfig.INSTANCE.baseScanRadius));
-        if (!scanner.active()) {
-            BaseMap map = MAPS.computeIfAbsent(player.getUuid(), u -> new BaseMap(anchor));
-            map.clearScanMarkers();
-            restorePlacedMarkers(player.getUuid(), map);
-            scanner.start(anchor);
-        }
+        startScan(player.getUuid(), anchor);
         return true;
     }
 
@@ -368,57 +416,68 @@ public final class BaseTracker {
         }
     }
 
-    /** Queues a scan; {@code force} skips the change-debounce (commands / new anchors). */
+    /** Queues a scan now; if one is running, a fresh one follows right after it (changes are never lost). */
     private static void scheduleScan(ServerPlayerEntity player, long anchor, boolean force) {
         UUID uuid = player.getUuid();
-        long now = player.getWorld().getTime();
-        Long rescanAt = RESCAN_AT.get(uuid);
-        if (!force && rescanAt != null && now < rescanAt) return;
-        RESCAN_AT.put(uuid, now + 15 * 20L);
-        BaseScanner scanner = SCANS.computeIfAbsent(uuid,
-                u -> new BaseScanner(ItWasTallConfig.INSTANCE.baseScanRadius));
-        if (force || !scanner.active()) {
-            BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
-            map.clearScanMarkers();
-            restorePlacedMarkers(uuid, map);
-            scanner.start(anchor);
+        BaseScanner scanner = SCANS.get(uuid);
+        if (scanner != null && scanner.active() && !force) {
+            RESTART.add(uuid);
+            return;
         }
+        startScan(uuid, anchor);
+    }
+
+    /** Starts a scan into a scratch map; markers only for the player's own (or non-structure) blocks. */
+    private static void startScan(UUID uuid, long anchor) {
+        BaseScanner scanner = SCANS.computeIfAbsent(uuid, u -> new BaseScanner(ItWasTallConfig.INSTANCE.baseScanRadius));
+        SCRATCH.put(uuid, new BaseMap(anchor));
+        RESTART.remove(uuid);
+        if (server == null) {
+            scanner.start(anchor);
+            return;
+        }
+        java.util.Set<Long> owned = ItWasTallState.getOrCreate(server).placedBlocks(uuid);
+        ServerWorld ow = server.getOverworld();
+        Map<Long, Boolean> refs = new HashMap<>();
+        scanner.start(anchor, pos -> Ownership.placedBy(owned, ow, pos)
+                || !(refs.computeIfAbsent(net.minecraft.util.math.ChunkPos.toLong(pos.getX() >> 4, pos.getZ() >> 4),
+                        c -> ow.getStructureAccessor().hasStructureReferences(pos))
+                     && Ownership.inGeneratedStructure(ow, pos)));
     }
 
     private static void runScans(MinecraftServer runningServer) {
         if (SCANS.isEmpty()) return;
-        int budgetLeft = Math.max(8, ItWasTallConfig.INSTANCE.scanBlocksPerTick);
-        List<UUID> uuids = new ArrayList<>(SCANS.keySet());
-        int activeScans = 0;
-        for (UUID uuid : uuids) {
-            BaseScanner scan = SCANS.get(uuid);
-            ServerPlayerEntity player = runningServer.getPlayerManager().getPlayer(uuid);
-            if (scan != null && scan.active() && player != null
-                    && player.getServerWorld() == runningServer.getOverworld()) activeScans++;
-        }
-        if (activeScans == 0) return;
-
-        for (UUID uuid : uuids) {
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        int minPerTick = Math.max(8, cfg.scanBlocksPerTick);
+        int maxPerTick = Math.max(minPerTick, cfg.scanMaxBlocksPerTick);
+        int totalLeft = maxPerTick * 2;            // all players together never exceed this per tick
+        long now = runningServer.getOverworld().getTime();
+        for (UUID uuid : new ArrayList<>(SCANS.keySet())) {
             BaseScanner scanner = SCANS.get(uuid);
             if (scanner == null || !scanner.active()) continue;
             ServerPlayerEntity player = runningServer.getPlayerManager().getPlayer(uuid);
             Long anchor = ANCHORS.get(uuid);
             // Anchors belong to the Overworld; never scan the same coordinates in another dimension.
-            if (player == null || anchor == null
-                    || player.getServerWorld() != runningServer.getOverworld()) continue;
-            int myBudget = Math.max(1, budgetLeft / activeScans);
-            BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
-            boolean done = scanner.tick(runningServer.getOverworld(),
-                    BlockPos.fromLong(anchor), map, myBudget);
-            budgetLeft -= myBudget;
-            activeScans--;
+            if (player == null || anchor == null || player.getServerWorld() != runningServer.getOverworld()) continue;
+            // enough per tick to finish a whole scan (plus flood fill) within baseRescanSeconds
+            int need = (int) Math.ceil(scanner.fullWork() * 1.3 / (20.0 * Math.max(1, cfg.baseRescanSeconds)));
+            int myBudget = Math.min(totalLeft, Math.max(minPerTick, Math.min(maxPerTick, need)));
+            if (myBudget <= 0) break;
+            BaseMap scratch = SCRATCH.computeIfAbsent(uuid, u -> new BaseMap(anchor));
+            boolean done = scanner.tick(runningServer.getOverworld(), BlockPos.fromLong(anchor), scratch, myBudget);
+            totalLeft -= myBudget;
             if (done) {
-                persist(player, map);
-                ItWasTall.LOGGER.info("Base scan finished for {} ({}).",
-                        player.getName().getString(), map);
-                SCANS.remove(uuid);
+                BaseMap map = MAPS.computeIfAbsent(uuid, u -> new BaseMap(anchor));
+                if (map.anchor() == anchor && !map.sameScanMarkers(scratch)) {
+                    map.replaceScanMarkers(scratch);
+                    restorePlacedMarkers(uuid, map);
+                    persist(player, map);
+                    ItWasTall.LOGGER.debug("Base map of {} updated ({}).", player.getName().getString(), map);
+                }
+                SCRATCH.remove(uuid);
+                NEXT_SCAN_AT.put(uuid, now + 20L * Math.max(1, cfg.baseRescanSeconds));
+                if (RESTART.remove(uuid)) startScan(uuid, anchor);
             }
-            if (budgetLeft <= 0) break;
         }
     }
 

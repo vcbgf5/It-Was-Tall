@@ -133,6 +133,22 @@ public final class BaseMap {
         markerSet.addAll(markers);
     }
 
+    /** Swaps in the scanner markers of a finished scan (built in a scratch map with the same anchor). */
+    public void replaceScanMarkers(BaseMap scan) {
+        clearScanMarkers();
+        for (int m : scan.markers) {
+            if ((m & 0x7) != TYPE_PLACED && markerSet.add(m)) markers.add(m);
+        }
+    }
+
+    /** Same scanner markers as {@code scan}? (then there is nothing to save) */
+    public boolean sameScanMarkers(BaseMap scan) {
+        Set<Integer> a = new HashSet<>(), b = new HashSet<>();
+        for (int m : markers) if ((m & 0x7) != TYPE_PLACED) a.add(m);
+        for (int m : scan.markers) if ((m & 0x7) != TYPE_PLACED) b.add(m);
+        return a.equals(b);
+    }
+
     /** Copy of the encoded marker ints (debug 3D payload; state file uses the same array). */
     public int[] encodedMarkers() {
         int[] arr = new int[markers.size()];

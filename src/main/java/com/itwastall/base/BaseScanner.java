@@ -51,6 +51,8 @@ public final class BaseScanner {
     private boolean seeded;
 
     private boolean active;
+    /** Smart filter: only the player's own (or non-structure) doors, windows, chests and lights become markers. */
+    private java.util.function.Predicate<BlockPos> counts = pos -> true;
 
     public BaseScanner(int radius) {
         this.radius = Math.max(4, Math.min(32, radius));
@@ -62,6 +64,18 @@ public final class BaseScanner {
 
     public int queuedColumns() {
         return columns.size();
+    }
+
+    /** Blocks of a full scan (columns x rows), for the "finish in about a second" budget. */
+    public int fullWork() {
+        int side = 2 * radius + 1;
+        return side * side * ROWS_TOTAL;
+    }
+
+    /** Queue one scan around {@code anchor} with an ownership filter for the markers. */
+    public void start(long anchorLong, java.util.function.Predicate<BlockPos> counts) {
+        this.counts = counts;
+        start(anchorLong);
     }
 
     /** Queue one scan around {@code anchor}; replaces any older one for the same map. */
@@ -130,6 +144,10 @@ public final class BaseScanner {
         BlockPos pos = new BlockPos(column.getX(), y, column.getZ());
         var state = world.getBlockState(pos);
         if (state.isAir()) return;
+        boolean candidate = BaseMap.isGlassy(state) || state.getBlock() instanceof net.minecraft.block.DoorBlock
+                || state.getBlock() instanceof net.minecraft.block.ChestBlock
+                || state.getBlock() instanceof net.minecraft.block.BarrelBlock || state.getLuminance() > 0;
+        if (!candidate || !counts.test(pos)) return;   // a villager's window is not your window
 
         if (BaseMap.isGlassy(state)) {
             // Do not guess the side during the column pass. The flood-fill below tells

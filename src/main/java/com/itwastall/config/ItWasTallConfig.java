@@ -135,8 +135,13 @@ public final class ItWasTallConfig {
 
         // ---- base tracking (PHASES Poziom 6: MODPLAN §8) ----
         // ---- base tracking (PHASES Poziom 6: MODPLAN §8) ----
-        /** How many blocks the base scanner may classify per tick (shared between players). */
+        /** Minimum blocks the base scanner classifies per tick; it goes faster on its own so a full scan
+         *  finishes within {@code baseRescanSeconds}, but never above {@code scanMaxBlocksPerTick}. */
         public int scanBlocksPerTick = 64;
+        /** Upper limit of blocks per tick for one base scan (all players together: twice this). */
+        public int scanMaxBlocksPerTick = 3000;
+        /** While you are within 64 blocks of your base it is rescanned this often (seconds). */
+        public int baseRescanSeconds = 1;
         /** Horizontal radius (anchor +-radius) of one base scan. */
         public int baseScanRadius = 16;
         /** Hard cap of interior cells flood-fill may mark (MODPLAN §8.3 "ograniczenie objętości"). */

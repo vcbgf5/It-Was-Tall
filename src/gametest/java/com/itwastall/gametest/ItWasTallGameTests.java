@@ -143,8 +143,31 @@ public class ItWasTallGameTests implements FabricGameTest {
         ChunkScores.Cluster best = clusters.get(0);
         ctx.assertTrue(best.chunks().size() == 2, "neighbouring chunks were not merged: " + best.chunks().size());
         ctx.assertTrue(Math.abs(best.score() - 60.0) < 1e-6, "cluster score should be 60, got " + best.score());
-        ctx.assertTrue(best.score() >= ChunkScores.BASE_SCORE, "60 placed blocks should be enough for a base");
+        ctx.assertFalse(best.isBase(), "a pile of plain blocks must not be a base (no bed, chest, furnace, door or window)");
         ctx.assertTrue(best.contains(best.center()), "the cluster centre lies outside the cluster");
+        ctx.complete();
+    }
+
+    /** Your own chest + furnace + window (and some building) make a base; the anchor is the chest. */
+    @GameTest(templateName = EMPTY_STRUCTURE)
+    public void ownKitMakesABase(TestContext ctx) {
+        ItWasTallState st = new ItWasTallState();
+        UUID player = UUID.randomUUID();
+        BlockPos chest = new BlockPos(1, 1, 1), furnace = new BlockPos(2, 1, 1), glass = new BlockPos(3, 1, 1);
+        ctx.setBlockState(chest, Blocks.CHEST);
+        ctx.setBlockState(furnace, Blocks.FURNACE);
+        ctx.setBlockState(glass, Blocks.GLASS);
+        for (BlockPos p : List.of(chest, furnace, glass)) st.recordPlacedBlock(player, ctx.getAbsolutePos(p).asLong());
+        for (int x = 0; x < 5; x++) {
+            for (int z = 3; z < 7; z++) {
+                ctx.setBlockState(x, 1, z, Blocks.OAK_PLANKS);
+                st.recordPlacedBlock(player, ctx.getAbsolutePos(new BlockPos(x, 1, z)).asLong());
+            }
+        }
+        List<ChunkScores.Cluster> clusters = ChunkScores.clusters(ctx.getWorld(), st, player);
+        ctx.assertTrue(!clusters.isEmpty() && clusters.get(0).isBase(),
+                "chest + furnace + window + 20 planks should be a base: " + (clusters.isEmpty() ? "no cluster" : clusters.get(0).kitString()));
+        ctx.assertTrue(clusters.get(0).center().equals(ctx.getAbsolutePos(chest)), "without a bed the chest should be the anchor");
         ctx.complete();
     }
 
