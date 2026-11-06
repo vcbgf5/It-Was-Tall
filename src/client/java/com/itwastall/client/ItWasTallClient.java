@@ -58,6 +58,7 @@ public class ItWasTallClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.OLD_ONE, com.itwastall.client.render.OldOneRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEEP_ONE, com.itwastall.client.render.DeepOneRenderer::new);
         EntityRendererRegistry.register(ModEntities.SLEEPER, com.itwastall.client.render.SleeperRenderer::new);
+        EntityRendererRegistry.register(ModEntities.HANGED, com.itwastall.client.render.HangedRenderer::new);
 
         FalsePresenceRenderer.init();
 

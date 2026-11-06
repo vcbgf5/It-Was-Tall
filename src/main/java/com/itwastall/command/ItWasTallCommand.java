@@ -234,6 +234,9 @@ public final class ItWasTallCommand {
                     com.itwastall.entity.TheGuest.stop(p);
                     if (!com.itwastall.entity.TheGuest.start(p)) throw new IllegalStateException("could not start the guest");
                 }))
+                .then(eventKind("hanged", p -> {
+                    if (!com.itwastall.entity.HangedTrees.spawnFor(p, 8, 40, false)) throw new IllegalStateException("no tree with a free branch nearby");
+                }))
                 .then(eventKind("count", p -> {
                     com.itwastall.entity.TheCount.stop(p);
                     if (!com.itwastall.entity.TheCount.start(p)) throw new IllegalStateException("could not start counting");
@@ -490,6 +493,7 @@ public final class ItWasTallCommand {
                 "  shared event gap (minEventCooldown): " + (com.itwastall.entity.EventGate.secondsLeft(p) == 0 ? "ready" : com.itwastall.entity.EventGate.secondsLeft(p) + " s left"),
                 "  haunting (It in the distance): " + in.apply(HauntDirector.nextAt(u)),
                 "  Old One: " + in.apply(com.itwastall.entity.OldOneDirector.nextAt(u)),
+                "  the hanged: " + in.apply(com.itwastall.entity.HangedTrees.nextAt(u)),
                 "  house events: " + in.apply(com.itwastall.entity.HouseEvents.nextAt(u)),
                 "  small scare: " + in.apply(ScareSounds.nextScareAt(u)),
                 "  window knocks tonight: " + WindowKnocks.ledgerCount(u),

@@ -48,6 +48,16 @@ public final class ModEntities {
                     .maxTrackingRange(10)
                     .build("sleeper"));
 
+    /** THE HANGED: hangs from a tree branch at night, wearing the face of whoever looks at it. */
+    public static final EntityType<com.itwastall.entity.HangedEntity> HANGED = Registry.register(
+            Registries.ENTITY_TYPE,
+            ItWasTall.id("hanged"),
+            EntityType.Builder.create(com.itwastall.entity.HangedEntity::new, SpawnGroup.MISC)
+                    .dimensions(0.6f, 1.8f)
+                    .eyeHeight(1.62f)
+                    .maxTrackingRange(10)
+                    .build("hanged"));
+
     private ModEntities() {
     }
 
@@ -56,5 +66,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(OLD_ONE, com.itwastall.entity.OldOneEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(DEEP_ONE, com.itwastall.entity.DeepOneEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SLEEPER, com.itwastall.entity.SleeperEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(HANGED, com.itwastall.entity.HangedEntity.createAttributes());
     }
 }

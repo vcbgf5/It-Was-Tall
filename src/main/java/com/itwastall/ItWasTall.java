@@ -65,6 +65,7 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.entity.DeepOneEntity.init();
         com.itwastall.entity.TheGuest.init();
         com.itwastall.entity.SleeperEntity.init();
+        com.itwastall.entity.HangedTrees.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -92,6 +93,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.world.SharedJournal.forget(uuid);
             com.itwastall.entity.Outspace.forget(uuid);
             com.itwastall.entity.TheCount.forget(uuid);
+            com.itwastall.entity.HangedTrees.forget(uuid);
             com.itwastall.entity.DeepOneEntity.forget(uuid);
             com.itwastall.entity.TheGuest.forget(uuid);
         });

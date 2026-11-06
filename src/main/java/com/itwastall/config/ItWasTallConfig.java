@@ -78,6 +78,11 @@ public final class ItWasTallConfig {
         // ---- the new creatures ----
         /** THE ONE WHO COUNTS: at night, alone outside, a countdown from ten; a figure closer with every number. */
         public boolean countEvents = true;
+        /** THE HANGED: someone hangs from a tree at night (stage 2+), wearing your face, until morning. */
+        public boolean hangedTrees = true;
+        /** Minutes between two hanged figures for one player (at most one per night). */
+        public int hangedMinMinutes = 15;
+        public int hangedMaxMinutes = 25;
         public int countMinStage = 2;
         /** Chance per 10 s check while eligible (night, outside, alone; 25-40 min per player between counts). */
         public double countChance = 0.03;
