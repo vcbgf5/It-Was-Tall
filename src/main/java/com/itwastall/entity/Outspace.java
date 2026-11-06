@@ -135,6 +135,8 @@ public final class Outspace {
         long now = server.getOverworld().getTime();
         int seconds = Math.max(5, ItWasTallConfig.INSTANCE.outspaceSeconds);
         DREAMERS.put(player.getUuid(), new Dream(bedDim, bed, fallback, now + 20L * seconds, now + 60));
+        // the dream costs nothing: the inventory from now comes back on waking (kept in the world data)
+        com.itwastall.world.ItWasTallState.getOrCreate(server).putDreamInventory(player.getUuid(), DreamInventory.snapshot(player));
         player.teleportTo(new TeleportTarget(out, start, Vec3d.ZERO, random.nextFloat() * 360f, 0f, TeleportTarget.NO_OP));
         ModNetworking.sendScareText(player, "you are dreaming.");
         com.itwastall.advancement.Achievements.grant(player, "outspace");
@@ -176,6 +178,15 @@ public final class Outspace {
             target = Vec3d.ofBottomCenter(world.getTopPosition(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, spawn));
         }
         player.teleportTo(new TeleportTarget(world, target, Vec3d.ZERO, player.getYaw(), 0f, TeleportTarget.NO_OP));
+        // everything as it was before the dream, plus whatever was found in it
+        net.minecraft.nbt.NbtList saved = com.itwastall.world.ItWasTallState.getOrCreate(server).takeDreamInventory(player.getUuid());
+        if (saved != null) {
+            boolean found = DreamInventory.restore(player, saved);
+            player.sendMessage(net.minecraft.text.Text.literal(found
+                    ? "It was only a dream. But you woke up holding something."
+                    : "It was only a dream. Your things are where you left them.")
+                    .formatted(net.minecraft.util.Formatting.GRAY, net.minecraft.util.Formatting.ITALIC), true);
+        }
     }
 
     // ------------------------------------------------------------------ ticking ----

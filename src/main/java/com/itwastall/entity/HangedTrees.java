@@ -29,7 +29,6 @@ import java.util.UUID;
 public final class HangedTrees {
     private static final Map<UUID, Long> NEXT = new HashMap<>();
     private static final Map<UUID, Long> NIGHT = new HashMap<>();
-    private static final Map<UUID, UUID> CURRENT = new HashMap<>();
 
     private HangedTrees() {}
 
@@ -40,7 +39,6 @@ public final class HangedTrees {
     public static void forget(UUID player) {
         NEXT.remove(player);
         NIGHT.remove(player);
-        CURRENT.remove(player);
     }
 
     /** World time of this player's next roll (-1 = not scheduled yet), for /itwastall debug events. */
@@ -82,7 +80,7 @@ public final class HangedTrees {
 
     /**
      * Hangs one on a tree {@code min}..{@code max} blocks from the player (ahead of them when {@code ahead}).
-     * Replaces the one this player saw before, if it still hangs somewhere.
+     * The ones from earlier nights keep hanging where they are.
      */
     public static boolean spawnFor(ServerPlayerEntity p, int min, int max, boolean ahead) {
         ServerWorld world = p.getServerWorld();
@@ -101,15 +99,11 @@ public final class HangedTrees {
         }
         if (branch == null) return false;
 
-        UUID old = CURRENT.remove(p.getUuid());
-        if (old != null && world.getEntity(old) instanceof HangedEntity previous) previous.discard();
-
         HangedEntity hanged = ModEntities.HANGED.create(world);
         if (hanged == null) return false;
         float yaw = (float) (MathHelper.atan2(p.getZ() - (branch.getZ() + 0.5), p.getX() - (branch.getX() + 0.5)) * MathHelper.DEGREES_PER_RADIAN) - 90f;
         hanged.hangFrom(branch, 1.4f, yaw);
         if (!world.spawnEntity(hanged)) return false;
-        CURRENT.put(p.getUuid(), hanged.getUuid());
         ItWasTall.LOGGER.info("The Hanged hangs at {} for {}.", branch.toShortString(), p.getName().getString());
         return true;
     }

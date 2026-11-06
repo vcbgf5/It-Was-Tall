@@ -71,6 +71,8 @@ public final class ItWasTallState extends PersistentState {
     private final Map<UUID, Map<Long, Float>> chunkDwell = new HashMap<>();
     /** Players whose base anchor is a bed they used (a bed always wins over a chunk cluster). */
     private final Set<UUID> bedAnchored = new HashSet<>();
+    /** OUTSPACE: each dreamer's inventory from before the dream (restored on waking, also after a restart). */
+    private final Map<UUID, net.minecraft.nbt.NbtList> dreamInventory = new HashMap<>();
     private static final int MAX_DWELL_CHUNKS = 400;
 
     /** Server-wide journal (BOOKS tab): every book / note someone on the server has read, in order. */
@@ -132,6 +134,8 @@ public final class ItWasTallState extends PersistentState {
             state.chunkDwell.put(UUID.fromString(key), m);
         }
         for (String key : nbt.getCompound("bedAnchored").getKeys()) state.bedAnchored.add(UUID.fromString(key));
+        NbtCompound dreams = nbt.getCompound("dreamInventory");
+        for (String key : dreams.getKeys()) state.dreamInventory.put(UUID.fromString(key), dreams.getList(key, net.minecraft.nbt.NbtElement.COMPOUND_TYPE));
         net.minecraft.nbt.NbtList books = nbt.getList("sharedBooks", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < books.size(); i++) state.sharedBooks.add(books.getCompound(i));
         net.minecraft.nbt.NbtList notes = nbt.getList("sharedNotes", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
@@ -202,6 +206,9 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound beds = new NbtCompound();
         for (UUID uuid : bedAnchored) beds.putBoolean(uuid.toString(), true);
         nbt.put("bedAnchored", beds);
+        NbtCompound dreams = new NbtCompound();
+        dreamInventory.forEach((uuid, list) -> dreams.put(uuid.toString(), list.copy()));
+        nbt.put("dreamInventory", dreams);
         net.minecraft.nbt.NbtList books = new net.minecraft.nbt.NbtList();
         books.addAll(sharedBooks);
         nbt.put("sharedBooks", books);
@@ -439,6 +446,20 @@ public final class ItWasTallState extends PersistentState {
 
     public Map<Long, Float> chunkDwell(UUID player) {
         return chunkDwell.getOrDefault(player, Map.of());
+    }
+
+    /** OUTSPACE: remembers the inventory a player had when the dream began. */
+    public void putDreamInventory(UUID player, net.minecraft.nbt.NbtList inventory) {
+        dreamInventory.put(player, inventory);
+        markDirty();
+    }
+
+    /** OUTSPACE: the inventory from before the dream (and forgets it), or null when there is none. */
+    @org.jetbrains.annotations.Nullable
+    public net.minecraft.nbt.NbtList takeDreamInventory(UUID player) {
+        net.minecraft.nbt.NbtList list = dreamInventory.remove(player);
+        if (list != null) markDirty();
+        return list;
     }
 
     public boolean isBedAnchored(UUID player) {

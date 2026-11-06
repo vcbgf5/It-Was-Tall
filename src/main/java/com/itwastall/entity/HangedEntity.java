@@ -31,8 +31,8 @@ import java.util.UUID;
 /**
  * THE HANGED. At night, at the edge of the forest, someone hangs from a branch on a rope — wearing YOUR
  * face (the client draws it with the skin of whoever is looking, like the Sleeper). It sways, the branch
- * creaks, and it stays until morning. It never moves while you look at it; but look away and look back,
- * and its head has turned to you.
+ * creaks, and it stays there for good (only cutting the branch takes it down). It never moves while you look
+ * at it; but look away and look back, and its head has turned to you.
  */
 public class HangedEntity extends PathAwareEntity {
     /** Height of the rope's top (the underside of the branch) above the entity's feet, for the client. */
@@ -88,8 +88,8 @@ public class HangedEntity extends PathAwareEntity {
         setVelocity(Vec3d.ZERO);
         if (!(getWorld() instanceof ServerWorld world)) return;
         if (anchor != null && age % 20 == 0) {
-            // morning, or the branch is gone (tree cut down): it is simply not there anymore
-            if (world.isDay() || world.getBlockState(anchor).isAir()) {
+            // it hangs there for good — only when the branch is gone (tree cut down) is it not there anymore
+            if (world.getBlockState(anchor).isAir()) {
                 discard();
                 return;
             }
