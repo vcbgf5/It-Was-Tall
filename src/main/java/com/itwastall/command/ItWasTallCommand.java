@@ -251,7 +251,17 @@ public final class ItWasTallCommand {
                         .then(structureKind("cemetery", com.itwastall.entity.DynamicStructures.Kind.CEMETERY))
                         .then(structureKind("shrine", com.itwastall.entity.DynamicStructures.Kind.SHRINE))
                         .then(structureKind("cottage", com.itwastall.entity.DynamicStructures.Kind.COTTAGE))
-                        .then(structureKind("blackcopy", com.itwastall.entity.DynamicStructures.Kind.BLACKCOPY)));
+                        .then(structureKind("blackcopy", com.itwastall.entity.DynamicStructures.Kind.BLACKCOPY))
+                        .then(structureKind("countingstones", com.itwastall.entity.DynamicStructures.Kind.COUNTING_STONES))
+                        .then(structureKind("guesthouse", com.itwastall.entity.DynamicStructures.Kind.GUEST_HOUSE))
+                        .then(structureKind("dreamwell", com.itwastall.entity.DynamicStructures.Kind.DREAM_WELL)))
+                // any of the world-generated structures, right in front of the player (test/explore)
+                .then(literal("build")
+                        .then(argument("name", StringArgumentType.word())
+                                .suggests((ctx, b) -> net.minecraft.command.CommandSource.suggestMatching(com.itwastall.world.StructureBuilder.NAMES, b))
+                                .executes(ctx -> build(ctx, ctx.getSource().getPlayerOrThrow(), StringArgumentType.getString(ctx, "name")))
+                                .then(argument("player", EntityArgumentType.player())
+                                        .executes(ctx -> build(ctx, EntityArgumentType.getPlayer(ctx, "player"), StringArgumentType.getString(ctx, "name"))))));
         return root;
     }
 
@@ -519,6 +529,19 @@ public final class ItWasTallCommand {
     private static void wake(ServerPlayerEntity p) {
         if (!com.itwastall.entity.Outspace.inOutspace(p)) throw new IllegalStateException("not dreaming");
         com.itwastall.entity.Outspace.wake(p, false);
+    }
+
+    private static int build(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity p, String name) {
+        if (!com.itwastall.world.StructureBuilder.NAMES.contains(name)) {
+            ctx.getSource().sendError(Text.literal("Unknown structure '" + name + "'. Try: " + String.join(", ", com.itwastall.world.StructureBuilder.NAMES)));
+            return 0;
+        }
+        if (!com.itwastall.world.StructureBuilder.placeInFront(p, name)) {
+            ctx.getSource().sendError(Text.literal("Could not place " + name + " (template missing?)"));
+            return 0;
+        }
+        ctx.getSource().sendFeedback(() -> Text.literal("Built " + name + " in front of " + p.getName().getString() + "."), true);
+        return 1;
     }
 
     private static boolean freeSlot(ServerPlayerEntity player) {

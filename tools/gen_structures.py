@@ -576,17 +576,21 @@ SURFACE_FOREST = ["minecraft:forest", "minecraft:birch_forest", "minecraft:dark_
 SURFACE_OPEN = ["minecraft:plains", "minecraft:sunflower_plains", "minecraft:meadow", "minecraft:forest",
                 "minecraft:birch_forest", "minecraft:taiga", "minecraft:savanna", "minecraft:snowy_plains"]
 
+SURFACE_ALL = sorted(set(SURFACE_FOREST + SURFACE_OPEN + ["minecraft:cherry_grove", "minecraft:savanna_plateau",
+                                                       "minecraft:windswept_savanna", "minecraft:grove", "minecraft:flower_forest"]))
+
 STRUCTURES = {
     # name: (builder, surface?, biomes, spacing, separation, salt, y-range underground / start offset surface)
-    "abandoned_cabin": (abandoned_cabin, True, SURFACE_FOREST, 40, 16, 74611301, None),
-    "roadside_shrine": (roadside_shrine, True, SURFACE_OPEN, 32, 12, 74611302, None),
-    "torch_tunnel": (torch_tunnel, False, "#minecraft:is_overworld", 36, 14, 74611303, (-24, 36)),
-    "sign_room": (sign_room, False, "#minecraft:is_overworld", 52, 22, 74611304, (-40, 20)),
-    "crystal_grotto": (crystal_grotto, False, "#minecraft:is_overworld", 44, 18, 74611305, (-50, 0)),
-    "deep_lair": (deep_lair, False, "#minecraft:is_overworld", 40, 16, 74611306, (-56, -10)),
-    "counting_stones": (counting_stones, True, SURFACE_OPEN, 44, 18, 74611307, None),
-    "guest_house": (guest_house, True, SURFACE_FOREST, 48, 20, 74611308, None),
-    "dream_well": (dream_well, True, SURFACE_OPEN, 50, 20, 74611309, -5),   # surface: 4 rows of shaft go below ground
+    # spacing in chunks: about one every 300-380 blocks (it used to be 500-830 — nobody ever found them)
+    "abandoned_cabin": (abandoned_cabin, True, SURFACE_FOREST, 22, 8, 74611301, None),
+    "roadside_shrine": (roadside_shrine, True, SURFACE_OPEN, 20, 7, 74611302, None),
+    "torch_tunnel": (torch_tunnel, False, "#minecraft:is_overworld", 18, 6, 74611303, (-24, 36)),
+    "sign_room": (sign_room, False, "#minecraft:is_overworld", 24, 9, 74611304, (-40, 20)),
+    "crystal_grotto": (crystal_grotto, False, "#minecraft:is_overworld", 22, 8, 74611305, (-50, 0)),
+    "deep_lair": (deep_lair, False, "#minecraft:is_overworld", 18, 6, 74611306, (-56, -10)),
+    "counting_stones": (counting_stones, True, SURFACE_ALL, 20, 7, 74611307, None),
+    "guest_house": (guest_house, True, SURFACE_ALL, 22, 8, 74611308, None),
+    "dream_well": (dream_well, True, SURFACE_ALL, 22, 8, 74611309, -5),   # surface: 4 rows of shaft go below ground
 }
 
 

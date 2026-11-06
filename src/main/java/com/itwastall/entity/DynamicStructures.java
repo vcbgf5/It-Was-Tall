@@ -51,7 +51,7 @@ import java.util.UUID;
  */
 public final class DynamicStructures {
 
-    public enum Kind {CEMETERY, SHRINE, COTTAGE, BLACKCOPY}
+    public enum Kind {CEMETERY, SHRINE, COTTAGE, BLACKCOPY, COUNTING_STONES, GUEST_HOUSE, DREAM_WELL}
 
     /** One build per player per night (the §17 frequency limit). */
     private static final Map<UUID, Ledger> LEDGERS = new HashMap<>();
@@ -96,10 +96,13 @@ public final class DynamicStructures {
             if (hasBase(player) && player.getRandom().nextDouble() < clamp01(cfg.blackCopyChance)) {
                 kind = Kind.BLACKCOPY;
             } else {
-                kind = switch (player.getRandom().nextInt(3)) {
+                kind = switch (player.getRandom().nextInt(6)) {
                     case 0 -> Kind.CEMETERY;
                     case 1 -> Kind.SHRINE;
-                    default -> Kind.COTTAGE;
+                    case 2 -> Kind.COTTAGE;
+                    case 3 -> Kind.COUNTING_STONES;   // the new ones also rise in old worlds, not only in new chunks
+                    case 4 -> Kind.GUEST_HOUSE;
+                    default -> Kind.DREAM_WELL;
                 };
             }
             BlockPos spot = findSpot(player, player.getRandom(), kind);
@@ -137,6 +140,9 @@ public final class DynamicStructures {
             case COTTAGE -> 5;
             case CEMETERY -> 6;
             case BLACKCOPY -> 7;
+            case COUNTING_STONES -> 6;
+            case GUEST_HOUSE -> 4;
+            case DREAM_WELL -> 3;
         };
         ServerWorld world = player.getServerWorld();
         float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
@@ -184,9 +190,19 @@ public final class DynamicStructures {
             case SHRINE -> buildShrine(world, ground, player);
             case COTTAGE -> buildCottage(world, ground, player);
             case BLACKCOPY -> buildBlackCopy(world, ground, player);
+            case COUNTING_STONES -> placeTemplate(world, ground, player, "counting_stones");
+            case GUEST_HOUSE -> placeTemplate(world, ground, player, "guest_house");
+            case DREAM_WELL -> placeTemplate(world, ground, player, "dream_well");
         }
         // PHASES §2: the world itself grew stranger tonight
         if (Director.phase() == 1) Director.addTension(1.0);
+    }
+
+    /** One of the world-generated structures, rising behind the player at night (template + its loot). */
+    private static void placeTemplate(ServerWorld world, BlockPos ground, ServerPlayerEntity player, String name) {
+        net.minecraft.util.BlockRotation rot = net.minecraft.util.BlockRotation.values()[player.getRandom().nextInt(4)];
+        com.itwastall.world.StructureBuilder.placeAt(world, name, ground, rot);
+        play(world, ground, player.getRandom());
     }
 
     /** Test/event trigger (/itwastall event structure X): skips chance and the ledger. */
