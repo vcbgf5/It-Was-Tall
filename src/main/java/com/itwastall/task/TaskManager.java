@@ -76,6 +76,8 @@ public final class TaskManager {
         int outsideSeconds;
         /** STAY_INSIDE: how long this one lasts (the window gaze gives a short 30 s one). */
         int seconds;
+        /** World time the current phase began (task start; hide-and-seek: again when the seeking starts). */
+        long phaseStart;
         /** SACRIFICE (§15.5): what must be offered and where. */
         final net.minecraft.item.Item offerItem;
         final int offerCount;
@@ -121,6 +123,38 @@ public final class TaskManager {
     public static String status(UUID player) {
         Task task = ACTIVE.get(player);
         return task == null ? "no task" : taskDescription(task);
+    }
+
+    /** What the TASK TIMER in the corner of the screen shows. */
+    public record Timer(String title, String detail, int left, int total, boolean danger) {
+    }
+
+    /** The TASK TIMER of a player's running task, or null when there is none. */
+    public static Timer timerFor(UUID player, long now) {
+        Task task = ACTIVE.get(player);
+        if (task == null) return null;
+        long start = task.phaseStart > 0 ? task.phaseStart : now;
+        int left = (int) Math.max(0, (task.expiresAt - now + 19) / 20);
+        int total = (int) Math.max(1, (task.expiresAt - start + 19) / 20);
+        int lights = task.lights.size();
+        String title = switch (task.kind) {
+            case STAY_INSIDE -> "DON'T GO OUTSIDE";
+            case DOUSE_LIGHTS -> "DOUSE THE LIGHTS";
+            case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "HIDE" : "STAY HIDDEN";
+            case DONT_LOOK -> "DON'T LOOK BACK";
+            case SACRIFICE -> "THE OFFERING";
+        };
+        String detail = switch (task.kind) {
+            case STAY_INSIDE -> "stay under a roof";
+            case DOUSE_LIGHTS -> lights + " light" + (lights == 1 ? "" : "s") + " left";
+            case HIDE_AND_SEEK -> task.seekStartAt == 0 ? "It starts looking soon"
+                    : task.checked + " corner" + (task.checked == 1 ? "" : "s") + " checked";
+            case DONT_LOOK -> "do not turn around";
+            case SACRIFICE -> task.offerCount + "x " + task.offerItem.getName().getString();
+        };
+        if (detail.length() > 90) detail = detail.substring(0, 90);
+        boolean danger = task.kind == Kind.DOUSE_LIGHTS || task.kind == Kind.SACRIFICE;
+        return new Timer(title, detail, left, total, danger);
     }
 
     /** The journal's "What it wants" line: plain words and the time left, e.g. "Don't go outside. 24 s left." */
@@ -291,6 +325,8 @@ public final class TaskManager {
                 task.seekStartAt = now;
                 task.nextCheckAt = now + cfg.taskSeekCheckSeconds * 20L;
                 task.expiresAt = now + 20L * cfg.taskSeekSeconds; // redefine: survive the seeking
+                task.phaseStart = now;
+                ModNetworking.sendTaskTimer(player);
                 sendToast(player, TaskToastPayload.KIND_NEW, "IT ENTERS.",
                         "It walks the rooms. Stay hidden.");
                 ItWasTall.LOGGER.info("Hide-and-seek seek phase started for {}.", player.getName().getString());
@@ -352,7 +388,9 @@ public final class TaskManager {
         long now = player.getWorld().getTime();
         Task task = new Task(Kind.STAY_INSIDE, now + 20L * seconds, List.of(), List.of());
         task.seconds = seconds;
+        task.phaseStart = now;
         ACTIVE.put(uuid, task);
+        ModNetworking.sendTaskTimer(player);
         logTask(player, task, "now (the window)", false);
         sendToast(player, TaskToastPayload.KIND_NEW, "IT SAW YOU.", "You looked at it. Stay inside for " + seconds + "s.");
         ItWasTall.LOGGER.info("{} looked at the window figure: {} s inside.", player.getName().getString(), seconds);
@@ -553,7 +591,9 @@ public final class TaskManager {
             task = new Task(Kind.STAY_INSIDE, now + 20L * cfg.taskStayInsideSeconds, List.of(), List.of(), null, 0, null);
             task.seconds = cfg.taskStayInsideSeconds;
         }
+        task.phaseStart = now;
         ACTIVE.put(player.getUuid(), task);
+        ModNetworking.sendTaskTimer(player);
         logTask(player, task, "now", false);
         sendToast(player, TaskToastPayload.KIND_NEW, TITLE_NEW, newToastText(kind, task));
         ItWasTall.LOGGER.info("Task assigned to {}: {} ({} light(s), {} corner(s)).",
@@ -565,6 +605,7 @@ public final class TaskManager {
 
     private static void complete(ServerPlayerEntity player, Task task) {
         ACTIVE.remove(player.getUuid());
+        ModNetworking.sendTaskTimer(player);
         logTask(player, task, "done", true);
         sendToast(player, TaskToastPayload.KIND_COMPLETED, TITLE_DONE, taskTitle(task) + " — done.");
         com.itwastall.advancement.Achievements.taskCompleted(player, task.kind.name());
@@ -576,6 +617,7 @@ public final class TaskManager {
 
     private static void fail(ServerPlayerEntity player, Task task, MinecraftServer server) {
         ACTIVE.remove(player.getUuid());
+        ModNetworking.sendTaskTimer(player);
         logTask(player, task, "failed", true);
         sendToast(player, TaskToastPayload.KIND_FAILED, TITLE_FAILED, taskTitle(task) + " — failed.");
         com.itwastall.advancement.Achievements.grant(player, "task_failed");

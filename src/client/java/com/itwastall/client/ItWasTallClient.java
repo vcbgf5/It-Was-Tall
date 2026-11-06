@@ -92,6 +92,8 @@ public class ItWasTallClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.SharedJournalPayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.updateShared(payload.books(), payload.notes())));
 
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.TaskTimerPayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.hud.TaskTimerHud.update(payload)));
         ClientPlayNetworking.registerGlobalReceiver(FearStatePayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.update(
                         payload.phase(), payload.stage(), payload.tension(),
@@ -163,7 +165,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

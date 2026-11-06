@@ -25,6 +25,7 @@ public final class ModNetworking {
     public static void init() {
         PayloadTypeRegistry.playS2C().register(JumpscarePayload.ID, JumpscarePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FearStatePayload.ID, FearStatePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(TaskTimerPayload.ID, TaskTimerPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
@@ -49,6 +50,7 @@ public final class ModNetworking {
                         Director.phase(), Director.stageIndex(), (float) Director.tension(),
                         com.itwastall.task.TaskManager.journalLine(player.getUuid(), server.getOverworld().getTime()),
                         java.util.List.copyOf(state.loreBookIds(player.getUuid()))));
+                sendTaskTimer(player);
                 // red chase overlay: on/off every second (the start is also sent instantly)
                 sendChase(player, isChased(player));
                 // journal BASE / EVENTS pages: every 5 s is plenty (they change rarely)
@@ -117,7 +119,17 @@ public final class ModNetworking {
                     com.itwastall.task.TaskManager.journalLine(uuid, server.getOverworld().getTime()), java.util.List.copyOf(state.loreBookIds(uuid))));
         }
         sendJournal(player);
+        sendTaskTimer(player);
         com.itwastall.world.SharedJournal.sync(player);
+    }
+
+    /** The TASK TIMER in the corner of the screen: the running task's time, or "no task". */
+    public static void sendTaskTimer(ServerPlayerEntity player) {
+        if (player.getServer() == null || !ServerPlayNetworking.canSend(player, TaskTimerPayload.ID)) return;
+        com.itwastall.task.TaskManager.Timer t = com.itwastall.task.TaskManager.timerFor(player.getUuid(),
+                player.getServer().getOverworld().getTime());
+        ServerPlayNetworking.send(player, t == null ? TaskTimerPayload.NONE
+                : new TaskTimerPayload(t.title(), t.detail(), t.left(), t.total(), t.danger()));
     }
 
     /** The player's own journal pages: BASE, EVENTS and the task history. */

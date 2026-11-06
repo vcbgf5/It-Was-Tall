@@ -122,6 +122,8 @@ public final class ItWasTallConfig {
         public int maxEventRange = 100;
         /** The title screen shows the night clearing with the Tall One instead of the panorama (client side). */
         public boolean customTitleScreen = true;
+        /** The TASK TIMER in the top-left corner while a task runs (client side). */
+        public boolean taskTimerHud = true;
         /** Lets players without operator rights use /itwastall debug ... (read-only views). */
         public boolean debugAllowedForNonOps = false;
 

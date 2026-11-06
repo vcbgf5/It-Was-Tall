@@ -24,6 +24,7 @@ public class InGameHudMixin {
         ItJoinedOverlay.render(context, tickCounter);
         FearHud.render(context, tickCounter);
         ChaseHud.render(context, tickCounter);
+        com.itwastall.client.hud.TaskTimerHud.render(context, tickCounter);
         TaskToast.render(context, tickCounter);
     }
 }
