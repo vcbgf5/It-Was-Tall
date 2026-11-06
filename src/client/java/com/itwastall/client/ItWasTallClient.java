@@ -79,6 +79,9 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.JournalPayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.updateJournal(payload.baseCounts(), payload.events(), payload.tasks())));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GuestFigurePayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.render.GuestFigures.handle(payload)));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(c -> com.itwastall.client.render.GuestFigures.tick());
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.SharedJournalPayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.updateShared(payload.books(), payload.notes())));
 
@@ -153,7 +156,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

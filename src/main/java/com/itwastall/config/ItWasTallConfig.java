@@ -85,6 +85,12 @@ public final class ItWasTallConfig {
         /** Chance per 10 s check while eligible (6-10 min per player between two). */
         public double deepOneChance = 0.12;
 
+        /** THE GUEST: an unknown name in YOUR player list, an echo of your chat, a far figure with its back to you. */
+        public boolean guest = true;
+        public int guestMinStage = 4;
+        /** Chance per 30 s check (40-70 min per player between two visits). */
+        public double guestChance = 0.04;
+
         // ---- OUTSPACE, the dream world ----
         /** Sometimes a sleeper is pulled into the dream maze (no damage, no death, the Old One hunts there). */
         public boolean outspace = true;

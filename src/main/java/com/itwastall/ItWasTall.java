@@ -63,6 +63,7 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.entity.Outspace.init();
         com.itwastall.entity.TheCount.init();
         com.itwastall.entity.DeepOneEntity.init();
+        com.itwastall.entity.TheGuest.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -90,6 +91,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.Outspace.forget(uuid);
             com.itwastall.entity.TheCount.forget(uuid);
             com.itwastall.entity.DeepOneEntity.forget(uuid);
+            com.itwastall.entity.TheGuest.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

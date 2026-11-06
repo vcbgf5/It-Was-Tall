@@ -222,6 +222,9 @@ public final class ItWasTallCommand {
                 .then(eventKind("deepone", p -> {
                     if (!com.itwastall.entity.DeepOneEntity.spawnFor(p)) throw new IllegalStateException("no ceiling in sight to hang from");
                 }))
+                .then(eventKind("guest", p -> {
+                    if (!com.itwastall.entity.TheGuest.start(p)) throw new IllegalStateException("a guest is already visiting");
+                }))
                 .then(eventKind("count", p -> {
                     if (!com.itwastall.entity.TheCount.start(p)) throw new IllegalStateException("already counting");
                 }))
@@ -460,6 +463,7 @@ public final class ItWasTallCommand {
                 "  mine: " + MineEvents.debugLine(u),
                 "  dream: " + com.itwastall.entity.Outspace.debugLine(p),
                 "  the one who counts: " + com.itwastall.entity.TheCount.debugLine(u, now),
+                "  the guest: " + com.itwastall.entity.TheGuest.debugLine(u, now),
                 "  task: " + TaskManager.status(u));
         for (String line : lines) source.sendFeedback(() -> Text.literal(line), false);
         return 1;

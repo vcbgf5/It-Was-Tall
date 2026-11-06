@@ -33,6 +33,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(JournalPayload.ID, JournalPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ChasePayload.ID, ChasePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(SharedJournalPayload.ID, SharedJournalPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(GuestFigurePayload.ID, GuestFigurePayload.CODEC);
         // C2S: the shared NOTES tab (validated and rate-limited in SharedJournal)
         PayloadTypeRegistry.playC2S().register(NoteActionPayload.ID, NoteActionPayload.CODEC);
         // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
