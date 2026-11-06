@@ -118,3 +118,7 @@ Numery sekcji odnoszą się do `MODPLAN.md`, etapy do `PHASES.md`.
 - Pukanie: sylwetka przy oknie lądowała na wysokości Y≈−2,5 (`getBodyY()` zwraca wysokość bezwzględną, nie przesunięcie). Teraz oczy są dokładnie na środku szyby, a postać pojawia się od razu na swoim miejscu.
 - Dziennik, notatka, TaskToast, winieta, efekt pościgu: nowe tekstury z `tools/gen_gui.py`, wszystkie ekrany bez vanilla-rozmycia (wcześniej rozmycie nakładało się dwa razy).
 - Struktury przebudowane: przygotowanie terenu (fundament, czyszczenie z drzew i roślin, płaski teren), chata pusta w środku z dachem dwuspadowym (wcześniej była wypełniona deskami), poprawiona czarna kopia (wcześniej liczyła wymiary ze złych danych). Kopia odwzorowuje teraz bloki postawione przez gracza.
+- UI: guziki bez jasnego szwu, ciemne separatory i tła list, czerwone zaznaczenie wiersza, tło lasu na każdym ekranie poza grą (`ScreenMixin`, `MenuBackground`).
+- Osiągnięcia: zakładka „It Was Tall” pod L, 29 osiągnięć (`tools/gen_advancements.py`, `Achievements.grant`), własne okno, zakładki i toast. Przycisk „< Journal” na ekranie L i wstążka AWARDS w dzienniku.
+- TASK TIMER w lewym górnym rogu (`TaskTimerHud`, `TaskTimerPayload`, opcja `taskTimerHud`). Skrzynia na ofiarę świeci przez ściany (`TaskTargetRenderer`).
+- Ekran ładowania (pasek z krwi i wskazówki) i pauza (napis PAUSED, przycisk Journal, etap i zadanie).
