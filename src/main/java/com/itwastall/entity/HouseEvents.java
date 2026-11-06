@@ -145,13 +145,13 @@ public final class HouseEvents {
     }
 
     private static boolean nearBase(ServerPlayerEntity player, int range) {
-        Long anchor = BaseTracker.anchorOf(player.getUuid());
+        Long anchor = BaseTracker.eventAnchorOf(player);
         return anchor != null && BlockPos.fromLong(anchor).isWithinDistance(player.getBlockPos(), range);
     }
 
     /** Test trigger (/itwastall event door|doorknock|knockinside|shadow|chest|sign): no chance, no cooldown. */
     public static boolean trigger(ServerPlayerEntity player, Kind kind) {
-        if (BaseTracker.mapOf(player.getUuid()) == null) return false;
+        if (BaseTracker.eventMapOf(player) == null) return false;
         return start(player, kind);
     }
 
@@ -244,7 +244,7 @@ public final class HouseEvents {
 
     /** Three slow knocks from INSIDE the base: a dark corner behind the player, at least 4 blocks away. */
     private static boolean knockInside(ServerPlayerEntity player) {
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return false;
         List<BlockPos> spots = new ArrayList<>(map.all(BaseMap.TYPE_CORNER));
         if (spots.isEmpty()) spots.addAll(map.all(BaseMap.TYPE_ROOM));
@@ -300,7 +300,7 @@ public final class HouseEvents {
 
     /** Swaps a few slots inside one mapped chest/barrel. Never removes, never replaces an item. */
     private static boolean chestShuffle(ServerPlayerEntity player) {
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return false;
         ServerWorld world = player.getServerWorld();
         List<BlockPos> chests = map.all(BaseMap.TYPE_CHEST);
@@ -342,7 +342,7 @@ public final class HouseEvents {
     /** A sign with a red message outside the base, facing it, placed where the player is not looking. */
     private static boolean sign(ServerPlayerEntity player) {
         ServerWorld world = player.getServerWorld();
-        Long anchorL = BaseTracker.anchorOf(player.getUuid());
+        Long anchorL = BaseTracker.eventAnchorOf(player);
         if (anchorL == null) return false;
         BlockPos anchor = BlockPos.fromLong(anchorL);
         Random random = player.getRandom();
@@ -351,7 +351,7 @@ public final class HouseEvents {
 
         // candidates: outside every mapped door first, then a ring around the base
         List<BlockPos> candidates = new ArrayList<>();
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map != null) {
             for (BlockPos d : map.all(BaseMap.TYPE_DOOR)) {
                 BlockPos out = doorSide(world, d, player, true);
@@ -393,7 +393,7 @@ public final class HouseEvents {
     /** Nearest mapped door (lower half) within range; {@code wooden} = only doors a hand can open. */
     @Nullable
     private static BlockPos nearestDoor(ServerPlayerEntity player, int range, boolean wooden) {
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return null;
         ServerWorld world = player.getServerWorld();
         BlockPos best = null;

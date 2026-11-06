@@ -72,6 +72,10 @@ public final class TaskManager {
         long nextCheckAt;
         /** HIDE_AND_SEEK: how many corners have been checked so far. */
         int checked;
+        /** STAY_INSIDE / hiding: seconds in a row spent outside (a short grace for stepping through a door). */
+        int outsideSeconds;
+        /** STAY_INSIDE: how long this one lasts (the window gaze gives a short 30 s one). */
+        int seconds;
         /** SACRIFICE (§15.5): what must be offered and where. */
         final net.minecraft.item.Item offerItem;
         final int offerCount;
@@ -121,10 +125,10 @@ public final class TaskManager {
 
     /** Force an assignment (commands); returns false when the context refuses it. */
     public static boolean forceAssign(ServerPlayerEntity player, @Nullable Kind requested) {
-        Stage st = Director.currentStage();
-        if (st.tasksFlag() <= 0) return false;
-        Kind kind = pickKind(player, requested, ItWasTallConfig.INSTANCE);
-        return kind != null && assign(player, kind);
+        // test command: works on every stage; replaces a running task
+        Task running = ACTIVE.remove(player.getUuid());
+        if (running != null) ItWasTall.LOGGER.info("Task {} of {} replaced by a command.", running.kind, player.getName().getString());
+        return assign(player, requested == null ? Kind.STAY_INSIDE : requested);
     }
 
     // -------------------------------------------------------------- ticking ----
@@ -151,13 +155,23 @@ public final class TaskManager {
         }
     }
 
+    /** Seconds outside before "don't go outside" / hiding fails (walking through your own door is fine). */
+    private static final int OUTSIDE_GRACE_SECONDS = 3;
+
+    /** "Inside" for the tasks: in your base (its mapped rooms, or right by the bed) OR anywhere built-in (roof + walls). */
+    public static boolean isInside(ServerPlayerEntity player) {
+        return ShelterCheck.isSheltered(player.getWorld(), player.getBlockPos()) || BaseTracker.isInBase(player);
+    }
+
     private static void tickTask(ServerPlayerEntity player, Task task, long now, MinecraftServer server) {
         World world = player.getWorld();
-        boolean sheltered = ShelterCheck.isSheltered(world, player.getBlockPos());
+        boolean sheltered = isInside(player);
+        task.outsideSeconds = sheltered ? 0 : task.outsideSeconds + 1;
         switch (task.kind) {
             case STAY_INSIDE -> {
-                // MODPLAN 15.1: leaving at ANY point fails — no mercy, It feels the draft
-                if (!sheltered) {
+                // MODPLAN 15.1: leaving fails — in the base or under a roof counts as inside,
+                // and a few seconds of grace cover stepping through a doorway
+                if (task.outsideSeconds > OUTSIDE_GRACE_SECONDS) {
                     fail(player, task, server);
                     return;
                 }
@@ -252,7 +266,7 @@ public final class TaskManager {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (task.seekStartAt == 0) {
             // ---- phase A: the 30 s hide countdown ----
-            if (!sheltered) {
+            if (task.outsideSeconds > OUTSIDE_GRACE_SECONDS) {
                 fail(player, task, server);   // slipped out while the hide counter ran
                 return;
             }
@@ -307,28 +321,23 @@ public final class TaskManager {
     // ------------------------------------------------------------- assigning ----
 
     /**
-     * WINDOW GAZE (§12 figure variant): the player deliberately looked at the knock figure —
-     * It noticed. Random task from the pair, as long as phase/stage allow and no task/cooldown
-     * is active (an active task stays untouched; the gaze does not stack extra work).
+     * WINDOW GAZE (§12 figure variant): you looked at the figure behind the glass — It noticed.
+     * You get a short "don't go outside" (taskWindowLookSeconds, default 30 s): stay in the base or
+     * under a roof until it is over. Works wherever the window was (your base or a village house);
+     * an active task stays untouched, and the usual task cooldown does not block it.
      */
     public static void onWindowLooked(ServerPlayerEntity player) {
         if (Director.phase() == 0) return;      // PHASE PRE: total silence
-        if (Director.currentStage().tasksFlag() <= 0) return;
         UUID uuid = player.getUuid();
         if (ACTIVE.containsKey(uuid)) return;   // already working: no double assignment
-        long now = player.getWorld().getTime();
-        Long cooldownUntil = COOLDOWN.get(uuid);
-        if (cooldownUntil != null && now < cooldownUntil) return;
         if (player.isCreative() || player.isSpectator() || !player.isAlive()) return;
-
-        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
-        // "some random one from the list": fair coin, dousing falls back when no lights are mapped
-        Kind wanted = player.getRandom().nextBoolean() ? Kind.DOUSE_LIGHTS : Kind.STAY_INSIDE;
-        Kind kind = pickKind(player, wanted, cfg);
-        if (kind == null) return;
-        if (assign(player, kind)) {
-            COOLDOWN.put(uuid, now + cfg.taskCooldownSeconds * 20L);
-        }
+        int seconds = Math.max(5, ItWasTallConfig.INSTANCE.taskWindowLookSeconds);
+        long now = player.getWorld().getTime();
+        Task task = new Task(Kind.STAY_INSIDE, now + 20L * seconds, List.of(), List.of());
+        task.seconds = seconds;
+        ACTIVE.put(uuid, task);
+        sendToast(player, TaskToastPayload.KIND_NEW, "IT SAW YOU.", "You looked at it. Stay inside for " + seconds + "s.");
+        ItWasTall.LOGGER.info("{} looked at the window figure: {} s inside.", player.getName().getString(), seconds);
     }
 
     private static void maybeAssign(ServerPlayerEntity player, Stage st, int flag, long now) {
@@ -344,7 +353,7 @@ public final class TaskManager {
         if (player.getRandom().nextDouble() >= cfg.taskChancePerSecond) return;
 
         Kind wanted;
-        boolean sheltered = ShelterCheck.isSheltered(world, player.getBlockPos());
+        boolean sheltered = isInside(player);
         if (!sheltered) {
             // NIE PATRZ (§15.4) works outdoors too — the watcher simply steps in behind you
             wanted = Kind.DONT_LOOK;
@@ -360,11 +369,31 @@ public final class TaskManager {
                 default -> Kind.DOUSE_LIGHTS;
             };
         }
-        Kind kind = pickKind(player, wanted, cfg);
-        if (kind != null) {
-            assign(player, kind);
-            COOLDOWN.put(uuid, now + cfg.taskCooldownSeconds * 20L);
+        // the wanted one first; if the place cannot host it (no lights, no corners, no chest here),
+        // any other task this stage allows — so every task really happens, never a silent no-show
+        List<Kind> order = new ArrayList<>();
+        order.add(wanted);
+        List<Kind> rest = new ArrayList<>(List.of(Kind.values()));
+        java.util.Collections.shuffle(rest, new java.util.Random(player.getRandom().nextLong()));
+        for (Kind k : rest) if (!order.contains(k)) order.add(k);
+        for (Kind k : order) {
+            if (!sheltered && k != Kind.DONT_LOOK) continue;          // outdoors only the watcher fits
+            if (!allowedAt(k, flag)) continue;
+            Kind kind = pickKind(player, k, cfg);
+            if (kind == k && assign(player, kind)) {
+                COOLDOWN.put(uuid, now + cfg.taskCooldownSeconds * 20L);
+                return;
+            }
         }
+    }
+
+    /** Which tasks a stage's tasksFlag unlocks: 1 = stay inside + lights, 2 = + don't look + offering, 3 = + hide and seek. */
+    private static boolean allowedAt(Kind kind, int flag) {
+        return switch (kind) {
+            case STAY_INSIDE, DOUSE_LIGHTS -> flag >= 1;
+            case DONT_LOOK, SACRIFICE -> flag >= 2;
+            case HIDE_AND_SEEK -> flag >= 3;
+        };
     }
 
     /** Chooses a kind the CONTEXT allows; {@code requested} wins when explicitly given.
@@ -400,10 +429,15 @@ public final class TaskManager {
      */
     @Nullable
     private static List<BlockPos> pickCorners(ServerPlayerEntity player) {
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return null;
         List<BlockPos> corners = new ArrayList<>(map.all(BaseMap.TYPE_CORNER));
-        if (corners.size() < 2) return null; // one corner is no game — refuse the task
+        if (corners.size() < 4) {
+            // a well-lit base has few dark corners: It walks the rooms instead (every 6th interior cell)
+            List<BlockPos> rooms = map.all(BaseMap.TYPE_ROOM);
+            for (int i = 0; i < rooms.size(); i += 6) corners.add(rooms.get(i));
+        }
+        if (corners.size() < 2) return null; // nowhere to search — refuse the task
         java.util.Collections.shuffle(corners, new java.util.Random(
                 player.getServerWorld().getSeed()));
         return corners;
@@ -416,7 +450,7 @@ public final class TaskManager {
     @Nullable
     private static List<BlockPos> pickLights(ServerPlayerEntity player, ItWasTallConfig.Values cfg) {
         ServerWorld world = player.getServerWorld();
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return null;
         List<BlockPos> candidates = new ArrayList<>(map.all(BaseMap.TYPE_LIGHT));
         candidates.removeIf(pos -> !pos.isWithinDistance(player.getBlockPos(), 24)
@@ -434,7 +468,7 @@ public final class TaskManager {
     @Nullable
     private static net.minecraft.util.math.BlockPos pickChest(ServerPlayerEntity player) {
         ServerWorld world = player.getServerWorld();
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return null;
         List<BlockPos> chests = new ArrayList<>(map.all(BaseMap.TYPE_CHEST));
         chests.removeIf(pos -> !(world.getBlockEntity(pos) instanceof net.minecraft.block.entity.LootableContainerBlockEntity));
@@ -499,6 +533,7 @@ public final class TaskManager {
                     chest.toShortString(), item, task.offerCount);
         } else {
             task = new Task(Kind.STAY_INSIDE, now + 20L * cfg.taskStayInsideSeconds, List.of(), List.of(), null, 0, null);
+            task.seconds = cfg.taskStayInsideSeconds;
         }
         ACTIVE.put(player.getUuid(), task);
         sendToast(player, TaskToastPayload.KIND_NEW, TITLE_NEW, newToastText(kind, task));
@@ -557,14 +592,15 @@ public final class TaskManager {
     private static String newToastText(Kind kind, Task task) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         return switch (kind) {
-            case STAY_INSIDE -> "It is at the door. Stay inside for " + cfg.taskStayInsideSeconds + "s.";
+            case STAY_INSIDE -> "It is at the door. Stay inside (base or under a roof) for " + task.seconds + "s.";
             case DOUSE_LIGHTS -> "Douse the lights (" + task.lights.size() + ").";
             case HIDE_AND_SEEK -> "HIDE. " + cfg.taskHideCountdownSeconds
                     + "s. It will walk every dark corner.";
             case DONT_LOOK -> "Something watches your back. Do NOT turn for "
                     + cfg.taskDontLookSeconds + "s.";
             case SACRIFICE -> "Offer " + task.offerCount + "x "
-                    + task.offerItem.getName().getString() + " in the chest near your base.";
+                    + task.offerItem.getName().getString() + " in the chest at "
+                    + task.offerChest.getX() + " " + task.offerChest.getY() + " " + task.offerChest.getZ() + ".";
         };
     }
 

@@ -317,7 +317,7 @@ public final class ItWasTallCommand {
                 ok++;
             } else {
                 ctx.getSource().sendError(Text.literal("task refused for " + p.getName().getString()
-                        + " (stage < 3, or no mapped lights nearby)"));
+                        + " (nothing for it here: no lights / dark corners / chest mapped nearby, or no room behind you)"));
             }
         }
         int done = ok;
@@ -361,6 +361,7 @@ public final class ItWasTallCommand {
                             for (String line : com.itwastall.base.BaseTracker.clusterSummary(p)) {
                                 ctx.getSource().sendFeedback(() -> Text.literal(line), false);
                             }
+                            ctx.getSource().sendFeedback(() -> Text.literal(com.itwastall.base.BaseTracker.areaSummary(p)), false);
                             // §8.5: "debug base" also shows the coloured frames in the world
                             if (ModNetworking.sendBaseDebug(p, false)) {
                                 ctx.getSource().sendFeedback(() -> Text.literal(

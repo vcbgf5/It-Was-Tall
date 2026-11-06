@@ -107,7 +107,7 @@ public final class DouseLights {
      */
     private static int douse(ServerPlayerEntity player, Stage st) {
         ServerWorld world = player.getServerWorld();
-        BaseMap map = BaseTracker.mapOf(player.getUuid());
+        BaseMap map = BaseTracker.eventMapOf(player);
         if (map == null) return 0;
 
         List<BlockPos> burning = new ArrayList<>(map.all(BaseMap.TYPE_LIGHT));

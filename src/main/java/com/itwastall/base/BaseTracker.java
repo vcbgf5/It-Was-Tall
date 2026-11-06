@@ -56,6 +56,22 @@ public final class BaseTracker {
     /** World time of an early cluster evaluation (a base block was just placed / used). */
     private static final Map<UUID, Long> EVAL_AT = new HashMap<>();
 
+    /**
+     * AREA MAP: where the player is when they are NOT at their own base (no base yet, or far away —
+     * a village, a friend's house, a ruin they sleep in). Centred on the chunk (within 3 chunks of the
+     * player) where they spent the most time, every window, door, light and dark corner is mapped —
+     * ownership does not matter here — so doors still open and it still knocks on the window there.
+     * It never becomes the player's base. Session only.
+     */
+    private static final Map<UUID, BaseMap> AREA_MAPS = new HashMap<>();
+    private static final Map<UUID, BaseScanner> AREA_SCANS = new HashMap<>();
+    private static final Map<UUID, BaseMap> AREA_SCRATCH = new HashMap<>();
+    private static final Map<UUID, Long> AREA_NEXT = new HashMap<>();
+    /** Radius of the area scan (blocks): about three chunks across. */
+    public static final int AREA_RADIUS = 24;
+    /** Farther than this from the own base, the area map takes over for events and tasks. */
+    public static final int BASE_EVENT_RANGE = 48;
+
     @Nullable
     private static MinecraftServer server;
 
@@ -85,6 +101,10 @@ public final class BaseTracker {
         NEXT_SCAN_AT.remove(player);
         RESTART.remove(player);
         EVAL_AT.remove(player);
+        AREA_MAPS.remove(player);
+        AREA_SCANS.remove(player);
+        AREA_SCRATCH.remove(player);
+        AREA_NEXT.remove(player);
         ChunkScores.forget(player);
     }
 
@@ -189,6 +209,8 @@ public final class BaseTracker {
                 EVAL_AT.remove(uuid);
                 evaluateClusters(player);
             }
+            // away from the own base: map the area where the player actually is (every 5 s)
+            tickArea(player, state, now);
             // periodic rescan while the player is near the base (default every second)
             Long anchor = ANCHORS.get(uuid);
             if (anchor != null) {
@@ -203,6 +225,106 @@ public final class BaseTracker {
         }
 
         runScans(tickingServer);
+        runAreaScans(tickingServer);
+    }
+
+    /** True while the player stands within {@link #BASE_EVENT_RANGE} of their own base. */
+    public static boolean atOwnBase(ServerPlayerEntity player) {
+        Long anchor = anchorOf(player.getUuid());
+        if (anchor == null) return false;
+        BlockPos a = BlockPos.fromLong(anchor);
+        double dx = player.getX() - a.getX(), dz = player.getZ() - a.getZ();
+        return dx * dx + dz * dz <= (double) BASE_EVENT_RANGE * BASE_EVENT_RANGE;
+    }
+
+    /** The map events and tasks should use for this player right now: the own base when near it, else the area map. */
+    @Nullable
+    public static BaseMap eventMapOf(ServerPlayerEntity player) {
+        if (atOwnBase(player)) return mapOf(player.getUuid());
+        return AREA_MAPS.get(player.getUuid());
+    }
+
+    /** Centre of {@link #eventMapOf}: the base anchor, or the centre of the area map. */
+    @Nullable
+    public static Long eventAnchorOf(ServerPlayerEntity player) {
+        if (atOwnBase(player)) return anchorOf(player.getUuid());
+        BaseMap area = AREA_MAPS.get(player.getUuid());
+        return area == null ? null : area.anchor();
+    }
+
+    /** Inside the base: on a mapped interior cell of the own base / area, or right next to the base anchor. */
+    public static boolean isInBase(ServerPlayerEntity player) {
+        BaseMap map = eventMapOf(player);
+        if (map == null) return false;
+        BlockPos feet = player.getBlockPos();
+        List<BlockPos> rooms = map.all(BaseMap.TYPE_ROOM);
+        if (rooms.contains(feet) || rooms.contains(feet.up())) return true;
+        if (!atOwnBase(player)) return false;
+        BlockPos a = map.anchorPos();
+        return Math.abs(feet.getX() - a.getX()) <= 5 && Math.abs(feet.getZ() - a.getZ()) <= 5 && Math.abs(feet.getY() - a.getY()) <= 3;
+    }
+
+    /** Picks the area centre and starts an area scan when one is due. */
+    private static void tickArea(ServerPlayerEntity player, ItWasTallState state, long now) {
+        UUID uuid = player.getUuid();
+        if (atOwnBase(player)) return;
+        BaseScanner scan = AREA_SCANS.get(uuid);
+        if (scan != null && scan.active()) return;
+        Long next = AREA_NEXT.get(uuid);
+        if (next != null && now < next) return;
+        // the chunk within 3 chunks where the player spent the most time; their own chunk wins ties
+        net.minecraft.util.math.ChunkPos pc = new net.minecraft.util.math.ChunkPos(player.getBlockPos());
+        Map<Long, Float> dwell = state.chunkDwell(uuid);
+        long best = pc.toLong();
+        float bestDwell = dwell.getOrDefault(best, 0f);
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                long c = net.minecraft.util.math.ChunkPos.toLong(pc.x + dx, pc.z + dz);
+                float d = dwell.getOrDefault(c, 0f);
+                if (d > bestDwell + 0.01f) {
+                    bestDwell = d;
+                    best = c;
+                }
+            }
+        }
+        int cx = net.minecraft.util.math.ChunkPos.getPackedX(best), cz = net.minecraft.util.math.ChunkPos.getPackedZ(best);
+        // centre: where the player stands if that is (next to) the chosen chunk, else the middle of it
+        BlockPos center = Math.abs(cx - pc.x) <= 1 && Math.abs(cz - pc.z) <= 1
+                ? player.getBlockPos().toImmutable()
+                : new BlockPos(cx * 16 + 8, player.getBlockY(), cz * 16 + 8);
+        BaseScanner scanner = AREA_SCANS.computeIfAbsent(uuid, u -> new BaseScanner(AREA_RADIUS));
+        AREA_SCRATCH.put(uuid, new BaseMap(center.asLong()));
+        scanner.start(center.asLong(), pos -> true);   // everything counts here: village doors and windows too
+    }
+
+    private static void runAreaScans(MinecraftServer runningServer) {
+        if (AREA_SCANS.isEmpty()) return;
+        int maxPerTick = Math.max(64, ItWasTallConfig.INSTANCE.scanMaxBlocksPerTick);
+        long now = runningServer.getOverworld().getTime();
+        for (UUID uuid : new ArrayList<>(AREA_SCANS.keySet())) {
+            BaseScanner scanner = AREA_SCANS.get(uuid);
+            BaseMap scratch = AREA_SCRATCH.get(uuid);
+            if (scanner == null || !scanner.active() || scratch == null) continue;
+            ServerPlayerEntity player = runningServer.getPlayerManager().getPlayer(uuid);
+            if (player == null || player.getServerWorld() != runningServer.getOverworld()) continue;
+            // the whole area within ~5 s
+            int budget = Math.min(maxPerTick, Math.max(64, (int) Math.ceil(scanner.fullWork() * 1.3 / 100.0)));
+            if (scanner.tick(runningServer.getOverworld(), scratch.anchorPos(), scratch, budget)) {
+                AREA_MAPS.put(uuid, scratch);
+                AREA_SCRATCH.remove(uuid);
+                AREA_NEXT.put(uuid, now + 100L);
+            }
+        }
+    }
+
+    /** Debug line for the area map. */
+    public static String areaSummary(ServerPlayerEntity player) {
+        if (atOwnBase(player)) return "area map: not used (you are at your base)";
+        BaseMap area = AREA_MAPS.get(player.getUuid());
+        if (area == null) return "area map: not scanned yet";
+        return "area map around " + area.anchorPos().toShortString() + ": windows " + area.count(BaseMap.TYPE_WINDOW)
+                + ", doors " + area.count(BaseMap.TYPE_DOOR) + ", lights " + area.count(BaseMap.TYPE_LIGHT)
+                + ", chests " + area.count(BaseMap.TYPE_CHEST) + ", dark corners " + area.count(BaseMap.TYPE_CORNER);
     }
 
     /**
@@ -317,7 +439,7 @@ public final class BaseTracker {
     /** Marker closest to the player (e.g. HANDY WINDOW for the knock event). */
     @Nullable
     public static BlockPos nearestMarker(ServerWorld world, ServerPlayerEntity player, int type) {
-        BaseMap map = mapOf(player.getUuid());
+        BaseMap map = eventMapOf(player);
         if (map == null) return null;
         BlockPos best = null;
         double bestDist = Double.MAX_VALUE;

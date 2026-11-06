@@ -163,6 +163,8 @@ public final class ItWasTallConfig {
 
         /** "Hide and seek" (§15.2, ETAP 5): seconds of the initial hide countdown. */
         public int taskHideCountdownSeconds = 30;
+        /** Looking at the figure behind a window gives a "don't go outside" task this long (seconds). */
+        public int taskWindowLookSeconds = 30;
         /** NIE PATRZ (§15.4, ETAP 4): seconds the watcher stands behind the player. */
         public int taskDontLookSeconds = 30;
         /** OFIARA (§15.5, ETAP 4+): comma-separated possible offering items (vanilla or mod ids). */
