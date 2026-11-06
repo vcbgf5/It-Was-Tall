@@ -6,6 +6,8 @@
     "InGameHudMixin",
     "AdvancementsScreenMixin",
     "EntryListWidgetMixin",
+    "GameMenuScreenMixin",
+    "LevelLoadingScreenMixin",
     "ScreenMixin",
     "TitleScreenMixin"
   ],

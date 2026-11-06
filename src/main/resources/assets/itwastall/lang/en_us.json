@@ -105,5 +105,15 @@
   "advancements.itwastall.explorer.title": "Something Built This",
   "advancements.itwastall.explorer.description": "Find an It Was Tall structure",
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
-  "advancements.itwastall.cartographer.description": "Find every It Was Tall structure"
+  "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
+  "itwastall.tip.0": "Don't look at the window for too long.",
+  "itwastall.tip.1": "If something knocks, don't open the door.",
+  "itwastall.tip.2": "It only moves when you are not looking.",
+  "itwastall.tip.3": "A roof over your head is worth more than a sword.",
+  "itwastall.tip.4": "Read every book you find. Someone wrote them for you.",
+  "itwastall.tip.5": "If the player list shows a name you don't know, don't go near it.",
+  "itwastall.tip.6": "When it counts, stand still under a roof.",
+  "itwastall.tip.7": "Put out the lights when it asks. All of them.",
+  "itwastall.tip.8": "Your bed is where It finds you.",
+  "itwastall.tip.9": "It was tall. It is still tall."
 }
