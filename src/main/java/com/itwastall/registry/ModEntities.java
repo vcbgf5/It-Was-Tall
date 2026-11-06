@@ -28,11 +28,22 @@ public final class ModEntities {
                     .maxTrackingRange(10)
                     .build("old_one"));
 
+    /** THE DEEP ONE: a long, thin thing crawling upside down on cave ceilings below Y 0. */
+    public static final EntityType<com.itwastall.entity.DeepOneEntity> DEEP_ONE = Registry.register(
+            Registries.ENTITY_TYPE,
+            ItWasTall.id("deep_one"),
+            EntityType.Builder.create(com.itwastall.entity.DeepOneEntity::new, SpawnGroup.MONSTER)
+                    .dimensions(1.0f, 0.9f)
+                    .eyeHeight(0.3f)
+                    .maxTrackingRange(10)
+                    .build("deep_one"));
+
     private ModEntities() {
     }
 
     public static void init() {
         FabricDefaultAttributeRegistry.register(TALL_ONE, TallOneEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(OLD_ONE, com.itwastall.entity.OldOneEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(DEEP_ONE, com.itwastall.entity.DeepOneEntity.createAttributes());
     }
 }

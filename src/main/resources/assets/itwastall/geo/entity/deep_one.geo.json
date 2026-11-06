@@ -1,0 +1,326 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.itwastall.deep_one",
+        "texture_width": 64,
+        "texture_height": 64,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 2,
+        "visible_bounds_offset": [
+          0,
+          0.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "torso",
+          "parent": "root",
+          "pivot": [
+            0,
+            7,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -3,
+                5,
+                -10
+              ],
+              "size": [
+                6,
+                3,
+                20
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "neck",
+          "parent": "torso",
+          "pivot": [
+            0,
+            6,
+            -10
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -1,
+                5,
+                -15
+              ],
+              "size": [
+                2,
+                2,
+                5
+              ],
+              "uv": [
+                24,
+                24
+              ]
+            }
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "neck",
+          "pivot": [
+            0,
+            6,
+            -15
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -3,
+                0,
+                -19
+              ],
+              "size": [
+                6,
+                7,
+                5
+              ],
+              "uv": [
+                0,
+                24
+              ]
+            }
+          ]
+        },
+        {
+          "name": "fl_upper",
+          "parent": "torso",
+          "pivot": [
+            3,
+            7,
+            -8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3,
+                6,
+                -9
+              ],
+              "size": [
+                7,
+                2,
+                2
+              ],
+              "uv": [
+                40,
+                24
+              ]
+            }
+          ]
+        },
+        {
+          "name": "fl_lower",
+          "parent": "fl_upper",
+          "pivot": [
+            10,
+            7,
+            -8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                9,
+                7,
+                -9
+              ],
+              "size": [
+                2,
+                7,
+                2
+              ],
+              "uv": [
+                0,
+                40
+              ]
+            }
+          ]
+        },
+        {
+          "name": "fr_upper",
+          "parent": "torso",
+          "pivot": [
+            -3,
+            7,
+            -8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10,
+                6,
+                -9
+              ],
+              "size": [
+                7,
+                2,
+                2
+              ],
+              "uv": [
+                40,
+                28
+              ]
+            }
+          ]
+        },
+        {
+          "name": "fr_lower",
+          "parent": "fr_upper",
+          "pivot": [
+            -10,
+            7,
+            -8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                7,
+                -9
+              ],
+              "size": [
+                2,
+                7,
+                2
+              ],
+              "uv": [
+                8,
+                40
+              ]
+            }
+          ]
+        },
+        {
+          "name": "bl_upper",
+          "parent": "torso",
+          "pivot": [
+            3,
+            7,
+            8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3,
+                6,
+                7
+              ],
+              "size": [
+                7,
+                2,
+                2
+              ],
+              "uv": [
+                40,
+                32
+              ]
+            }
+          ]
+        },
+        {
+          "name": "bl_lower",
+          "parent": "bl_upper",
+          "pivot": [
+            10,
+            7,
+            8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                9,
+                7,
+                7
+              ],
+              "size": [
+                2,
+                7,
+                2
+              ],
+              "uv": [
+                16,
+                40
+              ]
+            }
+          ]
+        },
+        {
+          "name": "br_upper",
+          "parent": "torso",
+          "pivot": [
+            -3,
+            7,
+            8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10,
+                6,
+                7
+              ],
+              "size": [
+                7,
+                2,
+                2
+              ],
+              "uv": [
+                40,
+                36
+              ]
+            }
+          ]
+        },
+        {
+          "name": "br_lower",
+          "parent": "br_upper",
+          "pivot": [
+            -10,
+            7,
+            8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                7,
+                7
+              ],
+              "size": [
+                2,
+                7,
+                2
+              ],
+              "uv": [
+                24,
+                40
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -61,6 +61,8 @@ public class ItWasTall implements ModInitializer {
         // the server-wide journal: books everyone has read + the shared NOTES board
         com.itwastall.world.SharedJournal.init();
         com.itwastall.entity.Outspace.init();
+        com.itwastall.entity.TheCount.init();
+        com.itwastall.entity.DeepOneEntity.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -86,6 +88,8 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.EventGate.forget(uuid);
             com.itwastall.world.SharedJournal.forget(uuid);
             com.itwastall.entity.Outspace.forget(uuid);
+            com.itwastall.entity.TheCount.forget(uuid);
+            com.itwastall.entity.DeepOneEntity.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

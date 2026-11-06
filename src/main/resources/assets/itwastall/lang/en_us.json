@@ -43,5 +43,7 @@
   "entity.itwastall.old_one": "Old One",
   "item.itwastall.old_one_spawn_egg": "Old One Spawn Egg",
   "item.itwastall.lore_book": "Strange Book",
-  "dimension.itwastall.outspace": "Outspace"
+  "dimension.itwastall.outspace": "Outspace",
+  "entity.itwastall.deep_one": "The Deep One",
+  "item.itwastall.deep_one_spawn_egg": "The Deep One Spawn Egg"
 }

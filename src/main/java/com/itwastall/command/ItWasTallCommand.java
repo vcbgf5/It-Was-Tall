@@ -219,6 +219,12 @@ public final class ItWasTallCommand {
                     if (!freeSlot(p)) throw new IllegalStateException("an It already exists on the server");
                     if (!com.itwastall.entity.HouseEvents.realKnockNearest(p)) throw new IllegalStateException("no mapped door with room outside");
                 }))
+                .then(eventKind("deepone", p -> {
+                    if (!com.itwastall.entity.DeepOneEntity.spawnFor(p)) throw new IllegalStateException("no ceiling in sight to hang from");
+                }))
+                .then(eventKind("count", p -> {
+                    if (!com.itwastall.entity.TheCount.start(p)) throw new IllegalStateException("already counting");
+                }))
                 .then(eventKind("oldone", p -> {
                     if (!com.itwastall.entity.OldOneDirector.spawnFor(p)) throw new IllegalStateException("no free spot near the player");
                 }))
@@ -453,6 +459,7 @@ public final class ItWasTallCommand {
                 "  structures today: " + com.itwastall.entity.DynamicStructures.ledgerCount(u),
                 "  mine: " + MineEvents.debugLine(u),
                 "  dream: " + com.itwastall.entity.Outspace.debugLine(p),
+                "  the one who counts: " + com.itwastall.entity.TheCount.debugLine(u, now),
                 "  task: " + TaskManager.status(u));
         for (String line : lines) source.sendFeedback(() -> Text.literal(line), false);
         return 1;

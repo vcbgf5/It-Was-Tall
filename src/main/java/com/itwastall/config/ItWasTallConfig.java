@@ -70,6 +70,21 @@ public final class ItWasTallConfig {
         /** KNOCK (stage 5): chance that a door-knock house event is the real It standing outside the door. */
         public double realKnockChance = 0.4;
 
+        // ---- the new creatures ----
+        /** THE ONE WHO COUNTS: at night, alone outside, a countdown from ten; a figure closer with every number. */
+        public boolean countEvents = true;
+        public int countMinStage = 2;
+        /** Chance per 10 s check while eligible (night, outside, alone; 25-40 min per player between counts). */
+        public double countChance = 0.03;
+
+        /** THE DEEP ONE: crawls on cave ceilings deep underground, douses torches, shakes blocks out of your hands. */
+        public boolean deepOne = true;
+        public int deepOneMinStage = 3;
+        /** Only below this height (the player's feet). */
+        public int deepOneMaxY = 0;
+        /** Chance per 10 s check while eligible (6-10 min per player between two). */
+        public double deepOneChance = 0.12;
+
         // ---- OUTSPACE, the dream world ----
         /** Sometimes a sleeper is pulled into the dream maze (no damage, no death, the Old One hunts there). */
         public boolean outspace = true;

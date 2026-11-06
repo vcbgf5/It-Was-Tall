@@ -173,7 +173,8 @@ public final class FalsePresences {
      * Returns the spot or null.
      */
     @Nullable
-    private static BlockPos findSpot(ServerPlayerEntity player, Random random, int minDist, int maxDist) {        ServerWorld world = player.getServerWorld();
+    public static BlockPos findSpot(ServerPlayerEntity player, Random random, int minDist, int maxDist) {
+        ServerWorld world = player.getServerWorld();
         float baseYaw = player.getYaw();
 
         for (int attempt = 0; attempt < 30; attempt++) {
