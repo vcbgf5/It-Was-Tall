@@ -31,6 +31,13 @@ public final class ModItems {
             ItWasTall.id("note"),
             new Item(new Item.Settings().maxCount(1)));
 
+    /** Our own book (every book in the mod is one of these): right-click to read; it then goes into
+     *  everyone's journal on the server (BOOKS tab). Title/body live in CUSTOM_DATA like a note's. */
+    public static final Item LORE_BOOK = Registry.register(
+            Registries.ITEM,
+            ItWasTall.id("lore_book"),
+            new Item(new Item.Settings().maxCount(1)));
+
     public static final String NOTE_ID = "note_id", NOTE_TITLE = "note_title", NOTE_BODY = "note_body";
 
     private ModItems() {
@@ -38,7 +45,21 @@ public final class ModItems {
 
     /** Builds a readable note: shown by name in the inventory, opened in the client's NoteScreen. */
     public static net.minecraft.item.ItemStack note(String id, String title, String body) {
-        net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(NOTE);
+        return readable(NOTE, id, title, body);
+    }
+
+    /** Builds one of our books (opened in the client's book reader, recorded in the shared journal). */
+    public static net.minecraft.item.ItemStack loreBook(String id, String title, String body) {
+        return readable(LORE_BOOK, id, title, body);
+    }
+
+    /** True for the items that open in the reader and go into the journal when read. */
+    public static boolean isReadable(net.minecraft.item.ItemStack stack) {
+        return stack.isOf(NOTE) || stack.isOf(LORE_BOOK);
+    }
+
+    private static net.minecraft.item.ItemStack readable(Item item, String id, String title, String body) {
+        net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(item);
         net.minecraft.nbt.NbtCompound data = new net.minecraft.nbt.NbtCompound();
         data.putString(NOTE_ID, id);
         data.putString(NOTE_TITLE, title);
@@ -47,6 +68,8 @@ public final class ModItems {
         stack.set(net.minecraft.component.DataComponentTypes.ITEM_NAME, net.minecraft.text.Text.literal(title));
         stack.set(net.minecraft.component.DataComponentTypes.LORE, new net.minecraft.component.type.LoreComponent(java.util.List.of(
                 net.minecraft.text.Text.literal("Right-click to read").formatted(net.minecraft.util.Formatting.DARK_GRAY,
+                        net.minecraft.util.Formatting.ITALIC),
+                net.minecraft.text.Text.literal("Then it is in everyone's journal").formatted(net.minecraft.util.Formatting.DARK_GRAY,
                         net.minecraft.util.Formatting.ITALIC))));
         return stack;
     }

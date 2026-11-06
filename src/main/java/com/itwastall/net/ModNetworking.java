@@ -32,6 +32,9 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(TaskToastPayload.ID, TaskToastPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(JournalPayload.ID, JournalPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ChasePayload.ID, ChasePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(SharedJournalPayload.ID, SharedJournalPayload.CODEC);
+        // C2S: the shared NOTES tab (validated and rate-limited in SharedJournal)
+        PayloadTypeRegistry.playC2S().register(NoteActionPayload.ID, NoteActionPayload.CODEC);
         // C2S: the client's warning-screen toggle must reach the server or the opt-out is a lie
         PayloadTypeRegistry.playC2S().register(ScaresPrefPayload.ID, ScaresPrefPayload.CODEC);
         // C2S: a deliberate look at a window figure earns a random task (MODPLAN §12 figure look)
@@ -48,11 +51,26 @@ public final class ModNetworking {
                 // red chase overlay: on/off every second (the start is also sent instantly)
                 sendChase(player, isChased(player));
                 // journal BASE / EVENTS pages: every 5 s is plenty (they change rarely)
-                if (server.getTicks() % 100 == 0 && ServerPlayNetworking.canSend(player, JournalPayload.ID)) {
-                    ServerPlayNetworking.send(player, new JournalPayload(baseCounts(player),
-                            com.itwastall.world.JournalLog.entries(player.getUuid())));
-                }
+                if (server.getTicks() % 100 == 0) sendJournal(player);
             }
+        });
+        ServerPlayNetworking.registerGlobalReceiver(NoteActionPayload.ID, (payload, context) ->
+                com.itwastall.world.SharedJournal.handle(context.player(), payload));
+        // multiplayer (also LAN / Essential-hosted worlds): a player who joins gets the whole state at once,
+        // not only after the next pulse — and once more two seconds later in case the client was still loading
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            UUID uuid = handler.getPlayer().getUuid();
+            server.execute(() -> syncAll(server, uuid));
+            SYNC_LATER.put(uuid, server.getTicks() + 40);
+        });
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (SYNC_LATER.isEmpty()) return;
+            int now = server.getTicks();
+            SYNC_LATER.entrySet().removeIf(e -> {
+                if (now < e.getValue()) return false;
+                syncAll(server, e.getKey());
+                return true;
+            });
         });
         ServerPlayNetworking.registerGlobalReceiver(WindowSeenPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
@@ -84,6 +102,31 @@ public final class ModNetworking {
                         || it.getMode() == com.itwastall.entity.TallOneEntity.Mode.ATTACK
                         || it.getMode() == com.itwastall.entity.TallOneEntity.Mode.FEINT)
                         && player.getUuid().equals(it.getVictimUuid())).isEmpty();
+    }
+
+    private static final java.util.Map<UUID, Integer> SYNC_LATER = new java.util.HashMap<>();
+
+    /** Everything a client shows: fear state, its journal pages and the shared journal. */
+    private static void syncAll(MinecraftServer server, UUID uuid) {
+        ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+        if (player == null) return;
+        if (ServerPlayNetworking.canSend(player, FearStatePayload.ID)) {
+            ItWasTallState state = ItWasTallState.getOrCreate(server);
+            ServerPlayNetworking.send(player, new FearStatePayload(Director.phase(), Director.stageIndex(), (float) Director.tension(),
+                    com.itwastall.task.TaskManager.status(uuid), java.util.List.copyOf(state.loreBookIds(uuid))));
+        }
+        sendJournal(player);
+        com.itwastall.world.SharedJournal.sync(player);
+    }
+
+    /** The player's own journal pages: BASE, EVENTS and the task history. */
+    public static void sendJournal(ServerPlayerEntity player) {
+        if (!ServerPlayNetworking.canSend(player, JournalPayload.ID) || player.getServer() == null) return;
+        ItWasTallState state = ItWasTallState.getOrCreate(player.getServer());
+        java.util.List<String> tasks = new java.util.ArrayList<>(state.taskLog(player.getUuid()));
+        if (tasks.size() > 16) tasks = tasks.subList(0, 16);
+        ServerPlayNetworking.send(player, new JournalPayload(baseCounts(player),
+                com.itwastall.world.JournalLog.entries(player.getUuid()), tasks));
     }
 
     /** Red chase overlay on/off for this player. Respects the warning-screen scare opt-out. */

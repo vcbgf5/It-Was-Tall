@@ -10,14 +10,10 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
-import net.minecraft.component.type.WrittenBookContentComponent;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.RawFilteredPair;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -164,16 +160,10 @@ public final class LoreBooks {
 
     private static ItemStack createBook(Book book, MinecraftServer server) {
         String body = book.id().equals("11_the_list") ? playerList(server) : book.body();
-        ItemStack stack = new ItemStack(Items.WRITTEN_BOOK);
-        WrittenBookContentComponent content = new WrittenBookContentComponent(
-                RawFilteredPair.of(book.title()),
-                "Unknown",
-                0,
-                List.of(RawFilteredPair.of(Text.literal(body))),
-                true
-        );
-        stack.set(DataComponentTypes.WRITTEN_BOOK_CONTENT, content);
-        var custom = new net.minecraft.nbt.NbtCompound();
+        // our own book item (no vanilla written book): right-click reads it and puts it in everyone's journal
+        ItemStack stack = com.itwastall.registry.ModItems.loreBook(book.id(), book.title(), body);
+        NbtComponent existing = stack.get(DataComponentTypes.CUSTOM_DATA);
+        var custom = existing == null ? new net.minecraft.nbt.NbtCompound() : existing.copyNbt();
         custom.putString(ITEM_ID_KEY, book.id());
         stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(custom));
         return stack;

@@ -56,6 +56,8 @@ public class ItWasTall implements ModInitializer {
         // rare night builds: cemetery / shrine / cottage / the base's black copy (§17.1)
         DynamicStructures.init();
         LoreBooks.init();
+        // the server-wide journal: books everyone has read + the shared NOTES board
+        com.itwastall.world.SharedJournal.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -79,6 +81,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.OldOneDirector.forget(uuid);
             DynamicStructures.forget(uuid);
             com.itwastall.entity.EventGate.forget(uuid);
+            com.itwastall.world.SharedJournal.forget(uuid);
         });
         CommandRegistrationCallback.EVENT.register(ItWasTallCommand::register);
         // Director: load phase/stage/tension from the world data before anything runs...

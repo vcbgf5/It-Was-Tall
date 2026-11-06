@@ -21,6 +21,9 @@ public final class NoteScreen extends Screen {
     private static final int INK = 0xFF2E2016, INK_RED = 0xFF7A1410, INK_FADED = 0xFF6E5C49;
 
     private final String noteTitle;
+    /** Where X / Escape go back to (the journal when opened from its BOOKS tab), null = close. */
+    @org.jetbrains.annotations.Nullable
+    private final Screen parent;
     private final String noteBody;
     private List<OrderedText> lines = List.of();
     private int scroll;
@@ -28,7 +31,12 @@ public final class NoteScreen extends Screen {
     private int left, top;
 
     public NoteScreen(String title, String body) {
+        this(title, body, null);
+    }
+
+    public NoteScreen(String title, String body, @org.jetbrains.annotations.Nullable Screen parent) {
         super(Text.literal(title == null ? "Note" : title));
+        this.parent = parent;
         this.noteTitle = title == null ? "Note" : title;
         // notes from loot tables store line breaks as "|" (SNBT strings cannot hold a newline)
         this.noteBody = body == null ? "" : body.replace("|", "\n");
@@ -74,11 +82,36 @@ public final class NoteScreen extends Screen {
             ctx.drawText(textRenderer, lines.get(i), TEXT_X, y, INK, false);
             y += 10;
         }
+        // the close X in the top-right corner of the page
+        boolean xHover = closeHit(mouseX, mouseY);
+        ctx.drawText(textRenderer, "X", CLOSE_X, CLOSE_Y, xHover ? INK_RED : INK_FADED, false);
         if (lines.size() > visible) {
             String more = (scroll + visible < lines.size() ? "▼" : " ") + "  " + (scroll > 0 ? "▲" : " ");
             ctx.drawText(textRenderer, more, TEXT_X + TEXT_W - textRenderer.getWidth(more), TEXT_BOTTOM + 4, INK_FADED, false);
         }
         ctx.getMatrices().pop();
+    }
+
+    private static final int CLOSE_X = TEXT_X + TEXT_W - 2, CLOSE_Y = TEXT_Y - 22;
+
+    private boolean closeHit(double mouseX, double mouseY) {
+        double px = (mouseX - left) / scale, py = (mouseY - top) / scale;
+        return px >= CLOSE_X - 4 && px <= CLOSE_X + 10 && py >= CLOSE_Y - 4 && py <= CLOSE_Y + 12;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && closeHit(mouseX, mouseY)) {
+            close();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void close() {
+        if (client != null && parent != null) client.setScreen(parent);
+        else super.close();
     }
 
     private int maxScroll() {

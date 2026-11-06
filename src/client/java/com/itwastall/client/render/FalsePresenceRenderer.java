@@ -135,8 +135,9 @@ public final class FalsePresenceRenderer {
                 // task ("torch outage"-style pair). Reported once per sighting.
                 if (!sighting.reported && isLookingAt(player, fake)) {
                     sighting.reported = true;
-                    net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
-                            new com.itwastall.net.WindowSeenPayload(false));
+                    if (net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.canSend(com.itwastall.net.WindowSeenPayload.ID))
+                        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                                new com.itwastall.net.WindowSeenPayload(false));
                 }
             } else if (sighting.dontlook) {
                 // §15.4: the watcher tracks you quietly (it observes, it does not knock) —
@@ -145,8 +146,9 @@ public final class FalsePresenceRenderer {
                 facePlayer(fake, player);
                 if (isLookingAt(player, fake)) {
                     sighting.reported = true;
-                    net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
-                            new com.itwastall.net.WindowSeenPayload(true));
+                    if (net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.canSend(com.itwastall.net.WindowSeenPayload.ID))
+                        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                                new com.itwastall.net.WindowSeenPayload(true));
                     lookedAt = true;   // remove locally alongside the report
                 }
             } else {

@@ -19,6 +19,12 @@ public final class JournalData {
     private static java.util.List<Integer> baseCounts = java.util.List.of();
     /** EVENTS page, newest first. */
     private static java.util.List<String> events = java.util.List.of();
+    /** The player's task history, newest first. */
+    private static java.util.List<String> tasks = java.util.List.of();
+    /** Server-wide: every book / note someone read (BOOKS tab). */
+    private static java.util.List<com.itwastall.net.SharedJournalPayload.Book> books = java.util.List.of();
+    /** Server-wide: the shared notes board (NOTES tab), oldest first. */
+    private static java.util.List<com.itwastall.net.SharedJournalPayload.Note> notes = java.util.List.of();
 
     private JournalData() {}
 
@@ -33,10 +39,21 @@ public final class JournalData {
         FearHud.setIntensity(tension / 100f);
     }
 
-    public static void updateJournal(java.util.List<Integer> newBase, java.util.List<String> newEvents) {
+    public static void updateJournal(java.util.List<Integer> newBase, java.util.List<String> newEvents, java.util.List<String> newTasks) {
         baseCounts = newBase == null ? java.util.List.of() : java.util.List.copyOf(newBase);
         events = newEvents == null ? java.util.List.of() : java.util.List.copyOf(newEvents);
+        tasks = newTasks == null ? java.util.List.of() : java.util.List.copyOf(newTasks);
     }
+
+    public static void updateShared(java.util.List<com.itwastall.net.SharedJournalPayload.Book> newBooks,
+                                    java.util.List<com.itwastall.net.SharedJournalPayload.Note> newNotes) {
+        books = newBooks == null ? java.util.List.of() : java.util.List.copyOf(newBooks);
+        notes = newNotes == null ? java.util.List.of() : java.util.List.copyOf(newNotes);
+    }
+
+    public static java.util.List<String> tasks() { return tasks; }
+    public static java.util.List<com.itwastall.net.SharedJournalPayload.Book> books() { return books; }
+    public static java.util.List<com.itwastall.net.SharedJournalPayload.Note> notes() { return notes; }
 
     public static java.util.List<Integer> baseCounts() { return baseCounts; }
     public static java.util.List<String> events() { return events; }
@@ -55,6 +72,9 @@ public final class JournalData {
         LORE.clear();
         baseCounts = java.util.List.of();
         events = java.util.List.of();
+        tasks = java.util.List.of();
+        books = java.util.List.of();
+        notes = java.util.List.of();
         FearHud.setIntensity(0);
     }
 }

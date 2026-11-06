@@ -56,7 +56,7 @@ public class ItWasTallClient implements ClientModInitializer {
         // notes (MODPLAN §16): right-click opens the torn-page NoteScreen
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) -> {
             net.minecraft.item.ItemStack stack = player.getStackInHand(hand);
-            if (!stack.isOf(com.itwastall.registry.ModItems.NOTE)) {
+            if (!com.itwastall.registry.ModItems.isReadable(stack)) {
                 return net.minecraft.util.TypedActionResult.pass(net.minecraft.item.ItemStack.EMPTY);
             }
             if (world.isClient) {
@@ -65,7 +65,7 @@ public class ItWasTallClient implements ClientModInitializer {
                 String title = nbt.getString(com.itwastall.registry.ModItems.NOTE_TITLE);
                 String body = nbt.getString(com.itwastall.registry.ModItems.NOTE_BODY);
                 net.minecraft.client.MinecraftClient.getInstance().setScreen(
-                        new com.itwastall.client.hud.NoteScreen(title.isEmpty() ? "Note" : title, body));
+                        new com.itwastall.client.hud.NoteScreen(title.isEmpty() ? "Note" : title, body, null));
                 net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(
                         net.minecraft.client.sound.PositionedSoundInstance.master(net.minecraft.sound.SoundEvents.ITEM_BOOK_PAGE_TURN, 0.8f));
             }
@@ -77,7 +77,9 @@ public class ItWasTallClient implements ClientModInitializer {
                 context.client().execute(() -> com.itwastall.client.hud.ChaseHud.setActive(payload.active())));
 
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.JournalPayload.ID, (payload, context) ->
-                context.client().execute(() -> JournalData.updateJournal(payload.baseCounts(), payload.events())));
+                context.client().execute(() -> JournalData.updateJournal(payload.baseCounts(), payload.events(), payload.tasks())));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.SharedJournalPayload.ID, (payload, context) ->
+                context.client().execute(() -> JournalData.updateShared(payload.books(), payload.notes())));
 
         ClientPlayNetworking.registerGlobalReceiver(FearStatePayload.ID, (payload, context) ->
                 context.client().execute(() -> JournalData.update(

@@ -14,12 +14,14 @@ import java.util.List;
  * @param baseCounts empty when no base is mapped yet, otherwise
  *                   [anchorX, anchorY, anchorZ, windows, doors, lights, chests, darkCorners, placedBlocks]
  * @param events     the player's {@code JournalLog}, newest first
+ * @param tasks      the player's task history (assigned / done / failed), newest first
  */
-public record JournalPayload(List<Integer> baseCounts, List<String> events) implements CustomPayload {
+public record JournalPayload(List<Integer> baseCounts, List<String> events, List<String> tasks) implements CustomPayload {
     public static final CustomPayload.Id<JournalPayload> ID = new CustomPayload.Id<>(ItWasTall.id("journal"));
     public static final PacketCodec<RegistryByteBuf, JournalPayload> CODEC = PacketCodec.tuple(
             PacketCodecs.collection(java.util.ArrayList::new, PacketCodecs.VAR_INT, 16), JournalPayload::baseCounts,
             PacketCodecs.collection(java.util.ArrayList::new, PacketCodecs.string(160), 16), JournalPayload::events,
+            PacketCodecs.collection(java.util.ArrayList::new, PacketCodecs.string(160), 16), JournalPayload::tasks,
             JournalPayload::new);
 
     @Override

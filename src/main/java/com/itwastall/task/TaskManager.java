@@ -127,7 +127,7 @@ public final class TaskManager {
     public static boolean forceAssign(ServerPlayerEntity player, @Nullable Kind requested) {
         // test command: works on every stage; replaces a running task
         Task running = ACTIVE.remove(player.getUuid());
-        if (running != null) ItWasTall.LOGGER.info("Task {} of {} replaced by a command.", running.kind, player.getName().getString());
+        if (running != null) logTask(player, running, "cancelled", true);
         return assign(player, requested == null ? Kind.STAY_INSIDE : requested);
     }
 
@@ -336,6 +336,7 @@ public final class TaskManager {
         Task task = new Task(Kind.STAY_INSIDE, now + 20L * seconds, List.of(), List.of());
         task.seconds = seconds;
         ACTIVE.put(uuid, task);
+        logTask(player, task, "in progress (it saw you at the window)", false);
         sendToast(player, TaskToastPayload.KIND_NEW, "IT SAW YOU.", "You looked at it. Stay inside for " + seconds + "s.");
         ItWasTall.LOGGER.info("{} looked at the window figure: {} s inside.", player.getName().getString(), seconds);
     }
@@ -536,6 +537,7 @@ public final class TaskManager {
             task.seconds = cfg.taskStayInsideSeconds;
         }
         ACTIVE.put(player.getUuid(), task);
+        logTask(player, task, "in progress", false);
         sendToast(player, TaskToastPayload.KIND_NEW, TITLE_NEW, newToastText(kind, task));
         ItWasTall.LOGGER.info("Task assigned to {}: {} ({} light(s), {} corner(s)).",
                 player.getName().getString(), task.kind, task.lights.size(), task.corners.size());
@@ -546,6 +548,7 @@ public final class TaskManager {
 
     private static void complete(ServerPlayerEntity player, Task task) {
         ACTIVE.remove(player.getUuid());
+        logTask(player, task, "done", true);
         sendToast(player, TaskToastPayload.KIND_COMPLETED, TITLE_DONE, taskTitle(task) + " — done.");
         // PHASES §2: wykonane zadanie -8 "It grows quiet" — no fleeting victory, tension falls
         if (Director.phase() == 1) Director.addTension(-8.0);
@@ -555,6 +558,7 @@ public final class TaskManager {
 
     private static void fail(ServerPlayerEntity player, Task task, MinecraftServer server) {
         ACTIVE.remove(player.getUuid());
+        logTask(player, task, "failed", true);
         sendToast(player, TaskToastPayload.KIND_FAILED, TITLE_FAILED, taskTitle(task) + " — failed.");
         // PHASES §2: niewykonane zadanie +5
         if (Director.phase() == 1) Director.addTension(+5.0);
@@ -565,6 +569,17 @@ public final class TaskManager {
         }
         putCooldown(player);
         ItWasTall.LOGGER.info("{} failed the {} task.", player.getName().getString(), task.kind);
+    }
+
+    /** Journal task history (saved with the world): "Night 3 — don't go outside — done". */
+    private static void logTask(ServerPlayerEntity player, Task task, String result, boolean replaceNewest) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+        long night = player.getWorld().getTimeOfDay() / 24000L + 1;
+        String what = taskTitle(task) + (task.kind == Kind.STAY_INSIDE && task.seconds > 0 ? " (" + task.seconds + "s)" : "");
+        com.itwastall.world.ItWasTallState.getOrCreate(server)
+                .putTaskLog(player.getUuid(), "Night " + night + " — " + what + " — " + result, replaceNewest, 16);
+        ModNetworking.sendJournal(player);
     }
 
     private static void putCooldown(ServerPlayerEntity player) {

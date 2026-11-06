@@ -73,6 +73,14 @@ public final class ItWasTallState extends PersistentState {
     private final Set<UUID> bedAnchored = new HashSet<>();
     private static final int MAX_DWELL_CHUNKS = 400;
 
+    /** Server-wide journal (BOOKS tab): every book / note someone on the server has read, in order. */
+    private final java.util.List<NbtCompound> sharedBooks = new java.util.ArrayList<>();
+    /** Server-wide journal (NOTES tab): notes players wrote for each other, oldest first. */
+    private final java.util.List<NbtCompound> sharedNotes = new java.util.ArrayList<>();
+    private long nextNoteId = 1;
+    /** Per-player task history for the journal, newest first. */
+    private final Map<UUID, java.util.List<String>> taskLog = new HashMap<>();
+
     public ItWasTallState() {
     }
 
@@ -124,6 +132,18 @@ public final class ItWasTallState extends PersistentState {
             state.chunkDwell.put(UUID.fromString(key), m);
         }
         for (String key : nbt.getCompound("bedAnchored").getKeys()) state.bedAnchored.add(UUID.fromString(key));
+        net.minecraft.nbt.NbtList books = nbt.getList("sharedBooks", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < books.size(); i++) state.sharedBooks.add(books.getCompound(i));
+        net.minecraft.nbt.NbtList notes = nbt.getList("sharedNotes", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < notes.size(); i++) state.sharedNotes.add(notes.getCompound(i));
+        state.nextNoteId = Math.max(1, nbt.getLong("nextNoteId"));
+        NbtCompound tasks = nbt.getCompound("taskLog");
+        for (String key : tasks.getKeys()) {
+            net.minecraft.nbt.NbtList list = tasks.getList(key, net.minecraft.nbt.NbtElement.STRING_TYPE);
+            java.util.List<String> lines = new java.util.ArrayList<>();
+            for (int i = 0; i < list.size(); i++) lines.add(list.getString(i));
+            state.taskLog.put(UUID.fromString(key), lines);
+        }
         if (nbt.containsUuid("activeIt")) {
             state.activeIt = nbt.getUuid("activeIt");
             state.activeItDim = nbt.getString("activeItDim");
@@ -182,6 +202,20 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound beds = new NbtCompound();
         for (UUID uuid : bedAnchored) beds.putBoolean(uuid.toString(), true);
         nbt.put("bedAnchored", beds);
+        net.minecraft.nbt.NbtList books = new net.minecraft.nbt.NbtList();
+        books.addAll(sharedBooks);
+        nbt.put("sharedBooks", books);
+        net.minecraft.nbt.NbtList notes = new net.minecraft.nbt.NbtList();
+        notes.addAll(sharedNotes);
+        nbt.put("sharedNotes", notes);
+        nbt.putLong("nextNoteId", nextNoteId);
+        NbtCompound tasks = new NbtCompound();
+        taskLog.forEach((uuid, lines) -> {
+            net.minecraft.nbt.NbtList list = new net.minecraft.nbt.NbtList();
+            for (String line : lines) list.add(net.minecraft.nbt.NbtString.of(line));
+            tasks.put(uuid.toString(), list);
+        });
+        nbt.put("taskLog", tasks);
         if (activeIt != null) {
             nbt.putUuid("activeIt", activeIt);
             nbt.putString("activeItDim", activeItDim);
@@ -413,5 +447,60 @@ public final class ItWasTallState extends PersistentState {
 
     public void setBedAnchored(UUID player, boolean bed) {
         if (bed ? bedAnchored.add(player) : bedAnchored.remove(player)) markDirty();
+    }
+
+    // ---- shared journal (BOOKS / NOTES tabs) and the task history ----
+
+    public java.util.List<NbtCompound> sharedBooks() {
+        return java.util.Collections.unmodifiableList(sharedBooks);
+    }
+
+    public boolean hasSharedBook(String id) {
+        for (NbtCompound b : sharedBooks) if (id.equals(b.getString("id"))) return true;
+        return false;
+    }
+
+    public void addSharedBook(NbtCompound book) {
+        sharedBooks.add(book);
+        markDirty();
+    }
+
+    public java.util.List<NbtCompound> sharedNotes() {
+        return java.util.Collections.unmodifiableList(sharedNotes);
+    }
+
+    /** Adds a note (the oldest ones go when there are more than {@code max}); returns its id. */
+    public long addSharedNote(NbtCompound note, int max) {
+        long id = nextNoteId++;
+        note.putLong("id", id);
+        sharedNotes.add(note);
+        while (sharedNotes.size() > max) sharedNotes.remove(0);
+        markDirty();
+        return id;
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public NbtCompound sharedNote(long id) {
+        for (NbtCompound n : sharedNotes) if (n.getLong("id") == id) return n;
+        return null;
+    }
+
+    public boolean removeSharedNote(long id) {
+        boolean removed = sharedNotes.removeIf(n -> n.getLong("id") == id);
+        if (removed) markDirty();
+        return removed;
+    }
+
+    public java.util.List<String> taskLog(UUID player) {
+        return taskLog.getOrDefault(player, java.util.List.of());
+    }
+
+    /** Newest first; {@code replaceNewest} rewrites the newest line (a task's result replaces "in progress"). */
+    public void putTaskLog(UUID player, String line, boolean replaceNewest, int max) {
+        java.util.List<String> lines = taskLog.computeIfAbsent(player, u -> new java.util.ArrayList<>());
+        if (replaceNewest && !lines.isEmpty()) lines.set(0, line);
+        else lines.add(0, line);
+        while (lines.size() > max) lines.remove(lines.size() - 1);
+        markDirty();
     }
 }

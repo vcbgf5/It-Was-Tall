@@ -50,7 +50,7 @@ public class WarningScreen extends Screen {
         toggleButton = ButtonWidget.builder(toggleLabel(), b -> {
                     scaresEnabled = !scaresEnabled;
                     b.setMessage(toggleLabel());
-                    ClientPlayNetworking.send(new ScaresPrefPayload(scaresEnabled));
+                    if (ClientPlayNetworking.canSend(ScaresPrefPayload.ID)) ClientPlayNetworking.send(new ScaresPrefPayload(scaresEnabled));
                 })
                 .dimensions(left, buttonY, buttonWidth, 20)
                 .build();
@@ -67,7 +67,7 @@ public class WarningScreen extends Screen {
     }
 
     private void accept() {
-        ClientPlayNetworking.send(new ScaresPrefPayload(scaresEnabled));
+        if (ClientPlayNetworking.canSend(ScaresPrefPayload.ID)) ClientPlayNetworking.send(new ScaresPrefPayload(scaresEnabled));
         this.close();
     }
 

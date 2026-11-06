@@ -776,8 +776,8 @@ public final class DynamicStructures {
 
     /** Flavour written book (untracked — the tracked §9 lore stays in the player's own chests). */
     private static ItemStack book(String title, String body) {
-        // a torn note (opens in the NoteScreen) — the tracked §9 lore stays in signed books
-        return com.itwastall.registry.ModItems.note("structure_" + title.toLowerCase(java.util.Locale.ROOT).replace(' ', '_'),
+        // one of our own books: read it once and it is in everyone's journal
+        return com.itwastall.registry.ModItems.loreBook("structure_" + title.toLowerCase(java.util.Locale.ROOT).replace(' ', '_'),
                 title, body);
     }
 
