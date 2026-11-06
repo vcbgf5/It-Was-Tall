@@ -47,6 +47,7 @@ public final class GodMode {
     public static void init() {
         PayloadTypeRegistry.playS2C().register(GodStatePayload.ID, GodStatePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(GodActionPayload.ID, GodActionPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.itwastall.net.GodMapPayload.ID, com.itwastall.net.GodMapPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(GodActionPayload.ID, (payload, context) ->
                 context.server().execute(() -> GodActions.run(context.player(), payload.action(), payload.target())));
         // someone joining never sees the god in the player list

@@ -35,7 +35,12 @@ public class GodPanelScreen extends Screen {
             {"Stage 4", "stage_4"}, {"Stage 5", "stage_5"}, {"Tension -10", "tension_down"}, {"Tension +10", "tension_up"},
             {"Tension +25", "tension_upup"}, {"Day", "day"}, {"Night", "night"}, {"Midnight", "midnight"},
             {"Clear", "clear"}, {"Rain", "rain"}, {"Thunder", "thunder"}};
-    private static final String[] TAB_NAMES = {"EVENTS", "SCENES & TASKS", "WORLD"};
+    private static final String[][] MAP_ACTIONS = {
+            {"It digs to them", "dig"}, {"It peeks (cave)", "peek"}, {"It: stare", "haunt"},
+            {"JUMPSCARE", "jumpscare"}, {"Fly to them", "tpto"}};
+    private static final String[] TAB_NAMES = {"EVENTS", "SCENES & TASKS", "WORLD", "MAP"};
+    private static final int MAP = 3;
+    private int mapX, mapY, mapSize, ticks;
 
     private static int tab;
     private static String target = "";
@@ -47,13 +52,18 @@ public class GodPanelScreen extends Screen {
     @Override
     protected void init() {
         // tabs
-        int tw = Math.min(110, (width - 24) / 3);
+        int tw = Math.min(100, (width - 28) / 4);
         for (int i = 0; i < TAB_NAMES.length; i++) {
             int t = i;
             addDrawableChild(ButtonWidget.builder(Text.literal((tab == i ? "> " : "") + TAB_NAMES[i] + (tab == i ? " <" : "")), b -> {
                 tab = t;
                 clearAndInit();
-            }).dimensions(width / 2 - (tw * 3 + 8) / 2 + i * (tw + 4), 22, tw, 18).build());
+                if (t == MAP) send("map");
+            }).dimensions(width / 2 - (tw * 4 + 12) / 2 + i * (tw + 4), 22, tw, 18).build());
+        }
+        if (tab == MAP) {
+            initMap();
+            return;
         }
         int top = 46;
         // players (not for the world tab)
@@ -86,6 +96,100 @@ public class GodPanelScreen extends Screen {
                 .dimensions(width - 68, height - 24, 60, 18).build());
     }
 
+    /** MAP tab: players with where they are, the mini-map around the chosen one, actions on them. */
+    private void initMap() {
+        int top = 46, left = 8;
+        int listW = Math.min(110, width / 4);
+        List<String> names = players();
+        if (!names.contains(target)) target = names.isEmpty() ? "" : names.get(0);
+        for (int i = 0; i < names.size() && top + i * 30 < height - 40; i++) {
+            String n = names.get(i);
+            addDrawableChild(ButtonWidget.builder(Text.literal(n.equals(target) ? "> " + n + " <" : n), b -> {
+                target = n;
+                clearAndInit();
+                send("map");
+            }).dimensions(left, top + i * 30, listW, 18).build());
+        }
+        int actW = Math.min(120, Math.max(90, width / 5));
+        mapSize = Math.max(64, Math.min(height - 80, width - listW - actW - 40));
+        mapSize = mapSize / 64 * 64;
+        mapX = left + listW + 12;
+        mapY = top + 12;
+        int ax = mapX + mapSize + 12;
+        for (int i = 0; i < MAP_ACTIONS.length; i++) {
+            String action = MAP_ACTIONS[i][1];
+            addDrawableChild(ButtonWidget.builder(Text.literal(MAP_ACTIONS[i][0]), b -> send(action))
+                    .dimensions(ax, top + i * 22, actW, 18).build());
+        }
+        addDrawableChild(ButtonWidget.builder(Text.literal("Close"), b -> close())
+                .dimensions(width - 68, height - 24, 60, 18).build());
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (tab == MAP && ++ticks % 20 == 0 && !target.isEmpty()) send("map");
+    }
+
+    private void renderMap(DrawContext ctx) {
+        // status under each player's name
+        List<String> names = players();
+        for (int i = 0; i < names.size() && 46 + i * 30 < height - 40; i++) {
+            String st = GodMapData.STATUS.getOrDefault(names.get(i), "...");
+            ctx.drawTextWithShadow(textRenderer, textRenderer.trimToWidth(st, Math.min(110, width / 4)), 10, 46 + i * 30 + 20, 0xFF9C8E78);
+        }
+        // frame
+        ctx.fill(mapX - 3, mapY - 3, mapX + mapSize + 3, mapY + mapSize + 3, 0xFF0E0806);
+        ctx.fill(mapX - 2, mapY - 2, mapX + mapSize + 2, mapY + mapSize + 2, 0xFF5A1610);
+        ctx.fill(mapX, mapY, mapX + mapSize, mapY + mapSize, 0xFF050505);
+        var map = GodMapData.map;
+        if (map == null || !map.target().equals(target)) {
+            ctx.drawCenteredTextWithShadow(textRenderer, target.isEmpty() ? "No other players." : "Loading map...",
+                    mapX + mapSize / 2, mapY + mapSize / 2 - 4, 0xFF9C8E78);
+            return;
+        }
+        int n = com.itwastall.net.GodMapPayload.SIZE, s = mapSize / n;
+        byte[] c = map.colors();
+        for (int z = 0; z < n; z++) {
+            for (int x = 0; x < n; x++) {
+                int argb = GodMapData.color(c[z * n + x]);
+                ctx.fill(mapX + x * s, mapY + z * s, mapX + x * s + s, mapY + z * s + s, argb);
+            }
+        }
+        ctx.drawCenteredTextWithShadow(textRenderer, "N", mapX + mapSize / 2, mapY - 12, 0xFFE8D9B8);
+        String head = map.target() + "  -  " + GodMapData.STATUS.getOrDefault(map.target(), "")
+                + (map.cave() ? "   (cave slice at Y " + map.center().getY() + ")" : "");
+        ctx.drawTextWithShadow(textRenderer, textRenderer.trimToWidth(head, width - mapX - 8), mapX, mapY + mapSize + 6, 0xFFE8D9B8);
+        // markers: It first, then players, the chosen one last (on top)
+        for (int pass = 0; pass < 3; pass++) {
+            for (var m : map.markers()) {
+                int kind = m.kind();
+                if (kind == 4) continue;
+                if ((pass == 0) != (kind == 3) || (pass == 2) != (kind == 1)) continue;
+                int px = mapX + (m.x() - map.center().getX() + n / 2) * s + s / 2;
+                int pz = mapY + (m.z() - map.center().getZ() + n / 2) * s + s / 2;
+                if (px < mapX || pz < mapY || px >= mapX + mapSize || pz >= mapY + mapSize) continue;
+                switch (kind) {
+                    case 3 -> {
+                        ctx.fill(px - 3, pz - 1, px + 4, pz + 2, 0xFFA0241B);
+                        ctx.fill(px - 1, pz - 3, px + 2, pz + 4, 0xFFA0241B);
+                        ctx.fill(px - 1, pz - 1, px + 2, pz + 2, 0xFF000000);
+                    }
+                    case 1 -> {
+                        ctx.fill(px - 3, pz - 3, px + 4, pz + 4, 0xFF000000);
+                        ctx.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFFE0281E);
+                        ctx.drawTextWithShadow(textRenderer, m.name(), px + 5, pz - 4, 0xFFFF6A5A);
+                    }
+                    case 2 -> ctx.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFF8A8A8A);
+                    default -> {
+                        ctx.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFFF0F0F0);
+                        ctx.drawTextWithShadow(textRenderer, m.name(), px + 4, pz - 4, 0xFFE8E8E8);
+                    }
+                }
+            }
+        }
+    }
+
     private void send(String action) {
         if (ClientPlayNetworking.canSend(GodActionPayload.ID)) ClientPlayNetworking.send(new GodActionPayload(action, target));
     }
@@ -111,7 +215,9 @@ public class GodPanelScreen extends Screen {
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         super.render(ctx, mouseX, mouseY, delta);
+        if (tab == MAP) renderMap(ctx);
         ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("GOD PANEL").formatted(net.minecraft.util.Formatting.DARK_RED), width / 2, 8, 0xFFFFFFFF);
+        if (tab == MAP) return;
         String status = (tab == 2 ? "" : "Target: " + (target.isEmpty() ? "nobody online" : target) + "   ")
                 + "Stage " + JournalData.stage() + "   Tension " + Math.round(JournalData.tension()) + " / 100";
         ctx.drawTextWithShadow(textRenderer, status, 8, height - 18, 0xFF9C8E78);

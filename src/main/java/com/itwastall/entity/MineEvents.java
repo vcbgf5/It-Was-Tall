@@ -146,7 +146,7 @@ public final class MineEvents {
     /** Starts an event for the player. Falls back to a milder event if the chosen one can't happen here. */
     public static boolean trigger(ServerPlayerEntity player, Kind kind) {
         boolean ok = switch (kind) {
-            case DIG -> spawnDigger(player) || startSounds(player);
+            case DIG -> spawnDigger(player) || spawnDiggerBelow(player) || startSounds(player);
             case SOUNDS -> startSounds(player);
             case TORCHES -> startTorches(player) || startSounds(player);
             case PEEK -> spawnPeeker(player) || startTorches(player) || startSounds(player);
@@ -179,6 +179,35 @@ public final class MineEvents {
             world.spawnEntity(it);
             it.startDig();
             playTo(player, ModSounds.DIG, Vec3d.ofCenter(pos), 1.5f, 0.6f);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * DIG from below: It wakes in the rock 6-14 blocks UNDER the player and tunnels up to them — so it works on
+     * the surface too (above a player in the open there is only sky).
+     */
+    private static boolean spawnDiggerBelow(ServerPlayerEntity player) {
+        ServerWorld world = player.getServerWorld();
+        if (!ItWasTallConfig.INSTANCE.digging || !world.getGameRules().getBoolean(net.minecraft.world.GameRules.DO_MOB_GRIEFING)) {
+            return false;
+        }
+        Random random = world.getRandom();
+        BlockPos origin = player.getBlockPos();
+        for (int attempt = 0; attempt < 48; attempt++) {
+            BlockPos pos = origin.add(random.nextInt(11) - 5, -(6 + random.nextInt(9)) - 4, random.nextInt(11) - 5);
+            if (pos.getY() <= world.getBottomY() + 2) continue;
+            if (!isSolidRockColumn(world, pos)) continue;
+            for (int y = 0; y < 4; y++) world.setBlockState(pos.up(y), Blocks.CAVE_AIR.getDefaultState());
+            TallOneEntity it = ModEntities.TALL_ONE.create(world);
+            if (it == null) return false;
+            it.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, random.nextFloat() * 360f, 0f);
+            it.setVictim(player);
+            it.setPersistent();
+            world.spawnEntity(it);
+            it.startDig();
+            playTo(player, ModSounds.DIG, Vec3d.ofCenter(pos.up(4)), 1.6f, 0.55f);
             return true;
         }
         return false;

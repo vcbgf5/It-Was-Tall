@@ -18,6 +18,9 @@ public final class GodActions {
     /** Actions aimed at a player: %p is that player's name. */
     private static final Map<String, String> ON_PLAYER = Map.ofEntries(
             Map.entry("haunt", "itwastall haunt %p"),
+            Map.entry("dig", "itwastall mine dig %p"),
+            Map.entry("peek", "itwastall mine peek %p"),
+            Map.entry("tpto", "tp %p"),
             Map.entry("spawn", "itwastall spawn 30 %p"),
             Map.entry("feint", "itwastall event feint %p"),
             Map.entry("tree", "itwastall event tree %p"),
@@ -65,6 +68,10 @@ public final class GodActions {
         if (god == null || god.getServer() == null) return;
         MinecraftServer server = god.getServer();
         if (!GodMode.isGod(god.getUuid()) || !god.hasPermissionLevel(2)) return;
+        if (action.equals("map")) {
+            GodMap.send(god, target);
+            return;
+        }
         String command = WORLD.get(action);
         if (command == null) {
             String template = ON_PLAYER.get(action);

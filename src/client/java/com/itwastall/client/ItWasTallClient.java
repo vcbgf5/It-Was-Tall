@@ -57,6 +57,8 @@ public class ItWasTallClient implements ClientModInitializer {
                 "category.itwastall"));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GodStatePayload.ID, (payload, context) ->
                 context.client().execute(() -> god = payload.god()));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GodMapPayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.god.GodMapData.update(payload)));
 
         EntityRendererRegistry.register(
                 ModEntities.TALL_ONE,
@@ -180,7 +182,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
