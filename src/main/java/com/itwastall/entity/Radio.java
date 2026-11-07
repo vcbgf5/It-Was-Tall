@@ -70,6 +70,7 @@ public final class Radio {
     public static void init() {
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(com.itwastall.net.RadioPayload.ID, com.itwastall.net.RadioPayload.CODEC);
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playC2S().register(com.itwastall.net.RadioPayload.ID, com.itwastall.net.RadioPayload.CODEC);
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(com.itwastall.net.RadioSoundPayload.ID, com.itwastall.net.RadioSoundPayload.CODEC);
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioPayload.ID,
                 (payload, context) -> context.server().execute(() -> toggle(context.player())));
         ServerTickEvents.END_SERVER_TICK.register(Radio::tick);
@@ -86,6 +87,15 @@ public final class Radio {
             p.getServerWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_LEVER_CLICK, net.minecraft.sound.SoundCategory.PLAYERS, 0.6f, on ? 1.2f : 0.8f);
             p.sendMessage(Text.literal(on ? "The radio crackles to life." : "The radio goes quiet.").formatted(Formatting.GRAY, Formatting.ITALIC), true);
             return;
+        }
+    }
+
+    /** A radio sound for this player only, without a position (the client plays it like music, Ambient volume). */
+    private static void play(ServerPlayerEntity p, SoundEvent sound, float volume) {
+        if (sound == null) return;
+        if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(p, com.itwastall.net.RadioSoundPayload.ID)) {
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                    new com.itwastall.net.RadioSoundPayload(sound.getId(), ModSounds.vol(volume)));
         }
     }
 
@@ -121,7 +131,7 @@ public final class Radio {
             if (b == null) continue;
             while (!b.clips.isEmpty() && b.clips.peekFirst()[0] <= tick) {
                 long[] c = b.clips.pollFirst();
-                MineEvents.playTo(p, b.sounds.get((int) c[1]), p.getEyePos(), ModSounds.vol(1.0f), 1.0f);
+                play(p, b.sounds.get((int) c[1]), 1.0f);
             }
             if (b.clips.isEmpty() && tick >= b.endsAt) {
                 PLAYING.remove(p.getUuid());
@@ -134,7 +144,7 @@ public final class Radio {
             if (state == 0) continue;
             // the hiss, every 3 seconds (the clip is 3 s long) — only while it is switched on
             if (state == 2 && server.getTicks() % 60 == 0 && !PLAYING.containsKey(p.getUuid())) {
-                MineEvents.playTo(p, ModVoices.radio("static"), p.getEyePos(), ModSounds.vol(0.25f), 1.0f);
+                play(p, ModVoices.radio("static"), 0.25f);
             }
             Long next = NEXT.get(p.getUuid());
             if (next == null) {
@@ -173,7 +183,7 @@ public final class Radio {
         b.endsAt = (b.clips.isEmpty() ? tick : b.clips.peekLast()[0]) + 50;   // the last clip, then a moment of hiss
         PLAYING.put(p.getUuid(), b);
         // a broadcast always comes with static before it (a radio that was off clicks on by itself)
-        MineEvents.playTo(p, ModVoices.radio("static"), p.getEyePos(), ModSounds.vol(0.35f), 1.0f);
+        play(p, ModVoices.radio("static"), 0.35f);
         onAir(p, true);
     }
 

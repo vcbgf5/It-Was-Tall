@@ -60,6 +60,12 @@ public class ItWasTallClient implements ClientModInitializer {
         radioKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.radio", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R,
                 "category.itwastall"));
+        // radio sounds: no position, like music (Ambient volume slider), same in both ears
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioSoundPayload.ID, (payload, context) ->
+                context.client().execute(() -> context.client().getSoundManager().play(
+                        new net.minecraft.client.sound.PositionedSoundInstance(payload.sound(), net.minecraft.sound.SoundCategory.AMBIENT,
+                                payload.volume(), 1.0f, net.minecraft.util.math.random.Random.create(), false, 0,
+                                net.minecraft.client.sound.SoundInstance.AttenuationType.NONE, 0.0, 0.0, 0.0, true))));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioPayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.hud.RadioHud.setOnAir(payload.onAir())));
         itFormKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
