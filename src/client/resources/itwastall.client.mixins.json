@@ -9,6 +9,7 @@
     "BloodMoonTextureMixin",
     "BloodSkyMixin",
     "EntryListWidgetMixin",
+    "HideOwnBodyMixin",
     "GameMenuScreenMixin",
     "LevelLoadingScreenMixin",
     "OutlineColorMixin",

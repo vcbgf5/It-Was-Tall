@@ -54,6 +54,9 @@ public final class ItForm {
         int emergeLeft = EMERGE_TICKS;
         int attackLeft;
         int sinkLeft = -1;            // >= 0 while the body sinks into the ground
+        double walked;                // blocks walked since the last footstep
+        double lastX, lastZ;
+        int nextNoise = 120;
     }
 
     private static final Map<UUID, Form> FORMS = new HashMap<>();
@@ -119,6 +122,10 @@ public final class ItForm {
         addModifier(god.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED),
                 new EntityAttributeModifier(SPEED_ID, 0.35, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
         world.playSound(null, at, ModSounds.DIG, SoundCategory.HOSTILE, ModSounds.vol(1.6f), 0.6f);
+        f.lastX = god.getX();
+        f.lastZ = god.getZ();
+        god.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.NIGHT_VISION,
+                net.minecraft.entity.effect.StatusEffectInstance.INFINITE, 0, true, false, false));
         sendState(god, f);
         god.sendMessage(Text.literal("You are It. Look at a player to hunt them. Hit to catch. H to sink.").formatted(Formatting.DARK_RED), true);
     }
@@ -148,6 +155,7 @@ public final class ItForm {
     }
 
     private static void restorePlayer(ServerPlayerEntity god) {
+        god.removeStatusEffect(net.minecraft.entity.effect.StatusEffects.NIGHT_VISION);
         removeModifier(god.getAttributeInstance(EntityAttributes.GENERIC_SCALE), SCALE_ID);
         removeModifier(god.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED), SPEED_ID);
         if (god.isCreative()) {
@@ -234,6 +242,23 @@ public final class ItForm {
                 mode = victim != null ? TallOneEntity.Mode.CHASE : TallOneEntity.Mode.STARE;
             }
             if (f.body.getMode() != mode) f.body.setPuppetMode(mode);
+            // its footsteps (heavy, slow, every ~1.6 blocks) and now and then its breath, a growl, a sniff
+            double dx = god.getX() - f.lastX, dz = god.getZ() - f.lastZ;
+            f.lastX = god.getX();
+            f.lastZ = god.getZ();
+            if (god.isOnGround()) f.walked += Math.sqrt(dx * dx + dz * dz);
+            ServerWorld w = god.getServerWorld();
+            if (f.walked > (mode == TallOneEntity.Mode.CHASE ? 2.2 : 1.6)) {
+                f.walked = 0;
+                w.playSound(null, god.getX(), god.getY(), god.getZ(), ModSounds.STEP, SoundCategory.HOSTILE,
+                        ModSounds.vol(mode == TallOneEntity.Mode.CHASE ? 1.3f : 0.9f), 0.85f + w.getRandom().nextFloat() * 0.15f);
+            }
+            if (--f.nextNoise <= 0) {
+                f.nextNoise = 120 + w.getRandom().nextInt(160);
+                net.minecraft.sound.SoundEvent[] noises = {ModSounds.GROWL, ModSounds.SNIFF, ModSounds.AMBIENT_BREATH};
+                w.playSound(null, god.getX(), god.getEyeY(), god.getZ(), noises[w.getRandom().nextInt(noises.length)],
+                        SoundCategory.HOSTILE, ModSounds.vol(0.9f), 0.8f + w.getRandom().nextFloat() * 0.2f);
+            }
             if (victim != null && server.getTicks() % 100 == 0) {
                 com.itwastall.entity.MineEvents.playTo(victim, ModSounds.AMBIENT_HEARTBEAT, victim.getPos(), 1.0f, 1.0f);
             }

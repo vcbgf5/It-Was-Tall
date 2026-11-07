@@ -28,6 +28,7 @@ public class InGameHudMixin {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void itwastall$drawJumpscare(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        com.itwastall.client.god.GodClientState.renderVision(context);
         ScareTextOverlay.render(context, tickCounter);
         JumpscareOverlay.render(context, tickCounter);
         ItJoinedOverlay.render(context, tickCounter);
