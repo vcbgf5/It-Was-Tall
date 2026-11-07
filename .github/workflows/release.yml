@@ -13,6 +13,11 @@ on:
         description: 'Release version (e.g. 0.3.1)'
         required: true
         type: string
+      name:
+        description: 'Release name (optional, e.g. Icons Update)'
+        required: false
+        type: string
+        default: ''
       release_type:
         description: 'CurseForge release channel'
         required: true
@@ -43,6 +48,7 @@ jobs:
         id: resolve
         env:
           INPUT_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          RELEASE_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.name || '' }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
           TAG="$INPUT_TAG"
@@ -72,6 +78,11 @@ jobs:
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          # Title: "It Was Tall <version>" or "It Was Tall <version> - <name>"
+          TITLE="It Was Tall $TAG"
+          if [ -n "$RELEASE_NAME" ]; then TITLE="$TITLE - $RELEASE_NAME"; fi
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
 
           # Manual releases build the current main branch. Existing tags may
           # point to an older commit and must not silently build stale source.
@@ -145,6 +156,7 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           TAG: ${{ steps.resolve.outputs.tag }}
+          TITLE: ${{ steps.resolve.outputs.title }}
           RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'release' }}
         run: |
           if [ -z "$CF_API_TOKEN" ]; then
@@ -155,10 +167,11 @@ jobs:
           JAR="build/libs/it-was-tall-${TAG}.jar"
           METADATA=$(jq -n \
             --arg version "$TAG" \
+            --arg title "$TITLE" \
             --arg releaseType "$RELEASE_TYPE" \
             --rawfile changelog RELEASE_CHANGELOG.md \
             '{
-              displayName: ("It Was Tall " + $version),
+              displayName: $title,
               changelog: $changelog,
               changelogType: "markdown",
               gameVersionNames: ["Client", "Server", "1.21.1", "Fabric"],
@@ -176,7 +189,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.resolve.outputs.tag }}
-          name: It Was Tall ${{ steps.resolve.outputs.tag }}
+          name: ${{ steps.resolve.outputs.title }}
           body_path: RELEASE_CHANGELOG.md
           generate_release_notes: true
           draft: false
