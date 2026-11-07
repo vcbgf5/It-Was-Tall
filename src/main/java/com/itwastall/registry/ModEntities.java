@@ -68,6 +68,16 @@ public final class ModEntities {
                     .maxTrackingRange(10)
                     .build("carcass"));
 
+    /** THE MIMIC: a bloodied cow / sheep / pig with wrong sounds that follows you, hits once and is gone. */
+    public static final EntityType<com.itwastall.entity.MimicEntity> MIMIC = Registry.register(
+            Registries.ENTITY_TYPE,
+            ItWasTall.id("mimic"),
+            EntityType.Builder.create(com.itwastall.entity.MimicEntity::new, SpawnGroup.MONSTER)
+                    .dimensions(0.9f, 1.3f)
+                    .eyeHeight(1.2f)
+                    .maxTrackingRange(10)
+                    .build("mimic"));
+
     private ModEntities() {
     }
 
@@ -78,5 +88,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(SLEEPER, com.itwastall.entity.SleeperEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(HANGED, com.itwastall.entity.HangedEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(CARCASS, com.itwastall.entity.CarcassEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(MIMIC, com.itwastall.entity.MimicEntity.createAttributes());
     }
 }

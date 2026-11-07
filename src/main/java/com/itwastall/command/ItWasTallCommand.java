@@ -244,6 +244,9 @@ public final class ItWasTallCommand {
                 .then(eventKind("chopping", p -> {
                     if (!com.itwastall.entity.DynamicStructures.buildChoppingInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
+                .then(eventKind("mimic", p -> {
+                    if (com.itwastall.entity.Mimics.spawnFor(p, 3) == 0) throw new IllegalStateException("no free ground around the player (or 3 mimics are already near)");
+                }))
                 .then(eventKind("hanged", p -> {
                     if (!com.itwastall.entity.HangedTrees.spawnFor(p, 8, 40, false)) throw new IllegalStateException("no tree with a free branch nearby");
                 }))
@@ -525,6 +528,7 @@ public final class ItWasTallCommand {
                 "  Old One: " + in.apply(com.itwastall.entity.OldOneDirector.nextAt(u)),
                 "  the hanged: " + in.apply(com.itwastall.entity.HangedTrees.nextAt(u)),
                 "  tall footprints: " + in.apply(com.itwastall.entity.TallFootprints.nextAt(u)),
+                "  mimics: " + in.apply(com.itwastall.entity.Mimics.nextAt(u)),
                 "  house events: " + in.apply(com.itwastall.entity.HouseEvents.nextAt(u)),
                 "  small scare: " + in.apply(ScareSounds.nextScareAt(u)),
                 "  window knocks tonight: " + WindowKnocks.ledgerCount(u),

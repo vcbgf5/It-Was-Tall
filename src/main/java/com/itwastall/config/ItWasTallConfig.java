@@ -82,6 +82,8 @@ public final class ItWasTallConfig {
         public boolean hangedTrees = true;
         /** THE FOOTPRINTS: huge prints walk up to your door and under your windows at night (gone by morning). */
         public boolean tallFootprints = true;
+        /** THE MIMICS: bloodied cows / sheep / pigs that follow you at night (stage 2+), hit once and vanish. */
+        public boolean mimics = true;
         /** Minutes between two hanged figures for one player (at most one per night). */
         public int hangedMinMinutes = 15;
         public int hangedMaxMinutes = 25;

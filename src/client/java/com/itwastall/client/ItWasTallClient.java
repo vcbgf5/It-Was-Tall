@@ -83,6 +83,7 @@ public class ItWasTallClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.SLEEPER, com.itwastall.client.render.SleeperRenderer::new);
         EntityRendererRegistry.register(ModEntities.HANGED, com.itwastall.client.render.HangedRenderer::new);
         EntityRendererRegistry.register(ModEntities.CARCASS, com.itwastall.client.render.CarcassRenderer::new);
+        EntityRendererRegistry.register(ModEntities.MIMIC, com.itwastall.client.render.MimicRenderer::new);
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(com.itwastall.registry.ModBlocks.BLOOD, net.minecraft.client.render.RenderLayer.getCutout());
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(com.itwastall.registry.ModBlocks.CHOPPING_STUMP, net.minecraft.client.render.RenderLayer.getCutout());
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(com.itwastall.registry.ModBlocks.FOOTPRINT, net.minecraft.client.render.RenderLayer.getCutout());
