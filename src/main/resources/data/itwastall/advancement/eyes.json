@@ -1,0 +1,23 @@
+{
+  "parent": "itwastall:it_joined",
+  "display": {
+    "icon": {
+      "id": "minecraft:spider_eye"
+    },
+    "title": {
+      "translate": "advancements.itwastall.eyes.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.eyes.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

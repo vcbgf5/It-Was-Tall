@@ -39,6 +39,7 @@ public final class GodActions {
             Map.entry("deepone", "itwastall event deepone %p"),
             Map.entry("hanged", "itwastall event hanged %p"),
             Map.entry("mimic", "itwastall event mimic %p"),
+            Map.entry("eyes", "itwastall event eyes %p"),
             Map.entry("jumpscare", "itwastall jumpscare %p"),
             Map.entry("scare", "itwastall scare %p"),
             Map.entry("outspace", "itwastall outspace %p"),

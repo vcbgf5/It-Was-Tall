@@ -84,6 +84,8 @@ public final class ItWasTallConfig {
         public boolean tallFootprints = true;
         /** THE MIMICS: bloodied cows / sheep / pigs that follow you at night (stage 2+), hit once and vanish. */
         public boolean mimics = true;
+        /** THE EYES: pairs of eyes open in a dark wood at night (stage 2+), close when you bring a light. */
+        public boolean eyeSwarms = true;
         /** Minutes between two hanged figures for one player (at most one per night). */
         public int hangedMinMinutes = 15;
         public int hangedMaxMinutes = 25;

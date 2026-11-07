@@ -111,6 +111,9 @@ public class ItWasTallClient implements ClientModInitializer {
         });
         BaseDebugRenderer.init();
         com.itwastall.client.render.TaskTargetRenderer.init();
+        com.itwastall.client.render.EyeSwarmRenderer.init();
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.EyeSwarmPayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.render.EyeSwarmRenderer.start(payload.spots())));
 
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.ChasePayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.hud.ChaseHud.setActive(payload.active())));
@@ -196,7 +199,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

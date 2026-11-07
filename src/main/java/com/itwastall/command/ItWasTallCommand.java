@@ -244,6 +244,9 @@ public final class ItWasTallCommand {
                 .then(eventKind("chopping", p -> {
                     if (!com.itwastall.entity.DynamicStructures.buildChoppingInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
+                .then(eventKind("eyes", p -> {
+                    if (!com.itwastall.entity.EyeSwarms.start(p)) throw new IllegalStateException("not enough dark spots between trees around the player");
+                }))
                 .then(eventKind("mimic", p -> {
                     if (com.itwastall.entity.Mimics.spawnFor(p, 3) == 0) throw new IllegalStateException("no free ground around the player (or 3 mimics are already near)");
                 }))
@@ -529,6 +532,7 @@ public final class ItWasTallCommand {
                 "  the hanged: " + in.apply(com.itwastall.entity.HangedTrees.nextAt(u)),
                 "  tall footprints: " + in.apply(com.itwastall.entity.TallFootprints.nextAt(u)),
                 "  mimics: " + in.apply(com.itwastall.entity.Mimics.nextAt(u)),
+                "  eyes: " + in.apply(com.itwastall.entity.EyeSwarms.nextAt(u)),
                 "  house events: " + in.apply(com.itwastall.entity.HouseEvents.nextAt(u)),
                 "  small scare: " + in.apply(ScareSounds.nextScareAt(u)),
                 "  window knocks tonight: " + WindowKnocks.ledgerCount(u),
