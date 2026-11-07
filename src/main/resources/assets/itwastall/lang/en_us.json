@@ -138,5 +138,7 @@
   "advancements.itwastall.explorer.description": "Find an It Was Tall structure",
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
   "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
-  "key.itwastall.radio": "Radio on / off"
+  "key.itwastall.radio": "Radio on / off",
+  "block.itwastall.glitch": "Wrong Block",
+  "block.itwastall.corruption_source": "Source of Corruption"
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Night scenes: textures, models, blockstates and loot of itwastall:footprint (a shoe print), itwastall:tall_footprint
-(the tall one's long print, gone by morning) and itwastall:eye_stone (a stone with an eye carved into it).
+(the tall one's long print, gone by morning) and itwastall:eye_stone (a stone with an eye carved into it), itwastall:glitch (a block with a broken, flickering
+texture) and itwastall:corruption_source (black stone with pulsing red veins).
 Run: python3 tools/gen_scenes.py"""
 import json, math, os, random
 from PIL import Image, ImageDraw
@@ -64,6 +65,48 @@ def stone(seed, eye=False):
     return img
 
 
+def glitch_frames():
+    """16x64: four 16x16 frames of a broken texture (magenta/black checker, smeared rows), animated."""
+    import random as _r
+    r = _r.Random(66)
+    out = Image.new("RGBA", (16, 64))
+    for f in range(4):
+        img = Image.new("RGBA", (16, 16))
+        for x in range(16):
+            for y in range(16):
+                on = ((x // 4) + (y // 4)) % 2 == 0
+                c = (230, 20, 220) if on else (12, 8, 12)
+                n = r.randint(-20, 20)
+                img.putpixel((x, y), (max(0, min(255, c[0] + n)), max(0, min(255, c[1] + n // 2)), max(0, min(255, c[2] + n)), 255))
+        for _ in range(3):                                   # smeared, shifted rows
+            y = r.randrange(16)
+            shift = r.randint(-5, 5)
+            row = [img.getpixel(((x - shift) % 16, y)) for x in range(16)]
+            for x in range(16): img.putpixel((x, y), row[x])
+        if f % 2: img.putpixel((r.randrange(16), r.randrange(16)), (160, 0, 0, 255))
+        out.paste(img, (0, f * 16))
+    return out
+
+
+def source_frames():
+    """16x32: two frames of the corruption source: black stone with red veins that pulse."""
+    import random as _r
+    out = Image.new("RGBA", (16, 32))
+    for f in range(2):
+        r = _r.Random(70)
+        img = Image.new("RGBA", (16, 16))
+        for x in range(16):
+            for y in range(16):
+                v = 14 + r.randint(-6, 6)
+                img.putpixel((x, y), (v, v - 4 if v > 4 else 0, v, 255))
+        d = ImageDraw.Draw(img)
+        col = (150, 16, 12, 255) if f == 0 else (220, 40, 28, 255)
+        for (a, b) in (((1, 3), (7, 8)), ((7, 8), (14, 5)), ((7, 8), (6, 15)), ((3, 12), (6, 15))):
+            d.line([a, b], fill=col)
+        out.paste(img, (0, f * 16))
+    return out
+
+
 def flat_model(tex):
     return {"ambientocclusion": False, "textures": {"particle": tex, "print": tex},
             "elements": [{"from": [0, 0.1, 0], "to": [16, 0.1, 16],
@@ -90,6 +133,16 @@ def main():
     save_json({"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "itwastall:eye_stone"}],
                                                       "conditions": [{"condition": "minecraft:survives_explosion"}]}]},
               D, "loot_table/blocks/eye_stone.json")
+    save_png(glitch_frames(), "textures/block/glitch.png")
+    with open(os.path.join(A, "textures/block/glitch.png.mcmeta"), "w") as fh:
+        json.dump({"animation": {"frametime": 3, "frames": [0, 2, 1, 3, 0, 1]}}, fh)
+    save_png(source_frames(), "textures/block/corruption_source.png")
+    with open(os.path.join(A, "textures/block/corruption_source.png.mcmeta"), "w") as fh:
+        json.dump({"animation": {"frametime": 12, "interpolate": True}}, fh)
+    for name in ("glitch", "corruption_source"):
+        save_json({"parent": "minecraft:block/cube_all", "textures": {"all": f"itwastall:block/{name}"}}, A, f"models/block/{name}.json")
+        save_json({"variants": {"": {"model": f"itwastall:block/{name}"}}}, A, f"blockstates/{name}.json")
+        save_json({"parent": f"itwastall:block/{name}"}, A, f"models/item/{name}.json")
     print("scene blocks written")
 
 

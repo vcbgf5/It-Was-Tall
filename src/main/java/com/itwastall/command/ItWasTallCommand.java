@@ -245,6 +245,9 @@ public final class ItWasTallCommand {
                     if (!com.itwastall.entity.DynamicStructures.buildChoppingInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
                 .then(eventKind("bloodmoon", p -> com.itwastall.entity.BloodMoon.start(p.getServer())))
+                .then(eventKind("corruption", p -> {
+                    if (!com.itwastall.entity.Corruption.startInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
+                }))
                 .then(eventKind("radio", p -> com.itwastall.entity.Radio.broadcast(p, p.getServerWorld().getTime())))
                 .then(eventKind("voice", p -> {
                     if (!com.itwastall.entity.ItVoice.whisperNow(p)) throw new IllegalStateException("It's voice is switched off (config itVoice)");
@@ -538,6 +541,7 @@ public final class ItWasTallCommand {
                 "  tall footprints: " + in.apply(com.itwastall.entity.TallFootprints.nextAt(u)),
                 "  mimics: " + in.apply(com.itwastall.entity.Mimics.nextAt(u)),
                 "  eyes: " + in.apply(com.itwastall.entity.EyeSwarms.nextAt(u)),
+                "  corruption: " + com.itwastall.entity.Corruption.debugLine(),
                 "  house events: " + in.apply(com.itwastall.entity.HouseEvents.nextAt(u)),
                 "  small scare: " + in.apply(ScareSounds.nextScareAt(u)),
                 "  window knocks tonight: " + WindowKnocks.ledgerCount(u),

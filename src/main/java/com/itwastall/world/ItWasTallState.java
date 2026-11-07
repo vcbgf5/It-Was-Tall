@@ -73,6 +73,8 @@ public final class ItWasTallState extends PersistentState {
     private final Set<UUID> bedAnchored = new HashSet<>();
     /** OUTSPACE: each dreamer's inventory from before the dream (restored on waking, also after a restart). */
     private final Map<UUID, net.minecraft.nbt.NbtList> dreamInventory = new HashMap<>();
+    /** CORRUPTION: the running corruptions and every block they changed (so they can be put back after a restart). */
+    private NbtCompound corruption = new NbtCompound();
     private static final int MAX_DWELL_CHUNKS = 400;
 
     /** Server-wide journal (BOOKS tab): every book / note someone on the server has read, in order. */
@@ -134,6 +136,7 @@ public final class ItWasTallState extends PersistentState {
             state.chunkDwell.put(UUID.fromString(key), m);
         }
         for (String key : nbt.getCompound("bedAnchored").getKeys()) state.bedAnchored.add(UUID.fromString(key));
+        state.corruption = nbt.getCompound("corruption");
         NbtCompound dreams = nbt.getCompound("dreamInventory");
         for (String key : dreams.getKeys()) state.dreamInventory.put(UUID.fromString(key), dreams.getList(key, net.minecraft.nbt.NbtElement.COMPOUND_TYPE));
         net.minecraft.nbt.NbtList books = nbt.getList("sharedBooks", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
@@ -209,6 +212,7 @@ public final class ItWasTallState extends PersistentState {
         NbtCompound dreams = new NbtCompound();
         dreamInventory.forEach((uuid, list) -> dreams.put(uuid.toString(), list.copy()));
         nbt.put("dreamInventory", dreams);
+        nbt.put("corruption", corruption.copy());
         net.minecraft.nbt.NbtList books = new net.minecraft.nbt.NbtList();
         books.addAll(sharedBooks);
         nbt.put("sharedBooks", books);
@@ -446,6 +450,15 @@ public final class ItWasTallState extends PersistentState {
 
     public Map<Long, Float> chunkDwell(UUID player) {
         return chunkDwell.getOrDefault(player, Map.of());
+    }
+
+    public NbtCompound corruption() {
+        return corruption;
+    }
+
+    public void setCorruption(NbtCompound value) {
+        corruption = value;
+        markDirty();
     }
 
     /** OUTSPACE: remembers the inventory a player had when the dream began. */

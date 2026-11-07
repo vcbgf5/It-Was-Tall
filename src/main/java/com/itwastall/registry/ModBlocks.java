@@ -38,6 +38,14 @@ public final class ModBlocks {
     public static final Block EYE_STONE = register("eye_stone", new Block(AbstractBlock.Settings.create()
             .mapColor(MapColor.STONE_GRAY).strength(1.5f, 6.0f).requiresTool().sounds(BlockSoundGroup.STONE)));
 
+    /** CORRUPTION: a block whose texture is simply wrong (it flickers). Nothing drops from it. */
+    public static final Block GLITCH = register("glitch", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.MAGENTA).strength(0.6f).sounds(BlockSoundGroup.AMETHYST_BLOCK).dropsNothing()));
+
+    /** CORRUPTION: where the wrongness comes from. Break it and the world mends itself. */
+    public static final Block CORRUPTION_SOURCE = register("corruption_source", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.BLACK).strength(3.0f, 6.0f).sounds(BlockSoundGroup.SCULK_CATALYST).luminance(s -> 4).dropsNothing()));
+
     private ModBlocks() {}
 
     private static Block register(String name, Block block) {

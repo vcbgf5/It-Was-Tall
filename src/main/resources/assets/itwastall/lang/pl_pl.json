@@ -132,5 +132,7 @@
   "advancements.itwastall.explorer.description": "Znajdź strukturę It Was Tall",
   "advancements.itwastall.cartographer.title": "Kartograf strachu",
   "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall",
-  "key.itwastall.radio": "Radio wł. / wył."
+  "key.itwastall.radio": "Radio wł. / wył.",
+  "block.itwastall.glitch": "Zły blok",
+  "block.itwastall.corruption_source": "Źródło zepsucia"
 }
