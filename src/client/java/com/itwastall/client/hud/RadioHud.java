@@ -44,29 +44,30 @@ public final class RadioHud {
         if (radio.isEmpty()) return;
         boolean on = Radio.isOn(radio);
         int w = ctx.getScaledWindowWidth(), h = ctx.getScaledWindowHeight();
-        int x = w / 2 - 91 - 29 - 56, y = h - 22;          // left of the hotbar (and of the off-hand slot)
+        // the frame sits left of the hotbar and of the off-hand slot; everything inside keeps a margin from its edge
+        int fw = 62, fx = w / 2 - 91 - 29 - fw - 4, fy = h - 22;
         TextRenderer tr = client.textRenderer;
         com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-        HudExtras.box(ctx, x - 2, y - 1, 54, 1f);
-        if (onAir) ctx.fill(x, y + 1, x + 50, y + 2, 0xFFA0241B);
-        ctx.drawItem(radio, x, y + 2);
+        HudExtras.box(ctx, fx, fy, fw, 1f);
+        ctx.drawItem(radio, fx + 2, fy + 2);
+        int tx = fx + 20, barsBottom = fy + 17;
         long t = Util.getMeasuringTimeMs();
         if (onAir) {
             boolean blink = (t / 500) % 2 == 0 || com.itwastall.config.ItWasTallConfig.INSTANCE.photosensitiveMode;
-            ctx.drawTextWithShadow(tr, "ON AIR", x + 18, y + 2, blink ? 0xFFE0281E : 0xFF7A1A14);
-            for (int i = 0; i < 6; i++) {                     // the level meter of the voice
-                int lvl = 2 + (int) (6 * Math.abs(MathHelper.sin((t / 90f) + i * 1.7f) * MathHelper.sin(t / 230f + i)));
-                ctx.fill(x + 18 + i * 4, y + 19 - lvl, x + 21 + i * 4, y + 19, 0xFFD8B080);
+            ctx.drawTextWithShadow(tr, "ON AIR", tx, fy + 3, blink ? 0xFFE0281E : 0xFF7A1A14);
+            for (int i = 0; i < 8; i++) {                     // the level meter of the voice
+                int lvl = 1 + (int) (4 * Math.abs(MathHelper.sin((t / 90f) + i * 1.7f) * MathHelper.sin(t / 230f + i)));
+                ctx.fill(tx + i * 4, barsBottom - lvl, tx + 3 + i * 4, barsBottom, 0xFFD8B080);
             }
         } else if (on) {
-            ctx.drawTextWithShadow(tr, "ON", x + 18, y + 2, 0xFFB4A890);
+            ctx.drawTextWithShadow(tr, "ON", tx, fy + 3, 0xFFB4A890);
             java.util.Random r = new java.util.Random(t / 80);
-            for (int i = 0; i < 6; i++) {                     // static: random flicker
-                int lvl = 1 + r.nextInt(4);
-                ctx.fill(x + 18 + i * 4, y + 19 - lvl, x + 21 + i * 4, y + 19, 0xFF6E6458);
+            for (int i = 0; i < 8; i++) {                     // static: random flicker
+                int lvl = 1 + r.nextInt(3);
+                ctx.fill(tx + i * 4, barsBottom - lvl, tx + 3 + i * 4, barsBottom, 0xFF6E6458);
             }
         } else {
-            ctx.drawTextWithShadow(tr, "OFF", x + 18, y + 7, 0xFF5F5446);
+            ctx.drawTextWithShadow(tr, "OFF", tx, fy + 6, 0xFF5F5446);
         }
     }
 }
