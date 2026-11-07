@@ -59,7 +59,7 @@ public class ItWasTallClient implements ClientModInitializer {
                 "key.itwastall.god_panel", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G,
                 "category.itwastall"));
         radioKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.itwastall.radio", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R,
+                "key.itwastall.radio", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I,
                 "category.itwastall"));
         // radio sounds: your own without a position (like music, Ambient slider); someone else's radio comes from them
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioSoundPayload.ID, (payload, context) ->

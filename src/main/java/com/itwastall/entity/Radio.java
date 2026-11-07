@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * THE RADIO. Right-click (or the radio key, R) switches it on (it glows) or off. Switched on and in your
+ * THE RADIO. Right-click (or the radio key, I) switches it on (it glows) or off. Switched on and in your
  * inventory it hisses with static, and every minute or so a voice breaks through: "Do not go outside tonight.",
  * "It knows your name." — or it reads out where you are standing, digit by digit. Switched off it is silent —
  * until a broadcast comes: then it turns itself on for it, every few minutes. On the day before a blood moon it
