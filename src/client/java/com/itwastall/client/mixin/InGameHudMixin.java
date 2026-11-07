@@ -40,5 +40,9 @@ public class InGameHudMixin {
         com.itwastall.client.hud.RadioHud.render(context);
         com.itwastall.client.hud.WalkieHud.render(context);
         com.itwastall.client.hud.HudExtras.render(context);
+        com.itwastall.client.hud.WatchHud.render(context);
+        com.itwastall.client.hud.SaveIcon.render(context);
+        com.itwastall.client.hud.Polaroids.render(context);
+        com.itwastall.client.hud.NightTitle.render(context);
     }
 }

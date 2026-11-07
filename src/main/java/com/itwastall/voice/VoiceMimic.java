@@ -45,9 +45,71 @@ public final class VoiceMimic {
 
     private VoiceMimic() {}
 
+    /** A running debug recording: every frame of the next 5 s, then played back near the target. */
+    private record Recording(List<short[]> frames, long endMs, UUID target, java.util.function.Consumer<String> report) {}
+    private static final Map<UUID, Recording> RECORDING = new ConcurrentHashMap<>();
+    private static final long RECORD_MS = 5_000;
+
     static void init() {
         VoiceHooks.mimicNow = p -> play(p, true);
+        VoiceHooks.recordThenMimic = (from, target, report) -> {
+            if (ItWasTallVoicechat.api == null) return false;
+            RECORDING.put(from.getUuid(), new Recording(java.util.Collections.synchronizedList(new ArrayList<>()),
+                    System.currentTimeMillis() + RECORD_MS, target.getUuid(), report));
+            return true;
+        };
         ServerTickEvents.END_SERVER_TICK.register(VoiceMimic::tick);
+        ServerTickEvents.END_SERVER_TICK.register(VoiceMimic::finishRecordings);
+    }
+
+    /** Debug recordings whose 5 s are over: what was said is played back near the target right away. */
+    private static void finishRecordings(MinecraftServer server) {
+        if (RECORDING.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        RECORDING.entrySet().removeIf(e -> {
+            Recording r = e.getValue();
+            if (now < r.endMs()) return false;
+            ServerPlayerEntity target = server.getPlayerManager().getPlayer(r.target());
+            List<short[]> frames;
+            synchronized (r.frames()) {
+                frames = new ArrayList<>(r.frames());
+            }
+            if (frames.isEmpty()) {
+                r.report().accept("Nothing was heard in those 5 s (is the microphone on and the player talking?).");
+                return true;
+            }
+            short[] all = new short[frames.size() * FRAME];
+            for (int i = 0; i < frames.size(); i++) {
+                short[] f = frames.get(i);
+                System.arraycopy(f, 0, all, i * FRAME, Math.min(FRAME, f.length));
+            }
+            Deque<short[]> keep = SNIPPETS.computeIfAbsent(e.getKey(), u -> new ArrayDeque<>());
+            synchronized (keep) {
+                keep.addLast(all);
+                while (keep.size() > KEEP) keep.removeFirst();
+            }
+            if (target == null) {
+                r.report().accept("Recorded " + frames.size() * 20 / 1000.0 + " s, but the target left.");
+            } else if (playVoice(target, e.getKey(), all, true)) {
+                r.report().accept("Recorded " + frames.size() * 20 / 1000.0 + " s of voice; It is playing it near "
+                        + target.getName().getString() + " now.");
+            } else {
+                r.report().accept("Recorded, but It could not play it (voice chat not ready).");
+            }
+            return true;
+        });
+    }
+
+    /** A debug recording of this player is running (voice chat thread asks before decoding). */
+    static boolean isRecording(UUID player) {
+        Recording rec = RECORDING.get(player);
+        return rec != null && System.currentTimeMillis() < rec.endMs();
+    }
+
+    /** One 20 ms frame for the debug recording (every frame, quiet ones too). */
+    static void recordDebug(UUID player, short[] pcm) {
+        Recording rec = RECORDING.get(player);
+        if (rec != null && System.currentTimeMillis() < rec.endMs()) rec.frames().add(pcm.clone());
     }
 
     /** One 20 ms frame of a player's voice (voice chat thread). */
@@ -124,8 +186,16 @@ public final class VoiceMimic {
             break;
         }
         if (voice == null) return false;
+        return playVoice(target, from, voice, forced);
+    }
+
+    /** It plays this voice piece (recorded from {@code from}) somewhere dark behind the target. */
+    private static boolean playVoice(ServerPlayerEntity target, UUID from, short[] voice, boolean forced) {
+        VoicechatServerApi api = ItWasTallVoicechat.api;
+        if (api == null) return false;
         ServerWorld world = target.getServerWorld();
         BlockPos spot = darkSpotBehind(world, target);
+        if (spot == null && forced) spot = BlockPos.ofFloored(target.getPos().subtract(target.getRotationVector().multiply(7, 0, 7)));
         if (spot == null) return false;
         LocationalAudioChannel channel = api.createLocationalAudioChannel(UUID.randomUUID(), api.fromServerLevel(world),
                 api.createPosition(spot.getX() + 0.5, spot.getY() + 1.6, spot.getZ() + 0.5));

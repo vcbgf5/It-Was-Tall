@@ -27,6 +27,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(FearStatePayload.ID, FearStatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(TaskTimerPayload.ID, TaskTimerPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(HudInfoPayload.ID, HudInfoPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(SaveIconPayload.ID, SaveIconPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
@@ -67,6 +68,9 @@ public final class ModNetworking {
             UUID uuid = handler.getPlayer().getUuid();
             server.execute(() -> syncAll(server, uuid));
             SYNC_LATER.put(uuid, server.getTicks() + 40);
+        });
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTicks() % 5 == 2) pulseWatched(server);
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (SYNC_LATER.isEmpty()) return;
@@ -130,8 +134,38 @@ public final class ModNetworking {
         if (!ServerPlayNetworking.canSend(player, HudInfoPayload.ID)) return;
         Long anchor = com.itwastall.base.BaseTracker.anchorOf(player.getUuid());
         boolean inside = com.itwastall.task.TaskManager.isInside(player);
+        com.itwastall.entity.TallOneEntity it = scaresDisabled(player.getUuid()) ? null : itAfter(player);
+        float watch = it == null ? 0f : it.watchLevel();
+        if (it != null) WATCHED.add(player.getUuid());
+        else WATCHED.remove(player.getUuid());
         ServerPlayNetworking.send(player, new HudInfoPayload(anchor != null,
-                anchor != null ? net.minecraft.util.math.BlockPos.fromLong(anchor) : net.minecraft.util.math.BlockPos.ORIGIN, inside));
+                anchor != null ? net.minecraft.util.math.BlockPos.fromLong(anchor) : net.minecraft.util.math.BlockPos.ORIGIN, inside,
+                watch, it == null ? -1 : it.getId()));
+    }
+
+    /** Players It was after at the last HUD update (they get it four times a second, so the eye reacts fast). */
+    private static final java.util.Set<UUID> WATCHED = new java.util.HashSet<>();
+
+    /** The It (in the player's world, within 128 blocks) that is after this player right now, or null. */
+    @org.jetbrains.annotations.Nullable
+    public static com.itwastall.entity.TallOneEntity itAfter(ServerPlayerEntity player) {
+        for (com.itwastall.entity.TallOneEntity it : player.getServerWorld().getEntitiesByType(com.itwastall.registry.ModEntities.TALL_ONE,
+                e -> player.getUuid().equals(e.getVictimUuid()))) {
+            if (it.squaredDistanceTo(player) < 128 * 128) return it;
+        }
+        return null;
+    }
+
+    /** Four times a second: the HUD of every player It is after (or was, so the eye closes again). */
+    private static void pulseWatched(MinecraftServer server) {
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            if (WATCHED.contains(p.getUuid()) || itAfter(p) != null) sendHudInfo(p);
+        }
+    }
+
+    /** The quill in the corner: the game was just saved (checkpoint or autosave). */
+    public static void sendSaveIcon(ServerPlayerEntity player) {
+        if (ServerPlayNetworking.canSend(player, SaveIconPayload.ID)) ServerPlayNetworking.send(player, SaveIconPayload.INSTANCE);
     }
 
     /** The TASK TIMER in the corner of the screen: the running task's time, or "no task". */

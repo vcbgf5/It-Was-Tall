@@ -42,6 +42,7 @@ public final class GodActions {
             Map.entry("eyes", "itwastall event eyes %p"),
             Map.entry("voice", "itwastall event voice %p"),
             Map.entry("mimicvoice", "itwastall event mimicvoice %p"),
+            Map.entry("recordvoice", "itwastall debug recordvoice %p"),
             Map.entry("corruption", "itwastall event corruption %p"),
             Map.entry("jumpscare", "itwastall jumpscare %p"),
             Map.entry("scare", "itwastall scare %p"),

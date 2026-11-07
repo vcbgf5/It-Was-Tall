@@ -32,6 +32,7 @@ public final class JournalLog {
         if (entry.equals(log.peekFirst())) return;
         log.addFirst(entry);
         while (log.size() > MAX) log.removeLast();
+        Checkpoint.save(player);
     }
 
     /** Newest first. */

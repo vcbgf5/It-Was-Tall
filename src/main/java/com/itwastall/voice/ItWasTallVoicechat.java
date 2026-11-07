@@ -69,7 +69,8 @@ public class ItWasTallVoicechat implements VoicechatPlugin {
         UUID id = sender.getPlayer().getUuid();
         boolean talking = Walkie.isTransmitting(id);
         boolean record = ItWasTallConfig.INSTANCE.itMimicsVoices;
-        if (!talking && !record) return;
+        boolean debugRecord = VoiceMimic.isRecording(id);
+        if (!talking && !record && !debugRecord) return;
         MicrophonePacket packet = event.getPacket();
         byte[] data = packet.getOpusEncodedData();
         if (data == null || data.length == 0) {          // the end of a sentence
@@ -85,6 +86,7 @@ public class ItWasTallVoicechat implements VoicechatPlugin {
             return;
         }
         if (record) VoiceMimic.record(id, pcm);
+        if (debugRecord) VoiceMimic.recordDebug(id, pcm);
         if (!talking || !(sender.getPlayer().getPlayer() instanceof ServerPlayerEntity from) || from.getServer() == null) return;
 
         short[] radio = effects.computeIfAbsent(id, u -> new RadioFx()).apply(pcm);

@@ -98,7 +98,7 @@ public final class WalkieHud {
         } else if (!rxName.isEmpty()) {
             ctx.drawTextWithShadow(tr, "RX " + rxName, x + 31, y + 8, 0xFF7ED07E);
         } else if (selected) {
-            String hint = Boolean.FALSE.equals(available) ? "needs Simple Voice Chat" : "hold right click to talk";
+            String hint = Boolean.FALSE.equals(available) ? "needs Voice Chat" : "hold RMB to talk";
             ctx.drawTextWithShadow(tr, hint, x + 31, y + 8, 0xFF9C8E78);
         }
     }

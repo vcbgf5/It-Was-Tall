@@ -24,7 +24,7 @@ public class GodPanelScreen extends Screen {
             {"It knocks", "realknock"}, {"Window knock", "knock"}, {"Door knock", "doorknock"}, {"Shadow at door", "shadow"},
             {"Knock inside", "knockinside"}, {"Door opens", "door"}, {"Chest moved", "chest"}, {"Sign outside", "sign"},
             {"False figure", "falsepresence"}, {"The Guest", "guest"}, {"The Count", "count"}, {"The Old One", "oldone"},
-            {"Deep One", "deepone"}, {"The Hanged", "hanged"}, {"Mimics", "mimic"}, {"Eye swarm", "eyes"}, {"It whispers", "voice"}, {"Steal a voice", "mimicvoice"}, {"Corruption", "corruption"}, {"Small scare", "scare"}, {"JUMPSCARE", "jumpscare"}};
+            {"Deep One", "deepone"}, {"The Hanged", "hanged"}, {"Mimics", "mimic"}, {"Eye swarm", "eyes"}, {"It whispers", "voice"}, {"Steal a voice", "mimicvoice"}, {"Record 5 s + play", "recordvoice"}, {"Corruption", "corruption"}, {"Small scare", "scare"}, {"JUMPSCARE", "jumpscare"}};
     private static final String[][] SCENES = {
             {"Chopping block", "scene_chopping"}, {"Empty camp", "scene_camp"}, {"Missing posters", "scene_missing"},
             {"Animal circle", "scene_circle"}, {"Footprints", "scene_footprints"}, {"Dream (outspace)", "outspace"},

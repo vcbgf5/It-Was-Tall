@@ -30,6 +30,10 @@ public final class ChaseHud {
         active = value;
     }
 
+    public static boolean isActive() {
+        return active;
+    }
+
     public static void reset() {
         active = false;
         level = 0f;

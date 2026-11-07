@@ -53,9 +53,14 @@ public final class HudExtras {
         hasBase = p.hasBase();
         base = p.base();
         inside = p.inside();
+        WatchHud.update(p.watch(), p.itId());
     }
 
     public static void reset() {
+        WatchHud.reset();
+        NightTitle.reset();
+        SaveIcon.reset();
+        Polaroids.reset();
         hasBase = false;
         inside = false;
         showStage = showClock = showCompass = showShelter = lit = 0;

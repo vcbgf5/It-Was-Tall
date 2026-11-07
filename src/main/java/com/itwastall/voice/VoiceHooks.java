@@ -13,6 +13,16 @@ public final class VoiceHooks {
     public static volatile boolean available;
     /** It plays back a stolen voice snippet near that player now (god panel / command). */
     public static volatile Predicate<ServerPlayerEntity> mimicNow;
+    /**
+     * DEBUG: records the next 5 s of {@code from}'s voice, then It plays exactly that back near {@code target} at
+     * once; {@code report} gets what happened (from the server thread). False = voice chat is not running.
+     */
+    public static volatile RecordThenMimic recordThenMimic;
+
+    @FunctionalInterface
+    public interface RecordThenMimic {
+        boolean start(ServerPlayerEntity from, ServerPlayerEntity target, java.util.function.Consumer<String> report);
+    }
 
     private VoiceHooks() {}
 }

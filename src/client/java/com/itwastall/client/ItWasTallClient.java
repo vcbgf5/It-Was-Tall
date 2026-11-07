@@ -145,6 +145,15 @@ public class ItWasTallClient implements ClientModInitializer {
         com.itwastall.client.render.EyeSwarmRenderer.init();
         net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.START.register(ctx ->
                 com.itwastall.client.god.GodClientState.syncOwnBody(net.minecraft.client.MinecraftClient.getInstance()));
+        // the new HUD: polaroids are taken at the end of the world render (no HUD, no hand), dusk types NIGHT N
+        net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.LAST.register(ctx ->
+                com.itwastall.client.hud.Polaroids.captureIfDue(net.minecraft.client.MinecraftClient.getInstance()));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(c -> {
+            com.itwastall.client.hud.NightTitle.tick(c);
+            com.itwastall.client.hud.Polaroids.tick(c);
+        });
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.SaveIconPayload.ID, (payload, context) ->
+                context.client().execute(com.itwastall.client.hud.SaveIcon::trigger));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.BloodMoonPayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.BloodMoonClient.active = payload.active()));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.EyeSwarmPayload.ID, (payload, context) ->

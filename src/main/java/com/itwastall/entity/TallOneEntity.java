@@ -174,6 +174,20 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         builder.add(MODE, Mode.STARE.ordinal());
     }
 
+    /**
+     * How hard it is watching its victim, for the eye on the victim's HUD: 0 = not watching; from 0.2 while it
+     * stands and stares, up to 1 when it is about to come for you (you stared too long, or came too close).
+     */
+    public float watchLevel() {
+        Mode m = getMode();
+        if (m == Mode.TREE || m == Mode.KNOCK || m == Mode.PEEK) return 0.6f;
+        if (!isSightingMode(m)) return 0f;
+        ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
+        double stare = lookedAtTicks / Math.max(1.0, cfg.stareTriggerSeconds * 20);
+        double close = lastVictimDistance < 0 ? 0 : (32 - lastVictimDistance) / Math.max(1.0, 32 - cfg.chaseTriggerDistance);
+        return MathHelper.clamp(0.2f + 0.8f * (float) Math.max(stare, close), 0f, 1f);
+    }
+
     /** Who it is after (null = nobody yet). */
     @Nullable
     public UUID getVictimUuid() {

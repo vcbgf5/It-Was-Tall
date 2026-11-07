@@ -435,9 +435,28 @@ public final class ItWasTallCommand {
         return builder.requires(src -> src.hasPermissionLevel(2));
     }
 
+    private static int recordVoice(ServerCommandSource src, ServerPlayerEntity from, ServerPlayerEntity target) {
+        var hook = com.itwastall.voice.VoiceHooks.recordThenMimic;
+        if (hook == null || !hook.start(from, target, msg -> src.sendFeedback(() -> Text.literal(msg), false))) {
+            src.sendError(Text.literal("Simple Voice Chat is not installed on this server"));
+            return 0;
+        }
+        src.sendFeedback(() -> Text.literal("Recording " + from.getName().getString() + "'s voice for 5 s - talk now..."), false);
+        return 1;
+    }
+
     /** "/itwastall debug base" + "/itwastall debug view" — MODPLAN §8.5 debug suite. */
     private static LiteralArgumentBuilder<ServerCommandSource> debugCommand() {
         return literal("debug")
+                // record the next 5 s of a player's voice, then It plays exactly that back near the target at once
+                .then(literal("recordvoice")
+                        .executes(ctx -> recordVoice(ctx.getSource(), ctx.getSource().getPlayerOrThrow(), ctx.getSource().getPlayerOrThrow()))
+                        .then(argument("from", EntityArgumentType.player())
+                                .executes(ctx -> recordVoice(ctx.getSource(), EntityArgumentType.getPlayer(ctx, "from"),
+                                        EntityArgumentType.getPlayer(ctx, "from")))
+                                .then(argument("target", EntityArgumentType.player())
+                                        .executes(ctx -> recordVoice(ctx.getSource(), EntityArgumentType.getPlayer(ctx, "from"),
+                                                EntityArgumentType.getPlayer(ctx, "target"))))))
                 .then(literal("base")
                         .executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();

@@ -104,6 +104,7 @@ public final class SharedJournal {
             note.putString("text", text);
             state.addSharedNote(note, MAX_NOTES);
             broadcast(server);
+            Checkpoint.save(player);
         } else if (payload.action() == NoteActionPayload.DELETE) {
             NbtCompound note = state.sharedNote(payload.id());
             if (note == null) return;

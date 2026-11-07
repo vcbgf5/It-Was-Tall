@@ -718,6 +718,7 @@ public final class TaskManager {
         logTask(player, task, "done", true);
         sendToast(player, TaskToastPayload.KIND_COMPLETED, TITLE_DONE, taskTitle(task) + " — done.");
         com.itwastall.advancement.Achievements.taskCompleted(player, task.kind.name());
+        com.itwastall.world.Checkpoint.save(player);
         // PHASES §2: wykonane zadanie -8 "It grows quiet" — no fleeting victory, tension falls
         if (Director.phase() == 1) Director.addTension(-8.0);
         putCooldown(player);

@@ -2,6 +2,6 @@
   "required": true,
   "package": "com.itwastall.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["BlockItemMixin", "GodTrackerMixin"],
+  "mixins": ["BlockItemMixin", "GodTrackerMixin", "ServerSaveMixin"],
   "injectors": {"defaultRequire": 1}
 }

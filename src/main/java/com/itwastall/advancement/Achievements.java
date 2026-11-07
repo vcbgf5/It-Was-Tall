@@ -55,6 +55,7 @@ public final class Achievements {
             List<String> missing = new ArrayList<>();
             for (String criterion : progress.getUnobtainedCriteria()) missing.add(criterion);
             for (String criterion : missing) player.getAdvancementTracker().grantCriterion(entry, criterion);
+            com.itwastall.world.Checkpoint.save(player);
         } catch (RuntimeException e) {
             ItWasTall.LOGGER.debug("Could not grant advancement {}: {}", id, e.toString());
         }
