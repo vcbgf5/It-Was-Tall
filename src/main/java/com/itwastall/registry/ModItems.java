@@ -48,6 +48,15 @@ public final class ModItems {
             ItWasTall.id("lore_book"),
             new Item(new Item.Settings().maxCount(1)));
 
+    /**
+     * The pixel icons of the icon pack as one item (tools/gen_iconpack.py): its custom_model_data picks the
+     * picture. Only for advancement icons — not in any creative tab.
+     */
+    public static final Item ICON = Registry.register(
+            Registries.ITEM,
+            ItWasTall.id("icon"),
+            new Item(new Item.Settings().maxCount(1)));
+
     /** THE RADIO: right-click to switch on; it hisses and now and then a voice breaks through. */
     public static final Item RADIO = Registry.register(
             Registries.ITEM,

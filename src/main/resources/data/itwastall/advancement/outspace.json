@@ -2,7 +2,10 @@
   "parent": "itwastall:root",
   "display": {
     "icon": {
-      "id": "minecraft:black_bed"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 43
+      }
     },
     "title": {
       "translate": "advancements.itwastall.outspace.title"

@@ -2,7 +2,10 @@
   "parent": "itwastall:outspace",
   "display": {
     "icon": {
-      "id": "minecraft:torch"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 9
+      }
     },
     "title": {
       "translate": "advancements.itwastall.wake_up.title"

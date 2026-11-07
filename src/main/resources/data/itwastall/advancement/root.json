@@ -1,7 +1,10 @@
 {
   "display": {
     "icon": {
-      "id": "itwastall:lore_book"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 19
+      }
     },
     "title": {
       "translate": "advancements.itwastall.root.title"

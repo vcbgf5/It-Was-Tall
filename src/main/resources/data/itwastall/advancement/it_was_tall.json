@@ -2,7 +2,10 @@
   "parent": "itwastall:stage_3",
   "display": {
     "icon": {
-      "id": "minecraft:wither_rose"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 30
+      }
     },
     "title": {
       "translate": "advancements.itwastall.it_was_tall.title"

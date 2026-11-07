@@ -2,7 +2,10 @@
   "parent": "itwastall:task_done",
   "display": {
     "icon": {
-      "id": "minecraft:chest"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 27
+      }
     },
     "title": {
       "translate": "advancements.itwastall.task_sacrifice.title"

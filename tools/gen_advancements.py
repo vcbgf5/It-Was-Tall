@@ -6,7 +6,7 @@ Everything except the root and the structure ones uses the "minecraft:impossible
 code (com.itwastall.advancement.Achievements.grant(player, id)).
 Run: python3 tools/gen_advancements.py
 """
-import json, os
+import json, os, importlib.util
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "src/main/resources/data/itwastall/advancement")
@@ -16,110 +16,122 @@ STRUCTURES = ["abandoned_cabin", "roadside_shrine", "torch_tunnel", "sign_room",
               "deep_lair", "counting_stones", "guest_house", "dream_well"]
 
 # id, parent, icon, frame, hidden, (en title, en desc), (pl title, pl desc)
+# The game shows the ENGLISH names in every language (pl_pl gets the English text too); the Polish ones stay
+# here only as notes.
 ADV = [
-    ("root", None, "itwastall:lore_book", "task", False,
+    ("root", None, "icon:journal", "task", False,
      ("It Was Tall", "Something is standing at the edge of the forest."),
      ("It Was Tall", "Coś stoi na skraju lasu.")),
-    ("first_sighting", "root", "minecraft:ender_eye", "task", False,
+    ("first_sighting", "root", "icon:moon_eye", "task", False,
      ("It Was There", "Look at It, standing at the edge of the forest"),
      ("Ono tam było", "Spójrz na To, gdy stoi na skraju lasu")),
-    ("dont_blink", "first_sighting", "minecraft:spyglass", "task", False,
+    ("dont_blink", "first_sighting", "icon:eye_closed", "task", False,
      ("Don't Blink", "Look away for a moment and let It vanish"),
      ("Nie mrugaj", "Odwróć wzrok na chwilę i pozwól Mu zniknąć")),
-    ("survive_chase", "first_sighting", "minecraft:leather_boots", "goal", False,
+    ("survive_chase", "first_sighting", "icon:footprints", "goal", False,
      ("Run", "Escape a chase by getting under a roof"),
      ("Uciekaj", "Ucieknij przed pościgiem, chowając się pod dachem")),
-    ("caught", "survive_chase", "minecraft:wither_skeleton_skull", "task", True,
+    ("caught", "survive_chase", "icon:it_face", "task", True,
      ("Face to Face", "See its face. Only for a moment."),
      ("Twarzą w twarz", "Zobacz jego twarz. Tylko przez chwilę.")),
-    ("it_joined", "root", "itwastall:tall_one_spawn_egg", "task", False,
+    ("it_joined", "root", "icon:warning", "task", False,
      ("IT JOINED", "Something joined this world"),
      ("IT JOINED", "Coś dołączyło do tego świata")),
-    ("knock_knock", "it_joined", "minecraft:oak_door", "task", False,
+    ("knock_knock", "it_joined", "icon:door", "task", False,
      ("Knock Knock", "Something knocks on your door or window"),
      ("Puk puk", "Coś puka do twoich drzwi albo okna")),
-    ("in_the_window", "knock_knock", "minecraft:glass_pane", "task", False,
+    ("in_the_window", "knock_knock", "icon:window_hand", "task", False,
      ("It Saw You", "Look at the figure in the window"),
      ("Widziało cię", "Spójrz na postać w oknie")),
-    ("task_done", "it_joined", "minecraft:writable_book", "task", False,
+    ("task_done", "it_joined", "icon:quill", "task", False,
      ("Do As It Says", "Complete a task"),
      ("Rób, co każe", "Wykonaj zadanie")),
-    ("task_stay_inside", "task_done", "minecraft:red_bed", "task", False,
+    ("task_stay_inside", "task_done", "icon:bed", "task", False,
      ("Don't Go Outside", "Complete the task \"Stay inside\""),
      ("Nie wychodź", "Wykonaj zadanie \"Zostań w środku\"")),
-    ("task_douse_lights", "task_done", "minecraft:torch", "task", False,
+    ("task_douse_lights", "task_done", "icon:lantern_dark", "task", False,
      ("Lights Out", "Complete the task \"Douse the lights\""),
      ("Zgaś światło", "Wykonaj zadanie \"Zgaś światła\"")),
-    ("task_hide_and_seek", "task_done", "minecraft:barrel", "goal", False,
+    ("task_hide_and_seek", "task_done", "icon:wardrobe", "goal", False,
      ("Not Found", "Survive hide and seek"),
      ("Nie znalazło", "Przetrwaj zabawę w chowanego")),
-    ("task_dont_look", "task_done", "minecraft:carved_pumpkin", "task", False,
+    ("task_dont_look", "task_done", "icon:dont_look", "task", False,
      ("Eyes Down", "Complete the task \"Don't look\""),
      ("Oczy w dół", "Wykonaj zadanie \"Nie patrz\"")),
-    ("task_sacrifice", "task_done", "minecraft:chest", "task", False,
+    ("task_sacrifice", "task_done", "icon:chest", "task", False,
      ("Offering", "Bring It what It asked for"),
      ("Ofiara", "Przynieś Mu to, o co prosiło")),
-    ("task_failed", "task_done", "minecraft:redstone", "task", True,
+    ("task_failed", "task_done", "icon:skull", "task", True,
      ("It Was Not Pleased", "Fail a task"),
      ("Nie było zadowolone", "Nie wykonaj zadania")),
-    ("stage_3", "it_joined", "minecraft:clock", "goal", False,
+    ("stage_3", "it_joined", "icon:hourglass", "goal", False,
      ("It Gets Closer", "Reach stage 3"),
      ("Coraz bliżej", "Dojdź do etapu 3")),
-    ("it_was_tall", "stage_3", "minecraft:wither_rose", "challenge", False,
+    ("it_was_tall", "stage_3", "icon:it_figure", "challenge", False,
      ("It Was Tall", "Reach the last stage"),
      ("To było wysokie", "Dojdź do ostatniego etapu")),
-    ("counted", "it_joined", "minecraft:cobblestone", "task", False,
+    ("counted", "it_joined", "icon:tally", "task", False,
      ("Under a Roof", "Survive The One Who Counts"),
      ("Pod dachem", "Przetrwaj Tego, który liczy")),
-    ("deep_one", "it_joined", "itwastall:deep_one_spawn_egg", "task", False,
+    ("deep_one", "it_joined", "icon:spider", "task", False,
      ("From Below", "The Deep One takes a block out of your hand"),
      ("Z głębin", "Głębinowy zabiera ci blok z ręki")),
-    ("guest", "it_joined", "minecraft:player_head", "task", False,
+    ("guest", "it_joined", "icon:guest", "task", False,
      ("A Guest", "Get close to the player who should not be here"),
      ("Gość", "Podejdź do gracza, którego nie powinno tu być")),
-    ("hanged", "it_joined", "minecraft:lead", "task", True,
+    ("hanged", "it_joined", "icon:noose", "task", True,
      ("It Had My Face", "See the one hanging from a tree"),
      ("Miał moją twarz", "Zobacz tego, który wisi na drzewie")),
-    ("mimic", "it_joined", "minecraft:leather", "task", True,
+    ("mimic", "it_joined", "icon:animal_skull", "task", True,
      ("That Was Not a Cow", "Get hit by a Mimic"),
      ("To nie była krowa", "Oberwij od Naśladowcy")),
-    ("eyes", "it_joined", "minecraft:spider_eye", "task", True,
+    ("eyes", "it_joined", "icon:eyes_dark", "task", True,
      ("Something Is Watching", "See the eyes between the trees"),
      ("Coś patrzy", "Zobacz oczy między drzewami")),
-    ("blood_moon", "it_joined", "minecraft:red_dye", "goal", False,
+    ("blood_moon", "it_joined", "icon:blood_moon", "goal", False,
      ("Red Night", "Live through a blood moon"),
      ("Czerwona noc", "Przeżyj krwawy księżyc")),
-    ("voice", "it_joined", "minecraft:goat_horn", "task", True,
+    ("voice", "it_joined", "icon:sound", "task", True,
      ("That Wasn't Them", "Hear a friend's voice from the dark when they are somewhere else"),
      ("To nie był on", "Usłysz z ciemności głos przyjaciela, gdy jest gdzie indziej")),
-    ("old_one", "root", "itwastall:old_one_spawn_egg", "task", False,
+    ("old_one", "root", "icon:grave", "task", False,
      ("The Old One", "Meet a player who is not a player"),
      ("Stary", "Spotkaj gracza, który nie jest graczem")),
-    ("old_one_split", "old_one", "minecraft:bone", "goal", True,
+    ("old_one_split", "old_one", "icon:bones", "goal", True,
      ("Something Climbed Out", "Get too close to the Old One"),
      ("Coś z niego wyszło", "Podejdź za blisko do Starego")),
-    ("outspace", "root", "minecraft:black_bed", "task", False,
+    ("outspace", "root", "icon:static_tv", "task", False,
      ("OUTSPACE", "Fall asleep and wake up somewhere else"),
      ("OUTSPACE", "Zaśnij i obudź się gdzie indziej")),
-    ("wake_up", "outspace", "minecraft:torch", "task", False,
+    ("wake_up", "outspace", "icon:candle", "task", False,
      ("Wake Up", "Leave OUTSPACE"),
      ("Pobudka", "Wydostań się z OUTSPACE")),
-    ("sleeper", "outspace", "itwastall:sleeper_spawn_egg", "goal", True,
+    ("sleeper", "outspace", "icon:photo", "goal", True,
      ("The One in the Bed", "Wake the one who has your face"),
      ("Ten w łóżku", "Obudź tego, który ma twoją twarz")),
-    ("first_book", "root", "itwastall:lore_book", "task", False,
+    ("first_book", "root", "icon:books", "task", False,
      ("Read It", "Add a book to the shared journal"),
      ("Przeczytaj", "Dodaj książkę do wspólnego dziennika")),
-    ("librarian", "first_book", "minecraft:bookshelf", "challenge", False,
+    ("librarian", "first_book", "icon:lantern_lit", "challenge", False,
      ("Librarian", "Collect 10 books in the shared journal"),
      ("Bibliotekarz", "Zbierz 10 książek we wspólnym dzienniku")),
-    ("explorer", "root", "minecraft:compass", "task", False,
+    ("explorer", "root", "icon:map", "task", False,
      ("Something Built This", "Find an It Was Tall structure"),
      ("Ktoś to zbudował", "Znajdź strukturę It Was Tall")),
-    ("cartographer", "explorer", "minecraft:filled_map", "challenge", False,
+    ("cartographer", "explorer", "icon:compass", "challenge", False,
      ("Cartographer of Fear", "Find every It Was Tall structure"),
      ("Kartograf strachu", "Znajdź wszystkie struktury It Was Tall")),
 ]
+
+
+def icon_stack(icon):
+    """'icon:<name>' = a picture from the icon pack (tools/gen_iconpack.py), otherwise a plain item id."""
+    if not icon.startswith("icon:"):
+        return {"id": icon}
+    spec = importlib.util.spec_from_file_location("iconpack", os.path.join(ROOT, "tools/gen_iconpack.py"))
+    pack = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pack)
+    return {"id": "itwastall:icon", "components": {"minecraft:custom_model_data": pack.cmd(icon[5:])}}
 
 
 def location(structure):
@@ -136,8 +148,8 @@ def main():
     for (aid, parent, icon, frame, hidden, (et, ed), (pt, pd)) in ADV:
         key = "advancements.itwastall." + aid
         en[key + ".title"], en[key + ".description"] = et, ed
-        pl[key + ".title"], pl[key + ".description"] = pt, pd
-        display = {"icon": {"id": icon}, "title": {"translate": key + ".title"},
+        pl[key + ".title"], pl[key + ".description"] = et, ed      # English in game, whatever the language
+        display = {"icon": icon_stack(icon), "title": {"translate": key + ".title"},
                    "description": {"translate": key + ".description"}, "frame": frame,
                    "show_toast": aid != "root", "announce_to_chat": aid != "root", "hidden": hidden}
         adv = {}

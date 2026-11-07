@@ -2,7 +2,10 @@
   "parent": "itwastall:first_sighting",
   "display": {
     "icon": {
-      "id": "minecraft:leather_boots"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 4
+      }
     },
     "title": {
       "translate": "advancements.itwastall.survive_chase.title"

@@ -2,13 +2,18 @@
 """ICON PACK of It Was Tall: 50 pixel icons, 16x16, in the HUD's style (journal colours: parchment, ink, dried
 blood, iron, old wood) with the same 1 px drop shadow. Not used by the code yet — ready for the journal / HUD.
 Each icon is drawn by hand as a 16x16 grid below (one letter = one pixel, '.' = empty).
-Output: src/main/resources/assets/itwastall/textures/gui/sprites/icons/<name>.png
+Output: src/main/resources/assets/itwastall/textures/gui/sprites/icons/<name>.png (GUI sprites)
+    and the same pictures as ONE item, itwastall:icon, whose custom_model_data picks the icon (1 = the first icon
+    below, 2 = the second...) — the advancements use it (tools/gen_advancements.py). New icons go at the END,
+    so the numbers of the old ones never change.
 Run: python3 tools/gen_iconpack.py"""
 import os
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src/main/resources/assets/itwastall/textures/gui/sprites/icons")
+ITEM_TEX = os.path.join(ROOT, "src/main/resources/assets/itwastall/textures/item/icon")
+ITEM_MODELS = os.path.join(ROOT, "src/main/resources/assets/itwastall/models/item")
 
 PAL = {
     "k": (24, 14, 10), "r": (128, 18, 14), "R": (186, 44, 32), "d": (78, 8, 6),
@@ -982,6 +987,121 @@ icon("moon_eye", """
 """)
 
 
+icon("eye_closed", """
+................
+................
+................
+................
+.....kkkkkk.....
+...kkppppppkk...
+..kppppppppppk..
+.kppppPPPPppppk.
+.kpppPkkkkPpppk.
+kkkkkk....kkkkkk
+.k..k..kk..k..k.
+k..k...kk...k..k
+.......Rk.......
+.......R........
+................
+................
+""")
+
+icon("guest", """
+................
+..kkkkkkkkkkkk..
+..kBBBBBBBBBBk..
+..kBBBBBBBBBBk..
+..kBpppppppBBk..
+..kppppppppppk..
+..kpNNppppNNpk..
+..kpNNppppNNpk..
+..kppppppppppk..
+..kpppPPPPpppk..
+..kppPkkkkPppk..
+..kppppppppppk..
+..kkkkkkkkkkkk..
+................
+................
+................
+""")
+
+icon("eyes_dark", """
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNN
+NNwRNwRNNNNNNNNN
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNwRNwRN
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNN
+NNNNNwRNwRNNNNNN
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNN
+NNwRNwRNNNNNNNNN
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNwRNwRN
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNN
+""")
+
+icon("books", """
+................
+................
+..kkk.kkk.......
+..kRk.kbk..kk...
+..kRk.kbk.kgGk..
+..kpk.kpk.kgGk..
+..kRk.kbk.kGgk..
+..kRk.kbkkGgk...
+..kRk.kbkkgGk...
+..kpk.kpkkGgk...
+..kRk.kbkkgGk...
+..kRk.kbkkGgk...
+.kkkkkkkkkkkkk..
+.kBBBBBBBBBBBk..
+.kkkkkkkkkkkkk..
+................
+""")
+
+icon("compass", """
+................
+.....kkkkkk.....
+...kkggggggkk...
+..kggppppppggk..
+..kgpppRRpppgk..
+.kgppppRRppppgk.
+.kgpppRRRRpppgk.
+.kgppppkkppppgk.
+.kgppppkkppppgk.
+.kgpppPwwPpppgk.
+..kgpppwwpppgk..
+..kggpppppppgk..
+...kkggggggkk...
+.....kkkkkk.....
+................
+................
+""")
+
+icon("cracked_bedrock", """
+gggGggggggGggggg
+gGgggkggggggGggg
+gggggkkgggGggggg
+ggGgggkggggggggg
+gggggkkkggggGggg
+gggggkNkkgggggGg
+gGgggkNNkkgggggg
+gggkkNNNNkkkgggg
+ggkNNNNNNNNkkGgg
+gGkNNNNNNNNNkggg
+ggkkNNNNNNNkkggg
+ggggkNNNNNkgggGg
+gGgggkkNkkgggggg
+gggggggkgggGgggg
+ggGggggkgggggggg
+gggggggggggggGgg
+""")
+
+
 def shadow(img):
     out = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     px = img.load()
@@ -1002,11 +1122,29 @@ def render(rows):
     return shadow(img)
 
 
+def cmd(name):
+    """custom_model_data of an icon on the itwastall:icon item."""
+    return list(ICONS).index(name) + 1
+
+
 def main():
+    import json
     os.makedirs(OUT, exist_ok=True)
+    os.makedirs(ITEM_TEX, exist_ok=True)
+    os.makedirs(os.path.join(ITEM_MODELS, "icon"), exist_ok=True)
+    overrides = []
     for name, rows in ICONS.items():
-        render(rows).save(os.path.join(OUT, name + ".png"))
-    print(len(ICONS), "icons ->", OUT)
+        img = render(rows)
+        img.save(os.path.join(OUT, name + ".png"))
+        img.save(os.path.join(ITEM_TEX, name + ".png"))
+        with open(os.path.join(ITEM_MODELS, "icon", name + ".json"), "w") as fh:
+            json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "itwastall:item/icon/" + name}}, fh)
+        overrides.append({"predicate": {"custom_model_data": cmd(name)}, "model": "itwastall:item/icon/" + name})
+    first = next(iter(ICONS))
+    with open(os.path.join(ITEM_MODELS, "icon.json"), "w") as fh:
+        json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": "itwastall:item/icon/" + first},
+                   "overrides": overrides}, fh, indent=1)
+    print(len(ICONS), "icons ->", OUT, "+ item itwastall:icon")
 
 
 if __name__ == "__main__":

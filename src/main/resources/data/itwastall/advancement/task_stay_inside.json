@@ -2,7 +2,10 @@
   "parent": "itwastall:task_done",
   "display": {
     "icon": {
-      "id": "minecraft:red_bed"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 24
+      }
     },
     "title": {
       "translate": "advancements.itwastall.task_stay_inside.title"

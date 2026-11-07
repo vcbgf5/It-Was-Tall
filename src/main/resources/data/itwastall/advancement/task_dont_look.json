@@ -2,7 +2,10 @@
   "parent": "itwastall:task_done",
   "display": {
     "icon": {
-      "id": "minecraft:carved_pumpkin"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 45
+      }
     },
     "title": {
       "translate": "advancements.itwastall.task_dont_look.title"

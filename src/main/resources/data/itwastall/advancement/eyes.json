@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:spider_eye"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 53
+      }
     },
     "title": {
       "translate": "advancements.itwastall.eyes.title"

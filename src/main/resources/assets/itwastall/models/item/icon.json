@@ -1,0 +1,344 @@
+{
+ "parent": "minecraft:item/generated",
+ "textures": {
+  "layer0": "itwastall:item/icon/skull"
+ },
+ "overrides": [
+  {
+   "predicate": {
+    "custom_model_data": 1
+   },
+   "model": "itwastall:item/icon/skull"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 2
+   },
+   "model": "itwastall:item/icon/heartbeat"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 3
+   },
+   "model": "itwastall:item/icon/lungs"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 4
+   },
+   "model": "itwastall:item/icon/footprints"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 5
+   },
+   "model": "itwastall:item/icon/mouth"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 6
+   },
+   "model": "itwastall:item/icon/lantern_lit"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 7
+   },
+   "model": "itwastall:item/icon/lantern_dark"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 8
+   },
+   "model": "itwastall:item/icon/torch"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 9
+   },
+   "model": "itwastall:item/icon/candle"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 10
+   },
+   "model": "itwastall:item/icon/match"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 11
+   },
+   "model": "itwastall:item/icon/radio"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 12
+   },
+   "model": "itwastall:item/icon/walkie"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 13
+   },
+   "model": "itwastall:item/icon/key"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 14
+   },
+   "model": "itwastall:item/icon/padlock"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 15
+   },
+   "model": "itwastall:item/icon/lock_open"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 16
+   },
+   "model": "itwastall:item/icon/axe"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 17
+   },
+   "model": "itwastall:item/icon/pickaxe"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 18
+   },
+   "model": "itwastall:item/icon/noose"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 19
+   },
+   "model": "itwastall:item/icon/journal"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 20
+   },
+   "model": "itwastall:item/icon/quill"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 21
+   },
+   "model": "itwastall:item/icon/map"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 22
+   },
+   "model": "itwastall:item/icon/camera"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 23
+   },
+   "model": "itwastall:item/icon/photo"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 24
+   },
+   "model": "itwastall:item/icon/bed"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 25
+   },
+   "model": "itwastall:item/icon/door"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 26
+   },
+   "model": "itwastall:item/icon/window_hand"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 27
+   },
+   "model": "itwastall:item/icon/chest"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 28
+   },
+   "model": "itwastall:item/icon/bell"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 29
+   },
+   "model": "itwastall:item/icon/hourglass"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 30
+   },
+   "model": "itwastall:item/icon/it_figure"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 31
+   },
+   "model": "itwastall:item/icon/it_face"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 32
+   },
+   "model": "itwastall:item/icon/handprint"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 33
+   },
+   "model": "itwastall:item/icon/claws"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 34
+   },
+   "model": "itwastall:item/icon/blood_drop"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 35
+   },
+   "model": "itwastall:item/icon/blood_moon"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 36
+   },
+   "model": "itwastall:item/icon/crow"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 37
+   },
+   "model": "itwastall:item/icon/spider"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 38
+   },
+   "model": "itwastall:item/icon/dead_tree"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 39
+   },
+   "model": "itwastall:item/icon/grave"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 40
+   },
+   "model": "itwastall:item/icon/bones"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 41
+   },
+   "model": "itwastall:item/icon/tally"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 42
+   },
+   "model": "itwastall:item/icon/sound"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 43
+   },
+   "model": "itwastall:item/icon/static_tv"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 44
+   },
+   "model": "itwastall:item/icon/warning"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 45
+   },
+   "model": "itwastall:item/icon/dont_look"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 46
+   },
+   "model": "itwastall:item/icon/wardrobe"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 47
+   },
+   "model": "itwastall:item/icon/animal_skull"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 48
+   },
+   "model": "itwastall:item/icon/bear_trap"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 49
+   },
+   "model": "itwastall:item/icon/campfire"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 50
+   },
+   "model": "itwastall:item/icon/moon_eye"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 51
+   },
+   "model": "itwastall:item/icon/eye_closed"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 52
+   },
+   "model": "itwastall:item/icon/guest"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 53
+   },
+   "model": "itwastall:item/icon/eyes_dark"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 54
+   },
+   "model": "itwastall:item/icon/books"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 55
+   },
+   "model": "itwastall:item/icon/compass"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 56
+   },
+   "model": "itwastall:item/icon/cracked_bedrock"
+  }
+ ]
+}

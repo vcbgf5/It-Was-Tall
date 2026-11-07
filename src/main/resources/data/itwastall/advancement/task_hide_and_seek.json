@@ -2,7 +2,10 @@
   "parent": "itwastall:task_done",
   "display": {
     "icon": {
-      "id": "minecraft:barrel"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 46
+      }
     },
     "title": {
       "translate": "advancements.itwastall.task_hide_and_seek.title"

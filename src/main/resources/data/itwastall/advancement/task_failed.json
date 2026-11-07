@@ -2,7 +2,10 @@
   "parent": "itwastall:task_done",
   "display": {
     "icon": {
-      "id": "minecraft:redstone"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 1
+      }
     },
     "title": {
       "translate": "advancements.itwastall.task_failed.title"

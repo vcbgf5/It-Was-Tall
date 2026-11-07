@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:red_dye"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 35
+      }
     },
     "title": {
       "translate": "advancements.itwastall.blood_moon.title"

@@ -2,7 +2,10 @@
   "parent": "itwastall:old_one",
   "display": {
     "icon": {
-      "id": "minecraft:bone"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 40
+      }
     },
     "title": {
       "translate": "advancements.itwastall.old_one_split.title"

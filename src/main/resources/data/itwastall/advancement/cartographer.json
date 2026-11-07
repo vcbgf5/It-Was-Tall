@@ -2,7 +2,10 @@
   "parent": "itwastall:explorer",
   "display": {
     "icon": {
-      "id": "minecraft:filled_map"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 55
+      }
     },
     "title": {
       "translate": "advancements.itwastall.cartographer.title"

@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "itwastall:deep_one_spawn_egg"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 37
+      }
     },
     "title": {
       "translate": "advancements.itwastall.deep_one.title"

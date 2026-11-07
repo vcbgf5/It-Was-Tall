@@ -2,7 +2,10 @@
   "parent": "itwastall:outspace",
   "display": {
     "icon": {
-      "id": "itwastall:sleeper_spawn_egg"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 23
+      }
     },
     "title": {
       "translate": "advancements.itwastall.sleeper.title"

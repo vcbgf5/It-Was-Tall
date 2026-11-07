@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:goat_horn"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 42
+      }
     },
     "title": {
       "translate": "advancements.itwastall.voice.title"

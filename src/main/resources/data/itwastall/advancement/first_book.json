@@ -2,7 +2,10 @@
   "parent": "itwastall:root",
   "display": {
     "icon": {
-      "id": "itwastall:lore_book"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 54
+      }
     },
     "title": {
       "translate": "advancements.itwastall.first_book.title"

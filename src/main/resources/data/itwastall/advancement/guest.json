@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:player_head"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 52
+      }
     },
     "title": {
       "translate": "advancements.itwastall.guest.title"

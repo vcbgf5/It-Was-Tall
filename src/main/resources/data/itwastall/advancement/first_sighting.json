@@ -2,7 +2,10 @@
   "parent": "itwastall:root",
   "display": {
     "icon": {
-      "id": "minecraft:ender_eye"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 50
+      }
     },
     "title": {
       "translate": "advancements.itwastall.first_sighting.title"

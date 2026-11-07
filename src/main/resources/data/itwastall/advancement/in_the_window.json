@@ -2,7 +2,10 @@
   "parent": "itwastall:knock_knock",
   "display": {
     "icon": {
-      "id": "minecraft:glass_pane"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 26
+      }
     },
     "title": {
       "translate": "advancements.itwastall.in_the_window.title"

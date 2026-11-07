@@ -2,7 +2,10 @@
   "parent": "itwastall:root",
   "display": {
     "icon": {
-      "id": "itwastall:old_one_spawn_egg"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 39
+      }
     },
     "title": {
       "translate": "advancements.itwastall.old_one.title"

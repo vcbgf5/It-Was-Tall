@@ -2,7 +2,10 @@
   "parent": "itwastall:first_book",
   "display": {
     "icon": {
-      "id": "minecraft:bookshelf"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 6
+      }
     },
     "title": {
       "translate": "advancements.itwastall.librarian.title"

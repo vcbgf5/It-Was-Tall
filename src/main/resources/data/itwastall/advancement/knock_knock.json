@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:oak_door"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 25
+      }
     },
     "title": {
       "translate": "advancements.itwastall.knock_knock.title"

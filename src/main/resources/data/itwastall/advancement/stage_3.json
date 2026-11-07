@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:clock"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 29
+      }
     },
     "title": {
       "translate": "advancements.itwastall.stage_3.title"

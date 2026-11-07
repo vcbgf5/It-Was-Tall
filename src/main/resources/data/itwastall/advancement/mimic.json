@@ -2,7 +2,10 @@
   "parent": "itwastall:it_joined",
   "display": {
     "icon": {
-      "id": "minecraft:leather"
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 47
+      }
     },
     "title": {
       "translate": "advancements.itwastall.mimic.title"
