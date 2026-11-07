@@ -435,6 +435,20 @@ public final class ItWasTallCommand {
         return builder.requires(src -> src.hasPermissionLevel(2));
     }
 
+    private static int mimicVoiceNow(ServerCommandSource src, ServerPlayerEntity target) {
+        var hook = com.itwastall.voice.VoiceHooks.mimicLatestNow;
+        if (hook == null) {
+            src.sendError(Text.literal("Simple Voice Chat is not installed on this server"));
+            return 0;
+        }
+        if (!hook.test(target)) {
+            src.sendError(Text.literal("No voice recorded yet: use /itwastall debug recordvoice first (or turn on itMimicsVoices and talk)"));
+            return 0;
+        }
+        src.sendFeedback(() -> Text.literal("It is playing the newest stolen voice near " + target.getName().getString() + "."), false);
+        return 1;
+    }
+
     private static int recordVoice(ServerCommandSource src, ServerPlayerEntity from, ServerPlayerEntity target) {
         var hook = com.itwastall.voice.VoiceHooks.recordThenMimic;
         if (hook == null || !hook.start(from, target, msg -> src.sendFeedback(() -> Text.literal(msg), false))) {
@@ -448,6 +462,11 @@ public final class ItWasTallCommand {
     /** "/itwastall debug base" + "/itwastall debug view" — MODPLAN §8.5 debug suite. */
     private static LiteralArgumentBuilder<ServerCommandSource> debugCommand() {
         return literal("debug")
+                // It plays the newest recorded voice piece near the player right now
+                .then(literal("mimicvoicenow")
+                        .executes(ctx -> mimicVoiceNow(ctx.getSource(), ctx.getSource().getPlayerOrThrow()))
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(ctx -> mimicVoiceNow(ctx.getSource(), EntityArgumentType.getPlayer(ctx, "player")))))
                 // record the next 5 s of a player's voice, then It plays exactly that back near the target at once
                 .then(literal("recordvoice")
                         .executes(ctx -> recordVoice(ctx.getSource(), ctx.getSource().getPlayerOrThrow(), ctx.getSource().getPlayerOrThrow()))

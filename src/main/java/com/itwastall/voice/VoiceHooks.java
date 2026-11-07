@@ -13,6 +13,8 @@ public final class VoiceHooks {
     public static volatile boolean available;
     /** It plays back a stolen voice snippet near that player now (god panel / command). */
     public static volatile Predicate<ServerPlayerEntity> mimicNow;
+    /** DEBUG: It plays the NEWEST voice piece it has (anyone's) near that player now; false = nothing recorded. */
+    public static volatile Predicate<ServerPlayerEntity> mimicLatestNow;
     /**
      * DEBUG: records the next 5 s of {@code from}'s voice, then It plays exactly that back near {@code target} at
      * once; {@code report} gets what happened (from the server thread). False = voice chat is not running.

@@ -52,6 +52,7 @@ public final class VoiceMimic {
 
     static void init() {
         VoiceHooks.mimicNow = p -> play(p, true);
+        VoiceHooks.mimicLatestNow = VoiceMimic::playLatest;
         VoiceHooks.recordThenMimic = (from, target, report) -> {
             if (ItWasTallVoicechat.api == null) return false;
             RECORDING.put(from.getUuid(), new Recording(java.util.Collections.synchronizedList(new ArrayList<>()),
@@ -88,6 +89,7 @@ public final class VoiceMimic {
                 keep.addLast(all);
                 while (keep.size() > KEEP) keep.removeFirst();
             }
+            RECORDED_AT.put(e.getKey(), System.currentTimeMillis());
             if (target == null) {
                 r.report().accept("Recorded " + frames.size() * 20 / 1000.0 + " s, but the target left.");
             } else if (playVoice(target, e.getKey(), all, true)) {
@@ -143,6 +145,7 @@ public final class VoiceMimic {
             keep.addLast(all);
             while (keep.size() > KEEP) keep.removeFirst();
         }
+        RECORDED_AT.put(player, System.currentTimeMillis());
     }
 
     private static void tick(MinecraftServer server) {
@@ -187,6 +190,27 @@ public final class VoiceMimic {
         }
         if (voice == null) return false;
         return playVoice(target, from, voice, forced);
+    }
+
+    /** Debug: the piece recorded last (by anyone) is played near the target now, whatever the config says. */
+    private static final Map<UUID, Long> RECORDED_AT = new ConcurrentHashMap<>();
+
+    static boolean playLatest(ServerPlayerEntity target) {
+        UUID newest = null;
+        long best = Long.MIN_VALUE;
+        for (Map.Entry<UUID, Long> e : RECORDED_AT.entrySet()) {
+            if (e.getValue() > best && SNIPPETS.containsKey(e.getKey())) {
+                best = e.getValue();
+                newest = e.getKey();
+            }
+        }
+        if (newest == null) return false;
+        Deque<short[]> keep = SNIPPETS.get(newest);
+        short[] voice;
+        synchronized (keep) {
+            voice = keep.peekLast();
+        }
+        return voice != null && playVoice(target, newest, voice, true);
     }
 
     /** It plays this voice piece (recorded from {@code from}) somewhere dark behind the target. */
