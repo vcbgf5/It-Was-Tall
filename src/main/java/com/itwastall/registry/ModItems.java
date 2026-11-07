@@ -48,6 +48,12 @@ public final class ModItems {
             ItWasTall.id("lore_book"),
             new Item(new Item.Settings().maxCount(1)));
 
+    /** THE RADIO: right-click to switch on; it hisses and now and then a voice breaks through. */
+    public static final Item RADIO = Registry.register(
+            Registries.ITEM,
+            ItWasTall.id("radio"),
+            new com.itwastall.entity.Radio.RadioItem(new Item.Settings().maxCount(1)));
+
     public static final String NOTE_ID = "note_id", NOTE_TITLE = "note_title", NOTE_BODY = "note_body";
 
     private ModItems() {
@@ -92,5 +98,6 @@ public final class ModItems {
             entries.add(SLEEPER_SPAWN_EGG);
         });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(entries -> entries.add(WARDING_CRYSTAL));
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(entries -> entries.add(RADIO));
     }
 }

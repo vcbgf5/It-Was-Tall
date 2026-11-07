@@ -63,7 +63,7 @@ public final class TallFootprints {
             if (!p.isAlive() || p.isSpectator() || p.isCreative()) continue;
             Long next = NEXT.get(p.getUuid());
             if (next == null) {
-                NEXT.put(p.getUuid(), now + 20L * 60 * (8 + p.getRandom().nextInt(10)));
+                NEXT.put(p.getUuid(), now + BloodMoon.scale(20L * 60 * (8 + p.getRandom().nextInt(10))));
                 continue;
             }
             if (now < next || Long.valueOf(night).equals(NIGHT.get(p.getUuid()))) continue;
@@ -72,7 +72,7 @@ public final class TallFootprints {
                 NIGHT.put(p.getUuid(), night);
                 EventGate.mark(p);
             }
-            NEXT.put(p.getUuid(), now + 20L * 60 * (15 + p.getRandom().nextInt(11)));
+            NEXT.put(p.getUuid(), now + BloodMoon.scale(20L * 60 * (15 + p.getRandom().nextInt(11))));
         }
     }
 

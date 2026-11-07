@@ -88,6 +88,10 @@ public final class ItWasTallConfig {
         public boolean eyeSwarms = true;
         /** IT SPEAKS: It's voice lines ("I'm here.", "What are you mining here?") and its lone whispers. */
         public boolean itVoice = true;
+        /** THE BLOOD MOON: a rare red night (stage 3+) when every event comes twice as often. */
+        public boolean bloodMoon = true;
+        /** Chance each morning (stage 3+) that the coming night is a blood moon. */
+        public double bloodMoonChance = 0.12;
         /** Minutes between two hanged figures for one player (at most one per night). */
         public int hangedMinMinutes = 15;
         public int hangedMaxMinutes = 25;

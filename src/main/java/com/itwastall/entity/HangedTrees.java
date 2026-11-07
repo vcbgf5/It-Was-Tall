@@ -59,7 +59,7 @@ public final class HangedTrees {
             if (!p.isAlive() || p.isSpectator() || p.isCreative()) continue;
             Long next = NEXT.get(p.getUuid());
             if (next == null) {
-                NEXT.put(p.getUuid(), now + 20L * 60 * randomMinutes(p, cfg));
+                NEXT.put(p.getUuid(), now + BloodMoon.scale(20L * 60 * randomMinutes(p, cfg)));
                 continue;
             }
             if (now < next) continue;
@@ -69,7 +69,7 @@ public final class HangedTrees {
                 NIGHT.put(p.getUuid(), night);
                 EventGate.mark(p);
             }
-            NEXT.put(p.getUuid(), now + 20L * 60 * randomMinutes(p, cfg));
+            NEXT.put(p.getUuid(), now + BloodMoon.scale(20L * 60 * randomMinutes(p, cfg)));
         }
     }
 

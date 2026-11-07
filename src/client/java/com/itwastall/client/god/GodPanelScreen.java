@@ -34,7 +34,7 @@ public class GodPanelScreen extends Screen {
             {"Stage 0", "stage_0"}, {"Stage 1", "stage_1"}, {"Stage 2", "stage_2"}, {"Stage 3", "stage_3"},
             {"Stage 4", "stage_4"}, {"Stage 5", "stage_5"}, {"Tension -10", "tension_down"}, {"Tension +10", "tension_up"},
             {"Tension +25", "tension_upup"}, {"Day", "day"}, {"Night", "night"}, {"Midnight", "midnight"},
-            {"Clear", "clear"}, {"Rain", "rain"}, {"Thunder", "thunder"}};
+            {"Clear", "clear"}, {"Rain", "rain"}, {"Thunder", "thunder"}, {"BLOOD MOON", "bloodmoon"}};
     private static final String[][] MAP_ACTIONS = {
             {"It digs to them", "dig"}, {"It peeks (cave)", "peek"}, {"It: stare", "haunt"},
             {"JUMPSCARE", "jumpscare"}, {"Fly to them", "tpto"}, {"Rise as It / Sink (H)", "itform"}};

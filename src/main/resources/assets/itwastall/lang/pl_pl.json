@@ -62,6 +62,10 @@
   "key.itwastall.god_panel": "Panel boga (tryb boga)",
   "key.itwastall.it_form": "Wyjdź jako It / Zapadnij się (tryb boga)",
   "entity.itwastall.mimic": "Naśladowca",
+  "subtitles.itwastall.voice.it": "Coś mówi",
+  "subtitles.itwastall.voice.radio": "Głos z radia",
+  "subtitles.itwastall.voice.radio_static": "Szum radia",
+  "item.itwastall.radio": "Stare radio",
   "advancements.itwastall.root.title": "It Was Tall",
   "advancements.itwastall.root.description": "Coś stoi na skraju lasu.",
   "advancements.itwastall.first_sighting.title": "Ono tam było",
@@ -108,6 +112,8 @@
   "advancements.itwastall.mimic.description": "Oberwij od Naśladowcy",
   "advancements.itwastall.eyes.title": "Coś patrzy",
   "advancements.itwastall.eyes.description": "Zobacz oczy między drzewami",
+  "advancements.itwastall.blood_moon.title": "Czerwona noc",
+  "advancements.itwastall.blood_moon.description": "Przeżyj krwawy księżyc",
   "advancements.itwastall.old_one.title": "Stary",
   "advancements.itwastall.old_one.description": "Spotkaj gracza, który nie jest graczem",
   "advancements.itwastall.old_one_split.title": "Coś z niego wyszło",
@@ -125,8 +131,5 @@
   "advancements.itwastall.explorer.title": "Ktoś to zbudował",
   "advancements.itwastall.explorer.description": "Znajdź strukturę It Was Tall",
   "advancements.itwastall.cartographer.title": "Kartograf strachu",
-  "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall",
-  "subtitles.itwastall.voice.it": "Coś mówi",
-  "subtitles.itwastall.voice.radio": "Głos z radia",
-  "subtitles.itwastall.voice.radio_static": "Szum radia"
+  "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall"
 }

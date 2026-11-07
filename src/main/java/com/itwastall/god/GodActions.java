@@ -63,6 +63,7 @@ public final class GodActions {
             Map.entry("tension_down", "itwastall tension -10"), Map.entry("tension_up", "itwastall tension +10"),
             Map.entry("tension_upup", "itwastall tension +25"),
             Map.entry("day", "time set day"), Map.entry("night", "time set night"), Map.entry("midnight", "time set midnight"),
+            Map.entry("bloodmoon", "itwastall event bloodmoon"),
             Map.entry("clear", "weather clear"), Map.entry("rain", "weather rain"), Map.entry("thunder", "weather thunder"));
 
     private GodActions() {}

@@ -61,12 +61,12 @@ public final class EyeSwarms {
             if (!p.isAlive() || p.isSpectator() || p.isCreative()) continue;
             Long next = NEXT.get(p.getUuid());
             if (next == null) {
-                NEXT.put(p.getUuid(), now + 20L * 60 * (12 + p.getRandom().nextInt(11)));
+                NEXT.put(p.getUuid(), now + BloodMoon.scale(20L * 60 * (12 + p.getRandom().nextInt(11))));
                 continue;
             }
             if (now < next || BaseTracker.isInBase(p) || !EventGate.ready(p) || !inWoods(world, p.getBlockPos())) continue;
             if (start(p)) EventGate.mark(p);
-            NEXT.put(p.getUuid(), now + 20L * 60 * (12 + p.getRandom().nextInt(11)));
+            NEXT.put(p.getUuid(), now + BloodMoon.scale(20L * 60 * (12 + p.getRandom().nextInt(11))));
         }
     }
 

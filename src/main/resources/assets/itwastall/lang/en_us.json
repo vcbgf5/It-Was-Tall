@@ -68,6 +68,10 @@
   "key.itwastall.god_panel": "God Panel (god mode)",
   "key.itwastall.it_form": "Rise as It / Sink (god mode)",
   "entity.itwastall.mimic": "The Mimic",
+  "subtitles.itwastall.voice.it": "Something speaks",
+  "subtitles.itwastall.voice.radio": "Radio voice",
+  "subtitles.itwastall.voice.radio_static": "Radio static",
+  "item.itwastall.radio": "Old Radio",
   "advancements.itwastall.root.title": "It Was Tall",
   "advancements.itwastall.root.description": "Something is standing at the edge of the forest.",
   "advancements.itwastall.first_sighting.title": "It Was There",
@@ -114,6 +118,8 @@
   "advancements.itwastall.mimic.description": "Get hit by a Mimic",
   "advancements.itwastall.eyes.title": "Something Is Watching",
   "advancements.itwastall.eyes.description": "See the eyes between the trees",
+  "advancements.itwastall.blood_moon.title": "Red Night",
+  "advancements.itwastall.blood_moon.description": "Live through a blood moon",
   "advancements.itwastall.old_one.title": "The Old One",
   "advancements.itwastall.old_one.description": "Meet a player who is not a player",
   "advancements.itwastall.old_one_split.title": "Something Climbed Out",
@@ -131,8 +137,5 @@
   "advancements.itwastall.explorer.title": "Something Built This",
   "advancements.itwastall.explorer.description": "Find an It Was Tall structure",
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
-  "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
-  "subtitles.itwastall.voice.it": "Something speaks",
-  "subtitles.itwastall.voice.radio": "Radio voice",
-  "subtitles.itwastall.voice.radio_static": "Radio static"
+  "advancements.itwastall.cartographer.description": "Find every It Was Tall structure"
 }

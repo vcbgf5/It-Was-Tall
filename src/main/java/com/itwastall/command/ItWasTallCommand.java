@@ -244,6 +244,8 @@ public final class ItWasTallCommand {
                 .then(eventKind("chopping", p -> {
                     if (!com.itwastall.entity.DynamicStructures.buildChoppingInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
+                .then(eventKind("bloodmoon", p -> com.itwastall.entity.BloodMoon.start(p.getServer())))
+                .then(eventKind("radio", p -> com.itwastall.entity.Radio.broadcast(p, p.getServerWorld().getTime())))
                 .then(eventKind("voice", p -> {
                     if (!com.itwastall.entity.ItVoice.whisperNow(p)) throw new IllegalStateException("It's voice is switched off (config itVoice)");
                 }))

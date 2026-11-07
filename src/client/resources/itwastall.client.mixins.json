@@ -5,6 +5,9 @@
   "client": [
     "InGameHudMixin",
     "AdvancementsScreenMixin",
+    "BloodFogMixin",
+    "BloodMoonTextureMixin",
+    "BloodSkyMixin",
     "EntryListWidgetMixin",
     "GameMenuScreenMixin",
     "LevelLoadingScreenMixin",
