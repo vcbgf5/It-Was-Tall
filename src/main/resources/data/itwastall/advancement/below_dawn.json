@@ -1,0 +1,26 @@
+{
+  "parent": "itwastall:below",
+  "display": {
+    "icon": {
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 49
+      }
+    },
+    "title": {
+      "translate": "advancements.itwastall.below_dawn.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.below_dawn.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

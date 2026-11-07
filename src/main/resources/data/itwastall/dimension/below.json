@@ -1,0 +1,11 @@
+{
+  "type": "itwastall:below",
+  "generator": {
+    "type": "itwastall:below",
+    "seed": 6413113,
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:the_void"
+    }
+  }
+}

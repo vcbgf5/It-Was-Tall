@@ -6,6 +6,7 @@
     "InGameHudMixin",
     "AdvancementsScreenMixin",
     "BloodFogMixin",
+    "BelowFogMixin",
     "BloodMoonTextureMixin",
     "BloodSkyMixin",
     "DeathScreenMixin",

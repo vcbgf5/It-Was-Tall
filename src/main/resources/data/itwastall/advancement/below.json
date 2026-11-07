@@ -1,0 +1,26 @@
+{
+  "parent": "itwastall:root",
+  "display": {
+    "icon": {
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 56
+      }
+    },
+    "title": {
+      "translate": "advancements.itwastall.below.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.below.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

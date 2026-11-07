@@ -63,6 +63,7 @@ public class ItWasTall implements ModInitializer {
         // the server-wide journal: books everyone has read + the shared NOTES board
         com.itwastall.world.SharedJournal.init();
         com.itwastall.entity.Outspace.init();
+        com.itwastall.entity.TheBelow.init();
         com.itwastall.entity.TheCount.init();
         com.itwastall.entity.DeepOneEntity.init();
         com.itwastall.entity.TheGuest.init();
@@ -104,6 +105,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.EventGate.forget(uuid);
             com.itwastall.world.SharedJournal.forget(uuid);
             com.itwastall.entity.Outspace.forget(uuid);
+            com.itwastall.entity.TheBelow.forget(uuid);
             com.itwastall.entity.TheCount.forget(uuid);
             com.itwastall.entity.HangedTrees.forget(uuid);
             com.itwastall.entity.TallFootprints.forget(uuid);

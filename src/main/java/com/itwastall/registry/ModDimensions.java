@@ -11,11 +11,14 @@ import net.minecraft.world.World;
 /** OUTSPACE, the dream world: its chunk generator type and the world key (the dimension itself is datapack JSON). */
 public final class ModDimensions {
     public static final RegistryKey<World> OUTSPACE = RegistryKey.of(RegistryKeys.WORLD, ItWasTall.id("outspace"));
+    /** THE BELOW, the endless caves under the bedrock. */
+    public static final RegistryKey<World> BELOW = RegistryKey.of(RegistryKeys.WORLD, ItWasTall.id("below"));
 
     private ModDimensions() {
     }
 
     public static void init() {
         Registry.register(Registries.CHUNK_GENERATOR, ItWasTall.id("outspace"), OutspaceChunkGenerator.CODEC);
+        Registry.register(Registries.CHUNK_GENERATOR, ItWasTall.id("below"), com.itwastall.world.BelowChunkGenerator.CODEC);
     }
 }

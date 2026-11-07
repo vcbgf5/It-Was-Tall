@@ -134,6 +134,14 @@ public final class ItWasTallConfig {
         /** Share of the great halls of the dream that hold the Sleeper's bed (with a Warding Crystal by it). */
         public double outspaceSleeperChance = 0.35;
 
+        // ---- THE BELOW, the endless caves under the bedrock ----
+        /** Falling into the void and cracked bedrock lead to the caves under the world. */
+        public boolean below = true;
+        /** First stage at which cracked bedrock appears deep in the mines (the void works always). */
+        public int belowMinStage = 2;
+        /** Minutes between two chances of cracked bedrock near a player in the deepest mine (min .. min*2). */
+        public int crackedBedrockMinutes = 15;
+
         // ---- comfort / server settings (MODPLAN §19) ----
         /** Softer visuals: no flashing frames, gentler vignette and chase pulse, jumpscare image replaced by a dark fade. */
         public boolean photosensitiveMode = false;

@@ -249,6 +249,14 @@ public final class ItWasTallCommand {
                     if (!com.itwastall.entity.Corruption.startInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
                 .then(eventKind("radio", p -> com.itwastall.entity.Radio.broadcast(p, p.getServerWorld().getTime())))
+                .then(eventKind("below", p -> {
+                    if (!com.itwastall.entity.TheBelow.enter(p, false)) throw new IllegalStateException("already down there, or the Below dimension is missing");
+                }))
+                .then(eventKind("crackedbedrock", p -> {
+                    var at = com.itwastall.entity.TheBelow.crackNear(p, 2, 6);
+                    if (at == null) throw new IllegalStateException("no bedrock floor near the player (Overworld only)");
+                    p.sendMessage(Text.literal("Cracked bedrock at " + at.getX() + " " + at.getY() + " " + at.getZ()), false);
+                }))
                 .then(eventKind("mimicvoice", p -> {
                     var hook = com.itwastall.voice.VoiceHooks.mimicNow;
                     if (hook == null) throw new IllegalStateException("Simple Voice Chat is not installed on this server");

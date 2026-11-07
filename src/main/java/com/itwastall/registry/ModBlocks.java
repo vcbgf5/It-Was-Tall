@@ -48,6 +48,14 @@ public final class ModBlocks {
 
     private ModBlocks() {}
 
+    /**
+     * CRACKED BEDROCK: deep in the mines the floor of the world sometimes cracks (It dug at it from below). An iron
+     * pickaxe breaks it, slowly; under the last of it there is nothing — and below the nothing, THE BELOW.
+     */
+    public static final Block CRACKED_BEDROCK = register("cracked_bedrock", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.DEEPSLATE_GRAY).strength(30.0f, 1200.0f).requiresTool().sounds(BlockSoundGroup.DEEPSLATE)
+            .luminance(s -> 3).dropsNothing()));
+
     private static Block register(String name, Block block) {
         Registry.register(Registries.BLOCK, ItWasTall.id(name), block);
         Registry.register(Registries.ITEM, ItWasTall.id(name), new BlockItem(block, new Item.Settings()));
