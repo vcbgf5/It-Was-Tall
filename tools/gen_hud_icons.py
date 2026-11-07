@@ -81,11 +81,19 @@ def heart(frame):
 
 
 def needle():
-    """The compass needle pointing up (rotated by the code): bone shaft, blood-red tip, iron pivot."""
-    img = new(); d = ImageDraw.Draw(img)
-    d.polygon([(8, 0), (11, 8), (5, 8)], fill=BLOOD_L, outline=INK)
-    d.polygon([(8, 15), (11, 8), (5, 8)], fill=PARCH, outline=INK)
-    d.ellipse([6, 6, 10, 10], fill=(120, 120, 126, 255), outline=INK)
+    """The compass needle pointing up (rotated by the code around the sprite's centre, so it is drawn symmetric
+    around that centre: between pixel columns 7|8 and rows 7|8): blood-red tip, bone tail, iron pivot."""
+    img = new()
+    half = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 3, 7: 3, 8: 3, 9: 3, 10: 3, 11: 2, 12: 2, 13: 1, 14: 1}
+    for y, hw in half.items():
+        x0, x1 = 8 - hw, 7 + hw
+        for x in range(x0, x1 + 1):
+            edge = x in (x0, x1) or y in (1, 14) or half.get(y - 1, 0) < hw and abs(x - 7.5) > half.get(y - 1, 0) - 0.5 \
+                or half.get(y + 1, 0) < hw and abs(x - 7.5) > half.get(y + 1, 0) - 0.5
+            img.putpixel((x, y), INK if edge else (BLOOD_L if y <= 7 else PARCH))
+    for x in (7, 8):
+        for y in (7, 8):
+            img.putpixel((x, y), (120, 120, 126, 255))
     return img
 
 
@@ -142,7 +150,7 @@ def main():
     save(sun(), "sun"); save(moon(), "moon")
     save(shelter(True), "shelter_on"); save(shelter(False), "shelter_off")
     for i in range(3): save(heart(i), f"heart_{i}")
-    save(needle(), "needle")
+    save(needle(), "needle", use_shadow=False)
     for n in range(6): save(stage(n), f"stage_{n}", use_shadow=False)
     frame().save(os.path.join(OUT, "frame.png"))
     with open(os.path.join(OUT, "frame.png.mcmeta"), "w") as fh:
