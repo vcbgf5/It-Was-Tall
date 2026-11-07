@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * THE BELOW: what lies under the bedrock. Endless dark caves between a bedrock floor and a bedrock ceiling
- * (y 0..127): big hollow chambers joined by winding tunnels, deepslate and tuff, gravel and dead sculk on the
- * floors, water dripping into still pools. Every block is a pure function of the seed and the position.
+ * (y 0..127): big hollow chambers joined by winding tunnels, of pale Forgotten Stone and dark layered Oldrock,
+ * gravel on the floors, still black water in the lowest hollows. Every block is a pure function of the seed and the position.
  */
 public final class BelowCaves {
     public static final int HEIGHT = 128;
@@ -68,15 +68,10 @@ public final class BelowCaves {
         }
         Noise n = noise(seed);
         boolean floor = openAbove;
-        if (floor) {
-            double f = n.floor().sample(x / 9.0, 0, z / 9.0);
-            if (f > 0.45) return Blocks.SCULK.getDefaultState();
-            if (f < -0.5) return Blocks.GRAVEL.getDefaultState();
-        }
+        if (floor && n.floor().sample(x / 9.0, 0, z / 9.0) < -0.55) return Blocks.GRAVEL.getDefaultState();
         double s = n.stone().sample(x / 24.0, y / 16.0, z / 24.0);
-        if (s > 0.55) return Blocks.TUFF.getDefaultState();
-        if (s < -0.6) return Blocks.COBBLED_DEEPSLATE.getDefaultState();
-        return Blocks.DEEPSLATE.getDefaultState();
+        if (s > 0.3) return com.itwastall.registry.ModBlocks.OLDROCK.getDefaultState();
+        return com.itwastall.registry.ModBlocks.FORGOTTEN_STONE.getDefaultState();
     }
 
     static long hash(long seed, int x, int y, int z) {

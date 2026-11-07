@@ -56,6 +56,14 @@ public final class ModBlocks {
             .mapColor(MapColor.DEEPSLATE_GRAY).strength(30.0f, 1200.0f).requiresTool().sounds(BlockSoundGroup.DEEPSLATE)
             .luminance(s -> 3).dropsNothing()));
 
+    /** THE BELOW: the pale, worn stone of the caves under the bedrock (someone scratched tally marks into it). */
+    public static final Block FORGOTTEN_STONE = register("forgotten_stone", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).strength(3.0f, 6.0f).requiresTool().sounds(BlockSoundGroup.STONE)));
+
+    /** THE BELOW: dark layered rock, older than the world above. */
+    public static final Block OLDROCK = register("oldrock", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.BLACK).strength(3.5f, 6.0f).requiresTool().sounds(BlockSoundGroup.DEEPSLATE)));
+
     private static Block register(String name, Block block) {
         Registry.register(Registries.BLOCK, ItWasTall.id(name), block);
         Registry.register(Registries.ITEM, ItWasTall.id(name), new BlockItem(block, new Item.Settings()));
@@ -69,6 +77,11 @@ public final class ModBlocks {
             entries.add(FOOTPRINT);
             entries.add(TALL_FOOTPRINT);
             entries.add(EYE_STONE);
+        });
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.NATURAL).register(entries -> {
+            entries.add(FORGOTTEN_STONE);
+            entries.add(OLDROCK);
+            entries.add(CRACKED_BEDROCK);
         });
     }
 }
