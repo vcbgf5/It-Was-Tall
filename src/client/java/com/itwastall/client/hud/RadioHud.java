@@ -46,8 +46,9 @@ public final class RadioHud {
         int w = ctx.getScaledWindowWidth(), h = ctx.getScaledWindowHeight();
         int x = w / 2 - 91 - 29 - 56, y = h - 22;          // left of the hotbar (and of the off-hand slot)
         TextRenderer tr = client.textRenderer;
-        ctx.fill(x - 2, y - 1, x + 52, y + 21, 0x90100806);
-        ctx.fill(x - 2, y - 1, x + 52, y, onAir ? 0xFFA0241B : 0xFF3A2418);
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        HudExtras.box(ctx, x - 2, y - 1, 54, 1f);
+        if (onAir) ctx.fill(x, y + 1, x + 50, y + 2, 0xFFA0241B);
         ctx.drawItem(radio, x, y + 2);
         long t = Util.getMeasuringTimeMs();
         if (onAir) {
