@@ -118,6 +118,18 @@ The first-join warning screen also lets each player enable or disable scare effe
 
 For multiplayer, install the mod on the server and on every client.
 
+## NeoForge (unofficial, via Sinytra Connector)
+
+There is no native NeoForge build, but the Fabric file can be loaded on **NeoForge 1.21.1** with **Sinytra Connector**:
+
+- NeoForge **21.1.x** for Minecraft 1.21.1
+- Sinytra Connector
+- Forgified Fabric API
+- GeckoLib for NeoForge **4.9.x**
+- It Was Tall (this Fabric file)
+
+This setup is not tested by us. Known limitation: the **Simple Voice Chat** features (walkie-talkie, radio voices heard by others, It copying voices) do not work through Connector. If something breaks on NeoForge, please report it on GitHub.
+
 ## Content warning
 
 This mod contains jumpscares, brief flashing images, sudden loud sounds and horror effects. Players who do not want these effects can disable scares in the warning screen. The jumpscare image can also be disabled in the configuration.

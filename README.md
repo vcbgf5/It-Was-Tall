@@ -58,6 +58,11 @@ Wymaga Javy 21.
 ```
 Zależności w grze: Fabric Loader, Fabric API, GeckoLib (Fabric 1.21.1).
 
+### NeoForge (nieoficjalnie)
+Natywnej wersji na NeoForge nie ma, ale plik z Fabric da się wczytać na **NeoForge 1.21.1** przez **Sinytra Connector**
+(+ Forgified Fabric API + GeckoLib dla NeoForge). Nie jest to przez nas testowane; funkcje Simple Voice Chat
+(walkie-talkie, radio, It naśladujący głos) przez Connector nie działają.
+
 ## Narzędzia (tools/)
 - `gen_model.py` – generuje model (`geo/entity/tall_one.geo.json`) i tekstury z `tools/source/face_photo.png`.
 - `gen_animations.py` – generuje animacje.
