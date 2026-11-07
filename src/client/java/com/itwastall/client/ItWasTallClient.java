@@ -143,6 +143,8 @@ public class ItWasTallClient implements ClientModInitializer {
         BaseDebugRenderer.init();
         com.itwastall.client.render.TaskTargetRenderer.init();
         com.itwastall.client.render.EyeSwarmRenderer.init();
+        net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.START.register(ctx ->
+                com.itwastall.client.god.GodClientState.syncOwnBody(net.minecraft.client.MinecraftClient.getInstance()));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.BloodMoonPayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.BloodMoonClient.active = payload.active()));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.EyeSwarmPayload.ID, (payload, context) ->

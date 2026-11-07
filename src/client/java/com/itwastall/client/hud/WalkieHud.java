@@ -16,8 +16,6 @@ import net.minecraft.util.math.MathHelper;
  * the talk button (your item is not used). TX shows while you talk, RX and a name while someone else does.
  */
 public final class WalkieHud {
-    private static final Identifier SLOT = Identifier.ofVanilla("hud/hotbar_offhand_right");
-    private static final Identifier SELECTION = Identifier.ofVanilla("hud/hotbar_selection");
     private static final Identifier ICON = ItWasTall.id("textures/gui/walkie.png");
 
     public static boolean selected;
@@ -76,11 +74,20 @@ public final class WalkieHud {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.options.hudHidden || client.player.isSpectator()) return;
         int w = ctx.getScaledWindowWidth(), h = ctx.getScaledWindowHeight();
-        int x = w / 2 + 91 + 1, y = h - 23;
-        ctx.drawGuiTexture(SLOT, x, y, 29, 24);
-        ctx.drawTexture(ICON, x + 10, y + 4, 0, 0, 16, 16, 16, 16);
-        if (selected) ctx.drawGuiTexture(SELECTION, x + 5, y, 24, 23);
+        // the slot in the HUD's own leather frame, right of the hotbar; selected = a blood-red border
+        int x = w / 2 + 91 + 6, y = h - 22, sw = 22;
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        HudExtras.box(ctx, x, y, sw, 1f);
+        ctx.drawTexture(ICON, x + 3, y + 2, 0, 0, 16, 16, 16, 16);
+        if (selected) {
+            int c = 0xFFE0281E;
+            ctx.fill(x, y, x + sw, y + 1, c);
+            ctx.fill(x, y + 19, x + sw, y + 20, c);
+            ctx.fill(x, y, x + 1, y + 20, c);
+            ctx.fill(x + sw - 1, y, x + sw, y + 20, c);
+        }
         TextRenderer tr = client.textRenderer;
+        x -= 6;                                                  // labels keep their old place next to the slot
         long t = Util.getMeasuringTimeMs();
         if (transmitting) {
             ctx.drawTextWithShadow(tr, "TX", x + 31, y + 3, (t / 400) % 2 == 0 ? 0xFFE0281E : 0xFF8A1A14);

@@ -106,6 +106,42 @@ public final class GodClientState {
         ctx.getMatrices().pop();
     }
 
+    /**
+     * Before every frame: the god's own It body is put exactly where the god is (position, interpolation, turn),
+     * so in third person it moves with you instead of trailing a tick behind the server.
+     */
+    public static void syncOwnBody(MinecraftClient client) {
+        if (!god || !itForm || client.player == null || client.world == null) return;
+        var me = client.player;
+        com.itwastall.entity.TallOneEntity body = null;
+        double best = 3.0 * 3.0;
+        for (var e : client.world.getEntities()) {
+            if (e instanceof com.itwastall.entity.TallOneEntity it) {
+                double d = it.squaredDistanceTo(me);
+                if (d < best) {
+                    best = d;
+                    body = it;
+                }
+            }
+        }
+        if (body == null) return;
+        body.setPosition(me.getX(), me.getY(), me.getZ());
+        body.prevX = me.prevX;
+        body.prevY = me.prevY;
+        body.prevZ = me.prevZ;
+        body.lastRenderX = me.lastRenderX;
+        body.lastRenderY = me.lastRenderY;
+        body.lastRenderZ = me.lastRenderZ;
+        body.setYaw(me.getYaw());
+        body.prevYaw = me.prevYaw;
+        body.bodyYaw = me.bodyYaw;
+        body.prevBodyYaw = me.prevBodyYaw;
+        body.headYaw = me.headYaw;
+        body.prevHeadYaw = me.prevHeadYaw;
+        body.setPitch(me.getPitch());
+        body.prevPitch = me.prevPitch;
+    }
+
     /** A line at the bottom of the god's screen: what the keys do right now. */
     public static void renderHint(DrawContext ctx) {
         MinecraftClient client = MinecraftClient.getInstance();
