@@ -88,6 +88,28 @@ jobs:
           ref: ${{ steps.resolve.outputs.checkout_ref }}
           fetch-depth: 0
 
+      # The changelog: changelogs/<version>.md if it exists, otherwise the commit subjects since the previous tag.
+      - name: Build changelog
+        env:
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          if [ -f "changelogs/${TAG}.md" ]; then
+            cp "changelogs/${TAG}.md" RELEASE_CHANGELOG.md
+          else
+            PREV=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -n 1)
+            {
+              echo "## It Was Tall ${TAG}"
+              echo
+              if [ -n "$PREV" ]; then
+                git log --no-merges --pretty=format:'- %s' "${PREV}..HEAD"
+              else
+                git log --no-merges --pretty=format:'- %s' -n 30
+              fi
+              echo
+            } > RELEASE_CHANGELOG.md
+          fi
+          cat RELEASE_CHANGELOG.md
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
@@ -134,10 +156,11 @@ jobs:
           METADATA=$(jq -n \
             --arg version "$TAG" \
             --arg releaseType "$RELEASE_TYPE" \
+            --rawfile changelog RELEASE_CHANGELOG.md \
             '{
               displayName: ("It Was Tall " + $version),
-              changelog: ("Automated release " + $version + ". See the GitHub release for details."),
-              changelogType: "text",
+              changelog: $changelog,
+              changelogType: "markdown",
               gameVersionNames: ["Client", "Server", "1.21.1", "Fabric"],
               releaseType: $releaseType
             }')
@@ -154,6 +177,7 @@ jobs:
         with:
           tag_name: ${{ steps.resolve.outputs.tag }}
           name: It Was Tall ${{ steps.resolve.outputs.tag }}
+          body_path: RELEASE_CHANGELOG.md
           generate_release_notes: true
           draft: false
           prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'release' }}
