@@ -96,6 +96,9 @@ public final class ItWasTallConfig {
         public boolean corruption = true;
         /** Chance per night and player (inside the base, stage 4+) that a corruption begins. */
         public double corruptionChance = 0.25;
+        /** IT MIMICS YOUR VOICE (needs Simple Voice Chat): It keeps short pieces of what players say, in memory only,
+         *  and plays them back from the dark at night (stage 3+). Off by default: it listens to everyone's voice. */
+        public boolean itMimicsVoices = false;
         /** Minutes between two hanged figures for one player (at most one per night). */
         public int hangedMinMinutes = 15;
         public int hangedMaxMinutes = 25;

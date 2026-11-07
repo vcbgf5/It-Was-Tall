@@ -923,5 +923,14 @@
       }
     ],
     "subtitle": "subtitles.itwastall.voice.radio_static"
+  },
+  "voice.radio.squelch": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_squelch",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio_static"
   }
 }

@@ -249,6 +249,11 @@ public final class ItWasTallCommand {
                     if (!com.itwastall.entity.Corruption.startInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
                 .then(eventKind("radio", p -> com.itwastall.entity.Radio.broadcast(p, p.getServerWorld().getTime())))
+                .then(eventKind("mimicvoice", p -> {
+                    var hook = com.itwastall.voice.VoiceHooks.mimicNow;
+                    if (hook == null) throw new IllegalStateException("Simple Voice Chat is not installed on this server");
+                    if (!hook.test(p)) throw new IllegalStateException("no voice recorded yet (needs itMimicsVoices=true and someone talking), or no dark spot");
+                }))
                 .then(eventKind("voice", p -> {
                     if (!com.itwastall.entity.ItVoice.whisperNow(p)) throw new IllegalStateException("It's voice is switched off (config itVoice)");
                 }))

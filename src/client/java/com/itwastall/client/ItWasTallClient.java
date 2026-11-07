@@ -34,6 +34,7 @@ public class ItWasTallClient implements ClientModInitializer {
     private static KeyBinding godKey;
     private static KeyBinding itFormKey;
     private static KeyBinding radioKey;
+    private static KeyBinding walkieKey;
     /** True while this player is the god of the session (/changetogod). */
     private static boolean god;
 
@@ -60,12 +61,28 @@ public class ItWasTallClient implements ClientModInitializer {
         radioKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.radio", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R,
                 "category.itwastall"));
-        // radio sounds: no position, like music (Ambient volume slider), same in both ears
+        // radio sounds: your own without a position (like music, Ambient slider); someone else's radio comes from them
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioSoundPayload.ID, (payload, context) ->
-                context.client().execute(() -> context.client().getSoundManager().play(
-                        new net.minecraft.client.sound.PositionedSoundInstance(payload.sound(), net.minecraft.sound.SoundCategory.AMBIENT,
-                                payload.volume(), 1.0f, net.minecraft.util.math.random.Random.create(), false, 0,
-                                net.minecraft.client.sound.SoundInstance.AttenuationType.NONE, 0.0, 0.0, 0.0, true))));
+                context.client().execute(() -> {
+                    var client = context.client();
+                    if (payload.entityId() < 0) {
+                        client.getSoundManager().play(new net.minecraft.client.sound.PositionedSoundInstance(payload.sound(),
+                                net.minecraft.sound.SoundCategory.AMBIENT, payload.volume(), 1.0f, net.minecraft.util.math.random.Random.create(),
+                                false, 0, net.minecraft.client.sound.SoundInstance.AttenuationType.NONE, 0.0, 0.0, 0.0, true));
+                        return;
+                    }
+                    var world = client.world;
+                    var entity = world == null ? null : world.getEntityById(payload.entityId());
+                    var sound = net.minecraft.registry.Registries.SOUND_EVENT.get(payload.sound());
+                    if (entity == null || sound == null) return;
+                    client.getSoundManager().play(new net.minecraft.client.sound.EntityTrackingSoundInstance(sound,
+                            net.minecraft.sound.SoundCategory.AMBIENT, payload.volume(), 1.0f, entity, world.getRandom().nextLong()));
+                }));
+        walkieKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.itwastall.walkie", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_0,
+                "category.itwastall"));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.WalkiePayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.hud.WalkieHud.onServerMessage(payload)));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioPayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.hud.RadioHud.setOnAir(payload.onAir())));
         itFormKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -213,12 +230,16 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.hud.RadioHud.clear(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
             com.itwastall.client.god.GodClientState.tick(client);
+            while (walkieKey.wasPressed()) {
+                if (client.player != null && client.currentScreen == null) com.itwastall.client.hud.WalkieHud.select(!com.itwastall.client.hud.WalkieHud.selected);
+            }
+            com.itwastall.client.hud.WalkieHud.tick(client);
             while (radioKey.wasPressed()) {
                 if (client.player != null && client.currentScreen == null
                         && ClientPlayNetworking.canSend(com.itwastall.net.RadioPayload.ID)) {

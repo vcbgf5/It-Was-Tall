@@ -75,6 +75,10 @@ public final class ItWasTallState extends PersistentState {
     private final Map<UUID, net.minecraft.nbt.NbtList> dreamInventory = new HashMap<>();
     /** CORRUPTION: the running corruptions and every block they changed (so they can be put back after a restart). */
     private NbtCompound corruption = new NbtCompound();
+    /** Players who already got their starter radio. */
+    private final Set<UUID> starterRadio = new HashSet<>();
+    /** The chest with two radios by the world spawn has been placed. */
+    private boolean spawnRadioChest;
     private static final int MAX_DWELL_CHUNKS = 400;
 
     /** Server-wide journal (BOOKS tab): every book / note someone on the server has read, in order. */
@@ -137,6 +141,8 @@ public final class ItWasTallState extends PersistentState {
         }
         for (String key : nbt.getCompound("bedAnchored").getKeys()) state.bedAnchored.add(UUID.fromString(key));
         state.corruption = nbt.getCompound("corruption");
+        for (String key : nbt.getCompound("starterRadio").getKeys()) state.starterRadio.add(UUID.fromString(key));
+        state.spawnRadioChest = nbt.getBoolean("spawnRadioChest");
         NbtCompound dreams = nbt.getCompound("dreamInventory");
         for (String key : dreams.getKeys()) state.dreamInventory.put(UUID.fromString(key), dreams.getList(key, net.minecraft.nbt.NbtElement.COMPOUND_TYPE));
         net.minecraft.nbt.NbtList books = nbt.getList("sharedBooks", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
@@ -213,6 +219,10 @@ public final class ItWasTallState extends PersistentState {
         dreamInventory.forEach((uuid, list) -> dreams.put(uuid.toString(), list.copy()));
         nbt.put("dreamInventory", dreams);
         nbt.put("corruption", corruption.copy());
+        NbtCompound starters = new NbtCompound();
+        for (UUID uuid : starterRadio) starters.putBoolean(uuid.toString(), true);
+        nbt.put("starterRadio", starters);
+        nbt.putBoolean("spawnRadioChest", spawnRadioChest);
         net.minecraft.nbt.NbtList books = new net.minecraft.nbt.NbtList();
         books.addAll(sharedBooks);
         nbt.put("sharedBooks", books);
@@ -450,6 +460,22 @@ public final class ItWasTallState extends PersistentState {
 
     public Map<Long, Float> chunkDwell(UUID player) {
         return chunkDwell.getOrDefault(player, Map.of());
+    }
+
+    /** True the first time it is asked for that player (they get their starter radio then). */
+    public boolean claimStarterRadio(UUID player) {
+        boolean first = starterRadio.add(player);
+        if (first) markDirty();
+        return first;
+    }
+
+    public boolean spawnRadioChestPlaced() {
+        return spawnRadioChest;
+    }
+
+    public void markSpawnRadioChest() {
+        spawnRadioChest = true;
+        markDirty();
     }
 
     public NbtCompound corruption() {

@@ -75,6 +75,8 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.entity.Radio.init();
         com.itwastall.entity.BloodMoon.init();
         com.itwastall.entity.Corruption.init();
+        com.itwastall.entity.StarterRadios.init();
+        com.itwastall.entity.Walkie.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -110,6 +112,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.ItVoice.forget(uuid);
             com.itwastall.entity.Radio.forget(uuid);
             com.itwastall.entity.Corruption.forget(uuid);
+            com.itwastall.entity.Walkie.forget(uuid);
             com.itwastall.god.GodMode.forget(uuid);
             com.itwastall.entity.DeepOneEntity.forget(uuid);
             com.itwastall.entity.TheGuest.forget(uuid);

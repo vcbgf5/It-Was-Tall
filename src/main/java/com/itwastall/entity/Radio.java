@@ -90,12 +90,24 @@ public final class Radio {
         }
     }
 
-    /** A radio sound for this player only, without a position (the client plays it like music, Ambient volume). */
+    /**
+     * A radio sound: the owner hears it without a position (like music, Ambient volume), and every player within
+     * 16 blocks hears it coming from the owner, following them as they walk.
+     */
     private static void play(ServerPlayerEntity p, SoundEvent sound, float volume) {
+        if (sound == null) return;
+        playTo(p, sound, volume, -1);
+        for (ServerPlayerEntity q : p.getServerWorld().getPlayers()) {
+            if (q != p && q.squaredDistanceTo(p) < 16 * 16) playTo(q, sound, volume * 0.8f, p.getId());
+        }
+    }
+
+    /** One radio sound for one player: {@code fromEntity} -1 = no position, else it follows that entity. */
+    public static void playTo(ServerPlayerEntity p, SoundEvent sound, float volume, int fromEntity) {
         if (sound == null) return;
         if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(p, com.itwastall.net.RadioSoundPayload.ID)) {
             net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
-                    new com.itwastall.net.RadioSoundPayload(sound.getId(), ModSounds.vol(volume)));
+                    new com.itwastall.net.RadioSoundPayload(sound.getId(), ModSounds.vol(volume), fromEntity));
         }
     }
 

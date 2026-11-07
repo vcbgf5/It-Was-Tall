@@ -18,6 +18,14 @@ repositories {
             includeGroup('com.eliotlash.mclib')
         }
     }
+    maven {
+        // Simple Voice Chat API (optional: walkie-talkie and It mimicking voices only work with that mod)
+        name = 'Henkelmax'
+        url = 'https://maven.maxhenkel.de/repository/public'
+        content {
+            includeGroup('de.maxhenkel.voicechat')
+        }
+    }
 }
 
 loom {
@@ -62,6 +70,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
 }
 
 processResources {

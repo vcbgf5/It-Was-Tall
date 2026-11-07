@@ -147,6 +147,14 @@ def static_loop():
     return x
 
 
+def squelch():
+    """The walkie-talkie keying up / down: a click and a short burst of hiss."""
+    n = int(0.22 * SR)
+    x = gs.spectrum_filter(gs.rng.standard_normal(n), 900, 6500) * np.exp(-np.arange(n) / (0.07 * SR)) * 0.6
+    x[:40] += np.linspace(0.9, 0, 40)
+    return x
+
+
 def main():
     sj_path = os.path.join(gs.ASSETS, "sounds.json")
     with open(sj_path) as fh:
@@ -162,6 +170,9 @@ def main():
         sounds[f"voice.radio.{key}"] = {"sounds": [{"name": f"itwastall:voice/radio_{key}", "attenuation_distance": 8}],
                                         "subtitle": "subtitles.itwastall.voice.radio"}
     gs.save("voice/radio_static", static_loop(), 0.5)
+    gs.save("voice/radio_squelch", squelch(), 0.6)
+    sounds["voice.radio.squelch"] = {"sounds": [{"name": "itwastall:voice/radio_squelch", "attenuation_distance": 8}],
+                                     "subtitle": "subtitles.itwastall.voice.radio_static"}
     sounds["voice.radio.static"] = {"sounds": [{"name": "itwastall:voice/radio_static", "attenuation_distance": 8}],
                                     "subtitle": "subtitles.itwastall.voice.radio_static"}
     with open(sj_path, "w") as fh:

@@ -23,7 +23,7 @@ public final class ModVoices {
     public static final String[] RADIO_LINES = {"not_a_test", "do_not_go_out", "it_is_coming", "count_rooms", "keep_lights",
             "at_your_door", "not_the_window", "lost_contact", "dont_answer", "knows_name"};
     private static final String[] RADIO_OTHER = {"red_moon", "position", "repeat", "x", "z", "minus",
-            "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "static"};
+            "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "static", "squelch"};
 
     private static final Map<String, SoundEvent> IT = new HashMap<>();
     private static final Map<String, SoundEvent> RADIO = new HashMap<>();

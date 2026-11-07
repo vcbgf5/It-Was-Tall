@@ -14,7 +14,9 @@
     "OutlineColorMixin",
     "OutlineMixin",
     "ScreenMixin",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "WalkieScrollMixin",
+    "WalkieUseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

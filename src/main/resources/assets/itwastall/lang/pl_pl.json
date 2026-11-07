@@ -66,6 +66,9 @@
   "subtitles.itwastall.voice.radio": "Głos z radia",
   "subtitles.itwastall.voice.radio_static": "Szum radia",
   "item.itwastall.radio": "Stare radio",
+  "key.itwastall.radio": "Radio wł. / wył.",
+  "block.itwastall.glitch": "Zły blok",
+  "block.itwastall.corruption_source": "Źródło zepsucia",
   "advancements.itwastall.root.title": "It Was Tall",
   "advancements.itwastall.root.description": "Coś stoi na skraju lasu.",
   "advancements.itwastall.first_sighting.title": "Ono tam było",
@@ -114,6 +117,8 @@
   "advancements.itwastall.eyes.description": "Zobacz oczy między drzewami",
   "advancements.itwastall.blood_moon.title": "Czerwona noc",
   "advancements.itwastall.blood_moon.description": "Przeżyj krwawy księżyc",
+  "advancements.itwastall.voice.title": "To nie był on",
+  "advancements.itwastall.voice.description": "Usłysz z ciemności głos przyjaciela, gdy jest gdzie indziej",
   "advancements.itwastall.old_one.title": "Stary",
   "advancements.itwastall.old_one.description": "Spotkaj gracza, który nie jest graczem",
   "advancements.itwastall.old_one_split.title": "Coś z niego wyszło",
@@ -132,7 +137,5 @@
   "advancements.itwastall.explorer.description": "Znajdź strukturę It Was Tall",
   "advancements.itwastall.cartographer.title": "Kartograf strachu",
   "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall",
-  "key.itwastall.radio": "Radio wł. / wył.",
-  "block.itwastall.glitch": "Zły blok",
-  "block.itwastall.corruption_source": "Źródło zepsucia"
+  "key.itwastall.walkie": "Slot walkie-talkie"
 }

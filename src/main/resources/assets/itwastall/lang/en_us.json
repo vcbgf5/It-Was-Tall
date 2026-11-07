@@ -72,6 +72,9 @@
   "subtitles.itwastall.voice.radio": "Radio voice",
   "subtitles.itwastall.voice.radio_static": "Radio static",
   "item.itwastall.radio": "Old Radio",
+  "key.itwastall.radio": "Radio on / off",
+  "block.itwastall.glitch": "Wrong Block",
+  "block.itwastall.corruption_source": "Source of Corruption",
   "advancements.itwastall.root.title": "It Was Tall",
   "advancements.itwastall.root.description": "Something is standing at the edge of the forest.",
   "advancements.itwastall.first_sighting.title": "It Was There",
@@ -120,6 +123,8 @@
   "advancements.itwastall.eyes.description": "See the eyes between the trees",
   "advancements.itwastall.blood_moon.title": "Red Night",
   "advancements.itwastall.blood_moon.description": "Live through a blood moon",
+  "advancements.itwastall.voice.title": "That Wasn't Them",
+  "advancements.itwastall.voice.description": "Hear a friend's voice from the dark when they are somewhere else",
   "advancements.itwastall.old_one.title": "The Old One",
   "advancements.itwastall.old_one.description": "Meet a player who is not a player",
   "advancements.itwastall.old_one_split.title": "Something Climbed Out",
@@ -138,7 +143,5 @@
   "advancements.itwastall.explorer.description": "Find an It Was Tall structure",
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
   "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
-  "key.itwastall.radio": "Radio on / off",
-  "block.itwastall.glitch": "Wrong Block",
-  "block.itwastall.corruption_source": "Source of Corruption"
+  "key.itwastall.walkie": "Walkie-talkie slot"
 }

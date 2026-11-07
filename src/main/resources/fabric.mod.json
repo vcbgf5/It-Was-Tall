@@ -16,6 +16,9 @@
     ],
     "client": [
       "com.itwastall.client.ItWasTallClient"
+    ],
+    "voicechat": [
+      "com.itwastall.voice.ItWasTallVoicechat"
     ]
   },
   "depends": {
@@ -24,6 +27,9 @@
     "java": ">=21",
     "fabric-api": "*",
     "geckolib": ">=4.6"
+  },
+  "suggests": {
+    "voicechat": "*"
   },
   "mixins": [
     "itwastall.mixins.json",
