@@ -64,6 +64,7 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.world.SharedJournal.init();
         com.itwastall.entity.Outspace.init();
         com.itwastall.entity.TheBelow.init();
+        com.itwastall.entity.Flashlight.init();
         com.itwastall.entity.TheCount.init();
         com.itwastall.entity.DeepOneEntity.init();
         com.itwastall.entity.TheGuest.init();

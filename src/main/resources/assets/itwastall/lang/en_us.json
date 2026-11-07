@@ -151,5 +151,6 @@
   "advancements.itwastall.cartographer.title": "Cartographer of Fear",
   "advancements.itwastall.cartographer.description": "Find every It Was Tall structure",
   "block.itwastall.forgotten_stone": "Forgotten Stone",
-  "block.itwastall.oldrock": "Oldrock"
+  "block.itwastall.oldrock": "Oldrock",
+  "key.itwastall.flashlight": "Flashlight"
 }

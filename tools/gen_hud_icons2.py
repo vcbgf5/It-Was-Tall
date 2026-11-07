@@ -2,6 +2,7 @@
 """More HUD sprites of It Was Tall, in the same style as tools/gen_hud_icons.py (journal colours):
   hud/eye_0..5   24x14  THE EYE: closed .. wide open (It is watching you; wide open = it is about to move)
   hud/save_0..7  16x16  SAVING: a sheet of parchment, a quill writing line after line
+  hud/flashlight_on / _off  16x16  THE FLASHLIGHT: an old metal torch, its lens lit (with a beam) or dark
 Run: python3 tools/gen_hud_icons2.py"""
 import math, os
 from PIL import Image, ImageDraw
@@ -135,12 +136,33 @@ def save_icon(f):
     return shadow(img)
 
 
+def flashlight(on):
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    G, GL = (110, 110, 118, 255), (168, 168, 176, 255)
+    # the body, lying diagonally: tail bottom-left, head (lens) top-right
+    for i in range(7):
+        x, y = 2 + i, 12 - i
+        d.point((x, y), fill=INK); d.point((x + 1, y), fill=G); d.point((x + 1, y + 1), fill=INK)
+        d.point((x, y - 1), fill=INK); d.point((x + 2, y + 1), fill=INK)
+        if i == 2: d.point((x + 1, y), fill=BLOOD)              # the switch
+    d.polygon([(8, 4), (11, 1), (14, 4), (11, 7)], fill=GL, outline=INK)
+    lens = (250, 226, 130, 255) if on else (40, 40, 48, 255)
+    d.polygon([(10, 3), (11, 2), (13, 4), (12, 5)], fill=lens)
+    if on:
+        for (x, y) in ((14, 1), (15, 0), (13, 0), (15, 2)):
+            img.putpixel((x, y), (250, 226, 130, 200))
+    return shadow(img)
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for n in range(6):
         eye(n).save(os.path.join(OUT, f"eye_{n}.png"))
     for f in range(8):
         save_icon(f).save(os.path.join(OUT, f"save_{f}.png"))
+    flashlight(True).save(os.path.join(OUT, "flashlight_on.png"))
+    flashlight(False).save(os.path.join(OUT, "flashlight_off.png"))
 
 
 if __name__ == "__main__":

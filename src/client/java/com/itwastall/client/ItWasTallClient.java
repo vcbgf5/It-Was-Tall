@@ -58,6 +58,12 @@ public class ItWasTallClient implements ClientModInitializer {
         godKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.god_panel", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G,
                 "category.itwastall"));
+        // the flashlight: middle mouse outside creative (PickBlockMixin); this key works everywhere, unbound by default
+        KeyBinding flashlightKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.itwastall.flashlight", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "category.itwastall"));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(c -> {
+            while (flashlightKey.wasPressed()) com.itwastall.client.hud.FlashlightClient.toggle();
+        });
         radioKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.radio", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I,
                 "category.itwastall"));
@@ -243,7 +249,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); com.itwastall.client.hud.HudExtras.reset(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); com.itwastall.client.hud.HudExtras.reset(); com.itwastall.client.hud.FlashlightClient.reset(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

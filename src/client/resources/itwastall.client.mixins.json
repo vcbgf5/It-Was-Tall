@@ -19,7 +19,8 @@
     "ScreenMixin",
     "TitleScreenMixin",
     "WalkieScrollMixin",
-    "WalkieUseMixin"
+    "WalkieUseMixin",
+    "PickBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1
