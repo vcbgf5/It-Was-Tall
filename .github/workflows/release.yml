@@ -165,7 +165,8 @@ jobs:
           fi
 
           JAR="build/libs/it-was-tall-${TAG}.jar"
-          METADATA=$(jq -n \
+          # (written to a file: inside -F "name=value" curl would cut the JSON at the first ';' of the changelog)
+          jq -n \
             --arg version "$TAG" \
             --arg title "$TITLE" \
             --arg releaseType "$RELEASE_TYPE" \
@@ -176,11 +177,11 @@ jobs:
               changelogType: "markdown",
               gameVersionNames: ["Client", "Server", "1.21.1", "Fabric"],
               releaseType: $releaseType
-            }')
+            }' > cf_metadata.json
 
           curl --fail-with-body --silent --show-error \
             -H "X-Api-Token: $CF_API_TOKEN" \
-            -F "metadata=$METADATA;type=application/json" \
+            -F "metadata=<cf_metadata.json;type=application/json" \
             -F "file=@$JAR;type=application/java-archive" \
             "https://minecraft.curseforge.com/api/projects/1778484/upload-file"
 
