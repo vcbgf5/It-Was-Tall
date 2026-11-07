@@ -39,5 +39,6 @@ public class InGameHudMixin {
         com.itwastall.client.god.GodClientState.renderHint(context);
         com.itwastall.client.hud.RadioHud.render(context);
         com.itwastall.client.hud.WalkieHud.render(context);
+        com.itwastall.client.hud.HudExtras.render(context);
     }
 }

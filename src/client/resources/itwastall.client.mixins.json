@@ -8,6 +8,7 @@
     "BloodFogMixin",
     "BloodMoonTextureMixin",
     "BloodSkyMixin",
+    "DeathScreenMixin",
     "EntryListWidgetMixin",
     "HideOwnBodyMixin",
     "GameMenuScreenMixin",

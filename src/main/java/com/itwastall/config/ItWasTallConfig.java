@@ -148,6 +148,8 @@ public final class ItWasTallConfig {
         public boolean customTitleScreen = true;
         /** The TASK TIMER in the top-left corner while a task runs (client side). */
         public boolean taskTimerHud = true;
+        /** The extra HUD: heartbeat, time until dusk / dawn, distance to the base, shelter icon, last words on death. */
+        public boolean hudExtras = true;
         /** Lets players without operator rights use /itwastall debug ... (read-only views). */
         public boolean debugAllowedForNonOps = false;
 

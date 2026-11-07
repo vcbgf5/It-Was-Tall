@@ -26,6 +26,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(JumpscarePayload.ID, JumpscarePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FearStatePayload.ID, FearStatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(TaskTimerPayload.ID, TaskTimerPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(HudInfoPayload.ID, HudInfoPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ScareTextPayload.ID, ScareTextPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ItJoinedPayload.ID, ItJoinedPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(FalsePresencePayload.ID, FalsePresencePayload.CODEC);
@@ -51,6 +52,7 @@ public final class ModNetworking {
                         com.itwastall.task.TaskManager.journalLine(player.getUuid(), server.getOverworld().getTime()),
                         java.util.List.copyOf(state.loreBookIds(player.getUuid()))));
                 sendTaskTimer(player);
+                sendHudInfo(player);
                 // red chase overlay: on/off every second (the start is also sent instantly)
                 sendChase(player, isChased(player));
                 // journal BASE / EVENTS pages: every 5 s is plenty (they change rarely)
@@ -121,6 +123,15 @@ public final class ModNetworking {
         sendJournal(player);
         sendTaskTimer(player);
         com.itwastall.world.SharedJournal.sync(player);
+    }
+
+    /** The HUD's base distance and shelter icon: where the base is, and whether the player is inside now. */
+    public static void sendHudInfo(ServerPlayerEntity player) {
+        if (!ServerPlayNetworking.canSend(player, HudInfoPayload.ID)) return;
+        Long anchor = com.itwastall.base.BaseTracker.anchorOf(player.getUuid());
+        boolean inside = com.itwastall.task.TaskManager.isInside(player);
+        ServerPlayNetworking.send(player, new HudInfoPayload(anchor != null,
+                anchor != null ? net.minecraft.util.math.BlockPos.fromLong(anchor) : net.minecraft.util.math.BlockPos.ORIGIN, inside));
     }
 
     /** The TASK TIMER in the corner of the screen: the running task's time, or "no task". */
