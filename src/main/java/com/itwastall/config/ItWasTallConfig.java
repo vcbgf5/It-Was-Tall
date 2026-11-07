@@ -86,6 +86,8 @@ public final class ItWasTallConfig {
         public boolean mimics = true;
         /** THE EYES: pairs of eyes open in a dark wood at night (stage 2+), close when you bring a light. */
         public boolean eyeSwarms = true;
+        /** IT SPEAKS: It's voice lines ("I'm here.", "What are you mining here?") and its lone whispers. */
+        public boolean itVoice = true;
         /** Minutes between two hanged figures for one player (at most one per night). */
         public int hangedMinMinutes = 15;
         public int hangedMaxMinutes = 25;

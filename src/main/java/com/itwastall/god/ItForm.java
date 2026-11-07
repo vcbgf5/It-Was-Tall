@@ -171,6 +171,7 @@ public final class ItForm {
         f.body.setPuppetMode(TallOneEntity.Mode.CHASE);
         god.getServerWorld().playSound(null, f.body.getBlockPos(), ModSounds.SCREAM, SoundCategory.HOSTILE, ModSounds.vol(2.5f), 0.85f);
         ModNetworking.sendChase(victim, true);
+        com.itwastall.entity.ItVoice.say(god.getServerWorld(), f.body.getEyePos(), com.itwastall.registry.ModVoices.IT_CHASE, 1.8f);
         JournalLog.add(victim, "It looked straight at me. Then it came.");
         sendState(god, f);
     }

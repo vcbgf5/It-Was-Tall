@@ -125,5 +125,8 @@
   "advancements.itwastall.explorer.title": "Ktoś to zbudował",
   "advancements.itwastall.explorer.description": "Znajdź strukturę It Was Tall",
   "advancements.itwastall.cartographer.title": "Kartograf strachu",
-  "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall"
+  "advancements.itwastall.cartographer.description": "Znajdź wszystkie struktury It Was Tall",
+  "subtitles.itwastall.voice.it": "Coś mówi",
+  "subtitles.itwastall.voice.radio": "Głos z radia",
+  "subtitles.itwastall.voice.radio_static": "Szum radia"
 }

@@ -1,468 +1,927 @@
 {
- "entity.tall_one.stare": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/stare1"
-   },
-   {
-    "name": "itwastall:entity/stare2"
-   },
-   {
-    "name": "itwastall:entity/stare3"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.stare"
- },
- "entity.tall_one.scream": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/scream1"
-   },
-   {
-    "name": "itwastall:entity/scream2"
-   },
-   {
-    "name": "itwastall:entity/scream3"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.scream"
- },
- "entity.tall_one.step": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/step1"
-   },
-   {
-    "name": "itwastall:entity/step2"
-   },
-   {
-    "name": "itwastall:entity/step3"
-   },
-   {
-    "name": "itwastall:entity/step4"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.step"
- },
- "entity.tall_one.sink": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/sink"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.sink"
- },
- "entity.tall_one.hurt": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/hurt1"
-   },
-   {
-    "name": "itwastall:entity/hurt2"
-   },
-   {
-    "name": "itwastall:entity/hurt3"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.hurt"
- },
- "entity.tall_one.attack": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/attack1"
-   },
-   {
-    "name": "itwastall:entity/attack2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.attack"
- },
- "entity.tall_one.knock": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/knock_glass1"
-   },
-   {
-    "name": "itwastall:entity/knock_glass2"
-   },
-   {
-    "name": "itwastall:entity/knock_door"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.knock"
- },
- "entity.tall_one.dig": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/dig1"
-   },
-   {
-    "name": "itwastall:entity/dig2"
-   },
-   {
-    "name": "itwastall:entity/dig3"
-   },
-   {
-    "name": "itwastall:entity/dig4"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.dig"
- },
- "entity.tall_one.growl": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/growl1"
-   },
-   {
-    "name": "itwastall:entity/growl2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.growl"
- },
- "entity.tall_one.sniff": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/sniff"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.sniff"
- },
- "entity.tall_one.scrape": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/scrape1"
-   },
-   {
-    "name": "itwastall:entity/scrape2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.tall_one.scrape"
- },
- "jumpscare": {
-  "sounds": [
-   {
-    "name": "itwastall:jumpscare1"
-   },
-   {
-    "name": "itwastall:jumpscare2"
-   }
-  ]
- },
- "ambient.drone": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/drone1",
-    "stream": true
-   },
-   {
-    "name": "itwastall:ambient/drone2",
-    "stream": true
-   },
-   {
-    "name": "itwastall:ambient/drone3",
-    "stream": true
-   }
-  ]
- },
- "ambient.wind": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/wind1",
-    "stream": true
-   },
-   {
-    "name": "itwastall:ambient/wind2",
-    "stream": true
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.wind"
- },
- "ambient.creak": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/creak1"
-   },
-   {
-    "name": "itwastall:ambient/creak2"
-   },
-   {
-    "name": "itwastall:ambient/creak3"
-   },
-   {
-    "name": "itwastall:ambient/creak4"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.creak"
- },
- "ambient.distant_scream": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/distant_scream1"
-   },
-   {
-    "name": "itwastall:ambient/distant_scream2"
-   },
-   {
-    "name": "itwastall:ambient/distant_scream3"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.distant_scream"
- },
- "ambient.whisper": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/whisper1"
-   },
-   {
-    "name": "itwastall:ambient/whisper2"
-   },
-   {
-    "name": "itwastall:ambient/whisper3"
-   },
-   {
-    "name": "itwastall:ambient/whisper4"
-   },
-   {
-    "name": "itwastall:ambient/whisper5"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.whisper"
- },
- "ambient.breath": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/breath1"
-   },
-   {
-    "name": "itwastall:ambient/breath2"
-   },
-   {
-    "name": "itwastall:ambient/breath3"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.breath"
- },
- "ambient.heartbeat": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/heartbeat"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.heartbeat"
- },
- "ambient.sting": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/sting1"
-   },
-   {
-    "name": "itwastall:ambient/sting2"
-   }
-  ]
- },
- "ambient.knock_distant": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/knock_distant1"
-   },
-   {
-    "name": "itwastall:ambient/knock_distant2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.knock_distant"
- },
- "ambient.cave_drip": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/cave_drip1"
-   },
-   {
-    "name": "itwastall:ambient/cave_drip2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.cave_drip"
- },
- "ambient.rock_fall": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/rock_fall"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.rock_fall"
- },
- "ambient.chains": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/chains"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.chains"
- },
- "ambient.hum": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/hum",
-    "stream": true
-   }
-  ]
- },
- "ambient.reversed_voice": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/reversed_voice1"
-   },
-   {
-    "name": "itwastall:ambient/reversed_voice2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.ambient.reversed_voice"
- },
- "scare.twig": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/twig1"
-   },
-   {
-    "name": "itwastall:scare/twig2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.twig"
- },
- "scare.pebble": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/pebble1"
-   },
-   {
-    "name": "itwastall:scare/pebble2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.pebble"
- },
- "scare.door": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/door1"
-   },
-   {
-    "name": "itwastall:scare/door2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.door"
- },
- "scare.glass_tap": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/glass_tap1"
-   },
-   {
-    "name": "itwastall:scare/glass_tap2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.glass_tap"
- },
- "scare.knock": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/knock"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.knock"
- },
- "scare.footsteps": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/footsteps1"
-   },
-   {
-    "name": "itwastall:scare/footsteps2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.footsteps"
- },
- "scare.whisper_run": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/whisper_run"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.whisper_run"
- },
- "scare.giggle": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/giggle1"
-   },
-   {
-    "name": "itwastall:scare/giggle2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.giggle"
- },
- "scare.metal": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/metal"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.metal"
- },
- "scare.static": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/static"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.static"
- },
- "scare.breath": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/breath"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.breath"
- },
- "scare.music_box": {
-  "sounds": [
-   {
-    "name": "itwastall:scare/music_box"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.scare.music_box"
- },
- "ui.message": {
-  "sounds": [
-   {
-    "name": "itwastall:ui/message"
-   }
-  ]
- },
- "ui.tinnitus": {
-  "sounds": [
-   {
-    "name": "itwastall:ui/tinnitus"
-   }
-  ]
- },
- "entity.old_one.tear": {
-  "sounds": [
-   {
-    "name": "itwastall:entity/old_one_tear1"
-   },
-   {
-    "name": "itwastall:entity/old_one_tear2"
-   }
-  ],
-  "subtitle": "subtitles.itwastall.entity.old_one.tear"
- },
- "ui.it_joined": {
-  "sounds": [
-   {
-    "name": "itwastall:ambient/drone2",
-    "volume": 1.0,
-    "pitch": 0.8
-   }
-  ]
- }
+  "entity.tall_one.stare": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/stare1"
+      },
+      {
+        "name": "itwastall:entity/stare2"
+      },
+      {
+        "name": "itwastall:entity/stare3"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.stare"
+  },
+  "entity.tall_one.scream": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/scream1"
+      },
+      {
+        "name": "itwastall:entity/scream2"
+      },
+      {
+        "name": "itwastall:entity/scream3"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.scream"
+  },
+  "entity.tall_one.step": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/step1"
+      },
+      {
+        "name": "itwastall:entity/step2"
+      },
+      {
+        "name": "itwastall:entity/step3"
+      },
+      {
+        "name": "itwastall:entity/step4"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.step"
+  },
+  "entity.tall_one.sink": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/sink"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.sink"
+  },
+  "entity.tall_one.hurt": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/hurt1"
+      },
+      {
+        "name": "itwastall:entity/hurt2"
+      },
+      {
+        "name": "itwastall:entity/hurt3"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.hurt"
+  },
+  "entity.tall_one.attack": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/attack1"
+      },
+      {
+        "name": "itwastall:entity/attack2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.attack"
+  },
+  "entity.tall_one.knock": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/knock_glass1"
+      },
+      {
+        "name": "itwastall:entity/knock_glass2"
+      },
+      {
+        "name": "itwastall:entity/knock_door"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.knock"
+  },
+  "entity.tall_one.dig": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/dig1"
+      },
+      {
+        "name": "itwastall:entity/dig2"
+      },
+      {
+        "name": "itwastall:entity/dig3"
+      },
+      {
+        "name": "itwastall:entity/dig4"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.dig"
+  },
+  "entity.tall_one.growl": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/growl1"
+      },
+      {
+        "name": "itwastall:entity/growl2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.growl"
+  },
+  "entity.tall_one.sniff": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/sniff"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.sniff"
+  },
+  "entity.tall_one.scrape": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/scrape1"
+      },
+      {
+        "name": "itwastall:entity/scrape2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.tall_one.scrape"
+  },
+  "jumpscare": {
+    "sounds": [
+      {
+        "name": "itwastall:jumpscare1"
+      },
+      {
+        "name": "itwastall:jumpscare2"
+      }
+    ]
+  },
+  "ambient.drone": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/drone1",
+        "stream": true
+      },
+      {
+        "name": "itwastall:ambient/drone2",
+        "stream": true
+      },
+      {
+        "name": "itwastall:ambient/drone3",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.wind": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/wind1",
+        "stream": true
+      },
+      {
+        "name": "itwastall:ambient/wind2",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.wind"
+  },
+  "ambient.creak": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/creak1"
+      },
+      {
+        "name": "itwastall:ambient/creak2"
+      },
+      {
+        "name": "itwastall:ambient/creak3"
+      },
+      {
+        "name": "itwastall:ambient/creak4"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.creak"
+  },
+  "ambient.distant_scream": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/distant_scream1"
+      },
+      {
+        "name": "itwastall:ambient/distant_scream2"
+      },
+      {
+        "name": "itwastall:ambient/distant_scream3"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.distant_scream"
+  },
+  "ambient.whisper": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/whisper1"
+      },
+      {
+        "name": "itwastall:ambient/whisper2"
+      },
+      {
+        "name": "itwastall:ambient/whisper3"
+      },
+      {
+        "name": "itwastall:ambient/whisper4"
+      },
+      {
+        "name": "itwastall:ambient/whisper5"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.whisper"
+  },
+  "ambient.breath": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/breath1"
+      },
+      {
+        "name": "itwastall:ambient/breath2"
+      },
+      {
+        "name": "itwastall:ambient/breath3"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.breath"
+  },
+  "ambient.heartbeat": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/heartbeat"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.heartbeat"
+  },
+  "ambient.sting": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/sting1"
+      },
+      {
+        "name": "itwastall:ambient/sting2"
+      }
+    ]
+  },
+  "ambient.knock_distant": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/knock_distant1"
+      },
+      {
+        "name": "itwastall:ambient/knock_distant2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.knock_distant"
+  },
+  "ambient.cave_drip": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/cave_drip1"
+      },
+      {
+        "name": "itwastall:ambient/cave_drip2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.cave_drip"
+  },
+  "ambient.rock_fall": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/rock_fall"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.rock_fall"
+  },
+  "ambient.chains": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/chains"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.chains"
+  },
+  "ambient.hum": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/hum",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.reversed_voice": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/reversed_voice1"
+      },
+      {
+        "name": "itwastall:ambient/reversed_voice2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.ambient.reversed_voice"
+  },
+  "scare.twig": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/twig1"
+      },
+      {
+        "name": "itwastall:scare/twig2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.twig"
+  },
+  "scare.pebble": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/pebble1"
+      },
+      {
+        "name": "itwastall:scare/pebble2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.pebble"
+  },
+  "scare.door": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/door1"
+      },
+      {
+        "name": "itwastall:scare/door2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.door"
+  },
+  "scare.glass_tap": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/glass_tap1"
+      },
+      {
+        "name": "itwastall:scare/glass_tap2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.glass_tap"
+  },
+  "scare.knock": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/knock"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.knock"
+  },
+  "scare.footsteps": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/footsteps1"
+      },
+      {
+        "name": "itwastall:scare/footsteps2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.footsteps"
+  },
+  "scare.whisper_run": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/whisper_run"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.whisper_run"
+  },
+  "scare.giggle": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/giggle1"
+      },
+      {
+        "name": "itwastall:scare/giggle2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.giggle"
+  },
+  "scare.metal": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/metal"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.metal"
+  },
+  "scare.static": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/static"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.static"
+  },
+  "scare.breath": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/breath"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.breath"
+  },
+  "scare.music_box": {
+    "sounds": [
+      {
+        "name": "itwastall:scare/music_box"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.scare.music_box"
+  },
+  "ui.message": {
+    "sounds": [
+      {
+        "name": "itwastall:ui/message"
+      }
+    ]
+  },
+  "ui.tinnitus": {
+    "sounds": [
+      {
+        "name": "itwastall:ui/tinnitus"
+      }
+    ]
+  },
+  "entity.old_one.tear": {
+    "sounds": [
+      {
+        "name": "itwastall:entity/old_one_tear1"
+      },
+      {
+        "name": "itwastall:entity/old_one_tear2"
+      }
+    ],
+    "subtitle": "subtitles.itwastall.entity.old_one.tear"
+  },
+  "ui.it_joined": {
+    "sounds": [
+      {
+        "name": "itwastall:ambient/drone2",
+        "volume": 1.0,
+        "pitch": 0.8
+      }
+    ]
+  },
+  "voice.it.im_here": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_im_here",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.know_everything": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_know_everything",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.see_you": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_see_you",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.dont_turn": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_dont_turn",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.found_you": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_found_you",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.cant_hide": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_cant_hide",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.come_closer": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_come_closer",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.why_running": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_why_running",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.always_here": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_always_here",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.look_at_me": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_look_at_me",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.dark_now": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_dark_now",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.go_to_sleep": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_go_to_sleep",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.behind_you": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_behind_you",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.nobody_coming": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_nobody_coming",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.where_are_you": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_where_are_you",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.what_mining": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_what_mining",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.dig_deeper": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_dig_deeper",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.hear_digging": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_hear_digging",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.quiet_down_here": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_quiet_down_here",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.let_me_in": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_let_me_in",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.where_you_sleep": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_where_you_sleep",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.door_open": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_door_open",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.run": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_run",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.it.there_you_are": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/it_there_you_are",
+        "attenuation_distance": 32
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.it"
+  },
+  "voice.radio.not_a_test": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_not_a_test",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.do_not_go_out": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_do_not_go_out",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.it_is_coming": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_it_is_coming",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.count_rooms": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_count_rooms",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.keep_lights": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_keep_lights",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.at_your_door": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_at_your_door",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.not_the_window": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_not_the_window",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.red_moon": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_red_moon",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.lost_contact": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_lost_contact",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.dont_answer": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_dont_answer",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.knows_name": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_knows_name",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.position": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_position",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.repeat": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_repeat",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.x": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_x",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.z": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_z",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.minus": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_minus",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d0": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d0",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d1": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d1",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d2": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d2",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d3": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d3",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d4": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d4",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d5": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d5",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d6": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d6",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d7": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d7",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d8": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d8",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.d9": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_d9",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio"
+  },
+  "voice.radio.static": {
+    "sounds": [
+      {
+        "name": "itwastall:voice/radio_static",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.itwastall.voice.radio_static"
+  }
 }

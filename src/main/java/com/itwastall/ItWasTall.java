@@ -40,6 +40,7 @@ public class ItWasTall implements ModInitializer {
     public void onInitialize() {
         ItWasTallConfig.load();
         ModSounds.init();
+        com.itwastall.registry.ModVoices.init();
         ModEntities.init();
         com.itwastall.registry.ModBlocks.init();
         ModItems.init();
@@ -70,6 +71,7 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.entity.TallFootprints.init();
         com.itwastall.entity.Mimics.init();
         com.itwastall.entity.EyeSwarms.init();
+        com.itwastall.entity.ItVoice.init();
         CaveStructureLoot.init();
         // base detection (MODPLAN §8) needs the tick + the bed-use hook registered before anything scans
         BaseTracker.init();
@@ -102,6 +104,7 @@ public class ItWasTall implements ModInitializer {
             com.itwastall.entity.TallFootprints.forget(uuid);
             com.itwastall.entity.Mimics.forget(uuid);
             com.itwastall.entity.EyeSwarms.forget(uuid);
+            com.itwastall.entity.ItVoice.forget(uuid);
             com.itwastall.god.GodMode.forget(uuid);
             com.itwastall.entity.DeepOneEntity.forget(uuid);
             com.itwastall.entity.TheGuest.forget(uuid);

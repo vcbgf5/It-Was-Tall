@@ -207,6 +207,8 @@ public final class HouseEvents {
                 if (shadow) shadowUnder(p, inside);
             });
         }
+        // after the knocks, a voice through the door
+        later(player, 84, p -> ItVoice.whisperTo(p, knockAt, com.itwastall.registry.ModVoices.IT_BASE, 0.9f));
         if (shadow) {
             // the shadow lingers a little after the last knock, then it is gone
             for (int k = 0; k < 6; k++) later(player, 70 + k * 8, p -> shadowUnder(p, inside));

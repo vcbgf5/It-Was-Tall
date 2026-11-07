@@ -121,6 +121,8 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     /** God mode: the god whose body this It is (it only mirrors them, no AI of its own); null for a real It. */
     @Nullable
     private UUID puppetOwner;
+    /** Ticks until It may say something again (IT SPEAKS). */
+    private int voiceCooldown = 200;
     // TREE: where it hides (directly behind the trunk) once you have seen it
     @Nullable
     private Vec3d treeHide;
@@ -315,6 +317,13 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
         PlayerEntity player = findVictim();
         if (player == null && isSightingMode(getMode())) setMode(Mode.IDLE);
+        // IT SPEAKS: now and then, a few words out of the dark while it watches you (in the mines: about digging)
+        if (getWorld() instanceof ServerWorld vw && player != null && --voiceCooldown <= 0
+                && (isSightingMode(getMode()) || getMode() == Mode.DIG || getMode() == Mode.PEEK)) {
+            voiceCooldown = 20 * (18 + random.nextInt(25));
+            boolean cave = getMode() == Mode.DIG || getMode() == Mode.PEEK;
+            ItVoice.say(vw, getEyePos(), cave ? com.itwastall.registry.ModVoices.IT_CAVE : com.itwastall.registry.ModVoices.IT_ANYWHERE, 1.4f);
+        }
         switch (getMode()) {
             case IDLE -> tickIdle(player);
             case STARE -> tickStare(player);
@@ -680,6 +689,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         setMode(Mode.CHASE);
         setTarget(player);
         getWorld().playSound(null, getBlockPos(), ModSounds.SCREAM, getSoundCategory(), ModSounds.vol(2.5f), 0.85f);
+        if (getWorld() instanceof ServerWorld vw) ItVoice.say(vw, getEyePos(), com.itwastall.registry.ModVoices.IT_CHASE, 1.8f);
         // the red chase overlay starts NOW, not on the next 1 s pulse
         if (player instanceof ServerPlayerEntity sp) ModNetworking.sendChase(sp, true);
         if (!chaseTensionGiven && Director.phase() == 1) {
