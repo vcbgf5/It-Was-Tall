@@ -33,6 +33,7 @@ public class ItWasTallClient implements ClientModInitializer {
     private static KeyBinding journalKey;
     private static KeyBinding godKey;
     private static KeyBinding itFormKey;
+    private static KeyBinding radioKey;
     /** True while this player is the god of the session (/changetogod). */
     private static boolean god;
 
@@ -56,6 +57,11 @@ public class ItWasTallClient implements ClientModInitializer {
         godKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.god_panel", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G,
                 "category.itwastall"));
+        radioKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.itwastall.radio", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R,
+                "category.itwastall"));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioPayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.hud.RadioHud.setOnAir(payload.onAir())));
         itFormKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.it_form", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H,
                 "category.itwastall"));
@@ -201,12 +207,18 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.hud.RadioHud.clear(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
             com.itwastall.client.god.GodClientState.tick(client);
+            while (radioKey.wasPressed()) {
+                if (client.player != null && client.currentScreen == null
+                        && ClientPlayNetworking.canSend(com.itwastall.net.RadioPayload.ID)) {
+                    ClientPlayNetworking.send(new com.itwastall.net.RadioPayload(false));
+                }
+            }
             while (itFormKey.wasPressed()) {
                 if (god && client.player != null && client.currentScreen == null
                         && ClientPlayNetworking.canSend(com.itwastall.net.GodActionPayload.ID)) {

@@ -27,5 +27,6 @@ public class InGameHudMixin {
         com.itwastall.client.hud.TaskTimerHud.render(context, tickCounter);
         TaskToast.render(context, tickCounter);
         com.itwastall.client.god.GodClientState.renderHint(context);
+        com.itwastall.client.hud.RadioHud.render(context);
     }
 }

@@ -26,14 +26,17 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * THE RADIO. Right-click to switch it on (it glows) or off. While it is on and in your inventory it hisses with
- * static, and every minute or so a voice breaks through: "Do not go outside tonight.", "It knows your name." —
- * or it reads out where you are standing, digit by digit. On the day before a blood moon it warns you.
+ * THE RADIO. Right-click (or the radio key, R) switches it on (it glows) or off. Switched on and in your
+ * inventory it hisses with static, and every minute or so a voice breaks through: "Do not go outside tonight.",
+ * "It knows your name." — or it reads out where you are standing, digit by digit. Switched off it is silent —
+ * until a broadcast comes: then it turns itself on for it, every few minutes. On the day before a blood moon it
+ * warns you. A small radio icon next to the hotbar shows OFF / static / ON AIR.
  */
 public final class Radio {
     private static final class Broadcast {
         final Deque<long[]> clips = new ArrayDeque<>();   // {at tick, clip index}
         final List<SoundEvent> sounds = new ArrayList<>();
+        long endsAt;
     }
 
     private static final Map<UUID, Long> NEXT = new HashMap<>();
@@ -65,7 +68,31 @@ public final class Radio {
     }
 
     public static void init() {
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(com.itwastall.net.RadioPayload.ID, com.itwastall.net.RadioPayload.CODEC);
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playC2S().register(com.itwastall.net.RadioPayload.ID, com.itwastall.net.RadioPayload.CODEC);
+        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(com.itwastall.net.RadioPayload.ID,
+                (payload, context) -> context.server().execute(() -> toggle(context.player())));
         ServerTickEvents.END_SERVER_TICK.register(Radio::tick);
+    }
+
+    /** The radio key: switches the first radio in the inventory on or off. */
+    public static void toggle(ServerPlayerEntity p) {
+        var inv = p.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (!s.isOf(ModItems.RADIO)) continue;
+            boolean on = !isOn(s);
+            s.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, on);
+            p.getServerWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_LEVER_CLICK, net.minecraft.sound.SoundCategory.PLAYERS, 0.6f, on ? 1.2f : 0.8f);
+            p.sendMessage(Text.literal(on ? "The radio crackles to life." : "The radio goes quiet.").formatted(Formatting.GRAY, Formatting.ITALIC), true);
+            return;
+        }
+    }
+
+    private static void onAir(ServerPlayerEntity p, boolean on) {
+        if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(p, com.itwastall.net.RadioPayload.ID)) {
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, new com.itwastall.net.RadioPayload(on));
+        }
     }
 
     public static void forget(UUID player) {
@@ -73,13 +100,17 @@ public final class Radio {
         PLAYING.remove(player);
     }
 
-    private static boolean carriesOnRadio(ServerPlayerEntity p) {
+    /** 0 = no radio, 1 = a radio (switched off), 2 = a radio switched on. */
+    private static int radioState(ServerPlayerEntity p) {
         var inv = p.getInventory();
+        int state = 0;
         for (int i = 0; i < inv.size(); i++) {
             ItemStack s = inv.getStack(i);
-            if (s.isOf(ModItems.RADIO) && isOn(s)) return true;
+            if (!s.isOf(ModItems.RADIO)) continue;
+            if (isOn(s)) return 2;
+            state = 1;
         }
-        return false;
+        return state;
     }
 
     private static void tick(MinecraftServer server) {
@@ -92,13 +123,17 @@ public final class Radio {
                 long[] c = b.clips.pollFirst();
                 MineEvents.playTo(p, b.sounds.get((int) c[1]), p.getEyePos(), ModSounds.vol(1.0f), 1.0f);
             }
-            if (b.clips.isEmpty()) PLAYING.remove(p.getUuid());
+            if (b.clips.isEmpty() && tick >= b.endsAt) {
+                PLAYING.remove(p.getUuid());
+                onAir(p, false);
+            }
         }
         if (server.getTicks() % 20 != 0) return;
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-            if (!p.isAlive() || p.isSpectator() || !carriesOnRadio(p)) continue;
-            // the hiss, every 3 seconds (the clip is 3 s long)
-            if (server.getTicks() % 60 == 0 && !PLAYING.containsKey(p.getUuid())) {
+            int state = p.isAlive() && !p.isSpectator() ? radioState(p) : 0;
+            if (state == 0) continue;
+            // the hiss, every 3 seconds (the clip is 3 s long) — only while it is switched on
+            if (state == 2 && server.getTicks() % 60 == 0 && !PLAYING.containsKey(p.getUuid())) {
                 MineEvents.playTo(p, ModVoices.radio("static"), p.getEyePos(), ModSounds.vol(0.25f), 1.0f);
             }
             Long next = NEXT.get(p.getUuid());
@@ -107,7 +142,8 @@ public final class Radio {
                 continue;
             }
             if (tick < next || PLAYING.containsKey(p.getUuid())) continue;
-            NEXT.put(p.getUuid(), tick + 20L * (45 + p.getRandom().nextInt(50)));
+            // switched on: every 45-95 s; switched off it turns itself on for a broadcast every 2-4 minutes
+            NEXT.put(p.getUuid(), tick + (state == 2 ? 20L * (45 + p.getRandom().nextInt(50)) : 20L * (120 + p.getRandom().nextInt(120))));
             broadcast(p, tick);
         }
     }
@@ -134,7 +170,11 @@ public final class Radio {
                 add(b, tick + 115, line);
             }
         }
+        b.endsAt = (b.clips.isEmpty() ? tick : b.clips.peekLast()[0]) + 50;   // the last clip, then a moment of hiss
         PLAYING.put(p.getUuid(), b);
+        // a broadcast always comes with static before it (a radio that was off clicks on by itself)
+        MineEvents.playTo(p, ModVoices.radio("static"), p.getEyePos(), ModSounds.vol(0.35f), 1.0f);
+        onAir(p, true);
     }
 
     private static long add(Broadcast b, long at, String key) {

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """IT SPEAKS. Voice lines of the Tall One and the radio broadcasts, made offline with espeak-ng (text to speech)
 and then bent out of shape with numpy: It is slowed down and pitched far too low, doubled by an even lower voice
-and a breathy whisper, with a light ring-mod wobble and reverb; the radio is band-passed, crackling, with drop-outs
+and a breathy whisper, with a light ring-mod wobble, radio-like interference (crackles, drop-outs, hiss) and reverb; the radio is band-passed, crackling, with drop-outs
 and a bed of static. The radio can also read numbers digit by digit (your coordinates).
 
 Writes assets/itwastall/sounds/voice/*.ogg and merges the entries into sounds.json.
@@ -103,8 +103,24 @@ def it_voice(text):
     v = gs.distort(v, 1.8)
     v = gs.ringmod(v, 28, 0.18)
     v = gs.spectrum_filter(v, 60, 5200)
+    v = interference(v, abs(hash(text)) % (2 ** 32))
     v = gs.reverb(v, 2.2, 0.32, 2600, "out")
     return np.concatenate([gs.silence(0.05), v])
+
+
+def interference(v, seed):
+    """It comes through like a bad radio signal: crackles, short drop-outs, a hiss that swells with the voice."""
+    r = np.random.default_rng(seed)
+    v = np.copy(v)
+    for _ in range(int(len(v) / SR * 2.0)):                      # drop-outs: the voice fades for a moment
+        s = r.integers(0, max(1, len(v) - int(0.06 * SR)))
+        v[s:s + int(r.uniform(0.015, 0.05) * SR)] *= r.uniform(0.05, 0.35)
+    hiss = gs.spectrum_filter(r.standard_normal(len(v)), 1500, 7000) * (0.04 + envelope(v, 0.05) * 0.35)
+    v = v + hiss
+    for _ in range(int(len(v) / SR * 9)):                        # crackles
+        s = r.integers(0, max(1, len(v) - 80))
+        v[s:s + r.integers(10, 60)] += r.uniform(-0.6, 0.6)
+    return v
 
 
 def radio_voice(text, bed=True):
