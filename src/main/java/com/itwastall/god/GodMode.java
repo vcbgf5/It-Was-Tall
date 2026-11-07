@@ -48,6 +48,7 @@ public final class GodMode {
         PayloadTypeRegistry.playS2C().register(GodStatePayload.ID, GodStatePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(GodActionPayload.ID, GodActionPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.itwastall.net.GodMapPayload.ID, com.itwastall.net.GodMapPayload.CODEC);
+        ItForm.init();
         ServerPlayNetworking.registerGlobalReceiver(GodActionPayload.ID, (payload, context) ->
                 context.server().execute(() -> GodActions.run(context.player(), payload.action(), payload.target())));
         // someone joining never sees the god in the player list
@@ -97,6 +98,7 @@ public final class GodMode {
     public static void disable(ServerPlayerEntity player, boolean restoreMode) {
         GameMode before = GODS.remove(player.getUuid());
         if (before == null) return;
+        ItForm.end(player.getUuid(), player);
         if (restoreMode) player.changeGameMode(before);
         player.setSilent(false);
         player.removeStatusEffect(StatusEffects.INVISIBILITY);
@@ -115,6 +117,7 @@ public final class GodMode {
     /** Leaving the game keeps nothing: a god who logs out comes back as a normal player. */
     public static void forget(UUID player) {
         GODS.remove(player);
+        ItForm.end(player, null);
     }
 
     private static void applyEffects(ServerPlayerEntity god) {

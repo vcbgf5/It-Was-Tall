@@ -8,6 +8,8 @@
     "EntryListWidgetMixin",
     "GameMenuScreenMixin",
     "LevelLoadingScreenMixin",
+    "OutlineColorMixin",
+    "OutlineMixin",
     "ScreenMixin",
     "TitleScreenMixin"
   ],

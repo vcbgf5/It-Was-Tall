@@ -37,7 +37,7 @@ public class GodPanelScreen extends Screen {
             {"Clear", "clear"}, {"Rain", "rain"}, {"Thunder", "thunder"}};
     private static final String[][] MAP_ACTIONS = {
             {"It digs to them", "dig"}, {"It peeks (cave)", "peek"}, {"It: stare", "haunt"},
-            {"JUMPSCARE", "jumpscare"}, {"Fly to them", "tpto"}};
+            {"JUMPSCARE", "jumpscare"}, {"Fly to them", "tpto"}, {"Rise as It / Sink (H)", "itform"}};
     private static final String[] TAB_NAMES = {"EVENTS", "SCENES & TASKS", "WORLD", "MAP"};
     private static final int MAP = 3;
     private int mapX, mapY, mapSize, ticks;

@@ -26,5 +26,6 @@ public class InGameHudMixin {
         ChaseHud.render(context, tickCounter);
         com.itwastall.client.hud.TaskTimerHud.render(context, tickCounter);
         TaskToast.render(context, tickCounter);
+        com.itwastall.client.god.GodClientState.renderHint(context);
     }
 }

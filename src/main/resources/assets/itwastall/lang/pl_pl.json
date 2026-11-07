@@ -119,5 +119,6 @@
   "block.itwastall.tall_footprint": "Wielki odcisk stopy",
   "block.itwastall.eye_stone": "Kamień z okiem",
   "entity.itwastall.carcass": "Padlina",
-  "key.itwastall.god_panel": "Panel boga (tryb boga)"
+  "key.itwastall.god_panel": "Panel boga (tryb boga)",
+  "key.itwastall.it_form": "Wyjdź jako It / Zapadnij się (tryb boga)"
 }

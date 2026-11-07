@@ -32,6 +32,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 public class ItWasTallClient implements ClientModInitializer {
     private static KeyBinding journalKey;
     private static KeyBinding godKey;
+    private static KeyBinding itFormKey;
     /** True while this player is the god of the session (/changetogod). */
     private static boolean god;
 
@@ -55,8 +56,20 @@ public class ItWasTallClient implements ClientModInitializer {
         godKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.itwastall.god_panel", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G,
                 "category.itwastall"));
+        itFormKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.itwastall.it_form", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H,
+                "category.itwastall"));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GodStatePayload.ID, (payload, context) ->
-                context.client().execute(() -> god = payload.god()));
+                context.client().execute(() -> {
+                    god = payload.god();
+                    com.itwastall.client.god.GodClientState.god = payload.god();
+                    if (!payload.god()) com.itwastall.client.god.GodClientState.reset();
+                }));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GodFormPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    com.itwastall.client.god.GodClientState.itForm = payload.active();
+                    com.itwastall.client.god.GodClientState.lockedId = payload.lockedId();
+                }));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.GodMapPayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.god.GodMapData.update(payload)));
 
@@ -182,11 +195,18 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
+            com.itwastall.client.god.GodClientState.tick(client);
+            while (itFormKey.wasPressed()) {
+                if (god && client.player != null && client.currentScreen == null
+                        && ClientPlayNetworking.canSend(com.itwastall.net.GodActionPayload.ID)) {
+                    ClientPlayNetworking.send(new com.itwastall.net.GodActionPayload("itform", ""));
+                }
+            }
             while (godKey.wasPressed()) {
                 if (god && client.player != null && client.currentScreen == null) {
                     client.setScreen(new com.itwastall.client.god.GodPanelScreen());

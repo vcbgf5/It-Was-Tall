@@ -112,6 +112,10 @@ public final class HauntDirector {
         for (ServerWorld w : server.getWorlds()) {
             for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> true)) {
                 if (it.isRemoved()) continue;
+                if (it.puppetOwner() != null) {   // the god walking as It: it IS the It of the server
+                    n++;
+                    continue;
+                }
                 if (it.getUuid().equals(recorded)) recordedLoaded = true;
                 boolean ticking = it.age < 100 || now - it.lastTickTime() < 100;
                 boolean nearSomeone = w.getClosestPlayer(it, 160) != null;
@@ -128,7 +132,7 @@ public final class HauntDirector {
     /** Test commands: the current It (if any) quietly leaves so the new one can come. */
     public static void clearForCommand(MinecraftServer server) {
         for (ServerWorld w : server.getWorlds()) {
-            for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> true)) it.discard();
+            for (TallOneEntity it : w.getEntitiesByType(ModEntities.TALL_ONE, e -> e.puppetOwner() == null)) it.discard();
         }
         com.itwastall.world.ItWasTallState.getOrCreate(server).forgetActiveIt();
     }

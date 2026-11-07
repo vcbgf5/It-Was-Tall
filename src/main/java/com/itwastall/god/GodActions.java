@@ -72,6 +72,14 @@ public final class GodActions {
             GodMap.send(god, target);
             return;
         }
+        if (action.equals("itform")) {
+            ItForm.toggle(god);
+            return;
+        }
+        if (action.equals("lock")) {
+            ItForm.lock(god, target);
+            return;
+        }
         String command = WORLD.get(action);
         if (command == null) {
             String template = ON_PLAYER.get(action);

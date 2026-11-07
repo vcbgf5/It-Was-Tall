@@ -118,6 +118,9 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     private boolean forced;
     /** Overworld time of its last AI tick (an It that does not tick does not block the server limit). */
     private long lastTickTime;
+    /** God mode: the god whose body this It is (it only mirrors them, no AI of its own); null for a real It. */
+    @Nullable
+    private UUID puppetOwner;
     // TREE: where it hides (directly behind the trunk) once you have seen it
     @Nullable
     private Vec3d treeHide;
@@ -263,8 +266,32 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
         return p;
     }
 
+    /** Turns this It into the body of the god of the session (see com.itwastall.god.ItForm). */
+    public void makePuppetOf(UUID god) {
+        this.puppetOwner = god;
+        setAiDisabled(true);
+        setInvulnerable(true);
+        setNoGravity(true);
+    }
+
+    @Nullable
+    public UUID puppetOwner() {
+        return puppetOwner;
+    }
+
+    /** Mode and its timer set from outside (the god's body). */
+    public void setPuppetMode(Mode mode) {
+        setMode(mode);
+    }
+
+    @Override
+    public boolean shouldSave() {
+        return puppetOwner == null && super.shouldSave();   // the god's body never stays in the world
+    }
+
     @Override
     protected void mobTick() {
+        if (puppetOwner != null) return;
         super.mobTick();
         modeTicks++;
         if (attackCooldown > 0) attackCooldown--;

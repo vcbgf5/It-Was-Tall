@@ -31,8 +31,10 @@ public abstract class GodTrackerMixin {
 
     @Inject(method = "updateTrackedStatus(Lnet/minecraft/server/network/ServerPlayerEntity;)V", at = @At("HEAD"), cancellable = true)
     private void itwastall$hideGod(ServerPlayerEntity player, CallbackInfo ci) {
-        if (entity instanceof ServerPlayerEntity god && god != player
-                && GodMode.isGod(god.getUuid()) && !GodMode.isGod(player.getUuid())) {
+        boolean ownBody = entity instanceof com.itwastall.entity.TallOneEntity it
+                && player.getUuid().equals(it.puppetOwner());     // the god never sees their own It body
+        if (ownBody || (entity instanceof ServerPlayerEntity god && god != player
+                && GodMode.isGod(god.getUuid()) && !GodMode.isGod(player.getUuid()))) {
             if (listeners.remove(player.networkHandler)) entry.stopTracking(player);
             ci.cancel();
         }
