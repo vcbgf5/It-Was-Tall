@@ -1,0 +1,17 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "building",
+ "pattern": [
+  "##",
+  "##"
+ ],
+ "key": {
+  "#": {
+   "item": "itwastall:oldrock"
+  }
+ },
+ "result": {
+  "id": "itwastall:oldrock_bricks",
+  "count": 4
+ }
+}

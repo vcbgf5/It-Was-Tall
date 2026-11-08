@@ -78,7 +78,9 @@ public final class Director {
         if (state == null) return;
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
 
-        if (phase == 0) {
+        if (phase == 2) {
+            // the end: nothing grows any more
+        } else if (phase == 0) {
             // physical activation counter: counted on every tick, saved — a restart never resets it
             state.addActivationTicks(1);
             if (state.activationTicks() >= cfg.activation.afterTicks
@@ -106,7 +108,7 @@ public final class Director {
      * @return false if the mod is already in the ACTIVE phase.
      */
     public static boolean activatePhase(MinecraftServer runningServer) {
-        if (phase != 0) return false;
+        if (phase == 1) return false;
         phase = 1;
         itJoined = true;
         if (state != null) {
@@ -121,7 +123,18 @@ public final class Director {
     }
 
     public static Phase phaseValue() {
-        return phase == 0 ? Phase.PRE : Phase.ACTIVE;
+        return phase == 0 ? Phase.PRE : phase == 2 ? Phase.ENDED : Phase.ACTIVE;
+    }
+
+    /** THE ENDING (the last night held until dawn): It is gone. Phase 2 = ENDED — every system that runs only in the
+     *  ACTIVE phase falls silent. /itwastall phase activate brings it back. */
+    public static void end(MinecraftServer runningServer) {
+        phase = 2;
+        if (state != null) {
+            state.setPhase(2);
+            state.markDirty();
+        }
+        ItWasTall.LOGGER.info("Phase ENDED: It is gone.");
     }
 
     /** {@code PHASE} for command feedback: 0 = PRE, 1 = ACTIVE. */
@@ -130,7 +143,7 @@ public final class Director {
     }
 
     public enum Phase {
-        PRE, ACTIVE
+        PRE, ACTIVE, ENDED
     }    // ---- stage ----
 
     /**

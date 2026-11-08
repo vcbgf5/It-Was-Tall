@@ -1,0 +1,17 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "building",
+ "pattern": [
+  "##",
+  "##"
+ ],
+ "key": {
+  "#": {
+   "item": "itwastall:forgotten_stone"
+  }
+ },
+ "result": {
+  "id": "itwastall:forgotten_stone_bricks",
+  "count": 4
+ }
+}

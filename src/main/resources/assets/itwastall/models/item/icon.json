@@ -339,6 +339,12 @@
     "custom_model_data": 56
    },
    "model": "itwastall:item/icon/cracked_bedrock"
+  },
+  {
+   "predicate": {
+    "custom_model_data": 57
+   },
+   "model": "itwastall:item/icon/ritual"
   }
  ]
 }

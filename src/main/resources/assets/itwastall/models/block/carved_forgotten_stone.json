@@ -1,0 +1,6 @@
+{
+ "parent": "minecraft:block/cube_all",
+ "textures": {
+  "all": "itwastall:block/carved_forgotten_stone"
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "building",
+ "pattern": [
+  "OOO",
+  "OTO",
+  "OOO"
+ ],
+ "key": {
+  "O": {
+   "item": "itwastall:oldrock_bricks"
+  },
+  "T": {
+   "item": "minecraft:torch"
+  }
+ },
+ "result": {
+  "id": "itwastall:oldrock_lantern",
+  "count": 2
+ }
+}

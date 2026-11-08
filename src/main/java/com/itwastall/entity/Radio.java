@@ -164,6 +164,7 @@ public final class Radio {
                 continue;
             }
             if (tick < next || PLAYING.containsKey(p.getUuid())) continue;
+            if (com.itwastall.director.Director.phase() == 2) continue;      // the end: no more voices on the radio
             // switched on: every 45-95 s; switched off it turns itself on for a broadcast every 2-4 minutes
             NEXT.put(p.getUuid(), tick + (state == 2 ? 20L * (45 + p.getRandom().nextInt(50)) : 20L * (120 + p.getRandom().nextInt(120))));
             broadcast(p, tick);

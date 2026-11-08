@@ -246,6 +246,12 @@ public final class ItWasTallCommand {
                 }))
                 .then(eventKind("bloodmoon", p -> com.itwastall.entity.BloodMoon.start(p.getServer())))
                 .then(eventKind("fog", p -> com.itwastall.entity.FogNight.start(p.getServer())))
+                .then(eventKind("ritual", com.itwastall.entity.LastNight::buildInFront))
+                .then(eventKind("ending", com.itwastall.entity.LastNight::showEnding))
+                .then(eventKind("archive", p -> com.itwastall.entity.TheBelow.archive(p.getServerWorld(),
+                        p.getBlockPos().offset(p.getHorizontalFacing(), 5), p.getRandom())))
+                .then(eventKind("altar", p -> com.itwastall.entity.TheBelow.heartShrine(p.getServerWorld(),
+                        p.getBlockPos().offset(p.getHorizontalFacing(), 5), p.getRandom())))
                 .then(eventKind("corruption", p -> {
                     if (!com.itwastall.entity.Corruption.startInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))

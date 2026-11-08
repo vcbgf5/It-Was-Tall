@@ -1,0 +1,26 @@
+{
+  "parent": "itwastall:last_night",
+  "display": {
+    "icon": {
+      "id": "itwastall:icon",
+      "components": {
+        "minecraft:custom_model_data": 30
+      }
+    },
+    "title": {
+      "translate": "advancements.itwastall.banished.title"
+    },
+    "description": {
+      "translate": "advancements.itwastall.banished.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

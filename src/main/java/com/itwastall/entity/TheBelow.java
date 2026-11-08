@@ -64,6 +64,7 @@ public final class TheBelow {
     private static final Map<UUID, Long> NEXT_IT = new HashMap<>();
     private static final Map<UUID, Long> NEXT_CRACK = new HashMap<>();
     private static final Set<Long> DECORATED = new HashSet<>();
+    private static final Set<UUID> FIRST_ARCHIVE = new HashSet<>();
     private static long lastDayTime = -1;
 
     private TheBelow() {}
@@ -147,6 +148,7 @@ public final class TheBelow {
         NEXT_IT.put(player.getUuid(), now + 20L * (45 + player.getRandom().nextInt(45)));
         ModNetworking.sendScareText(player, "there is something under everything.");
         com.itwastall.advancement.Achievements.grant(player, "below");
+        if (FIRST_ARCHIVE.add(player.getUuid())) archiveNear(below, spot, player.getRandom());
         JournalLog.add(player, fromVoid
                 ? "I fell out of the world. I did not die. I landed in caves that should not be there."
                 : "I broke through the bedrock. There was nothing under it, and then there were caves.");
@@ -257,10 +259,11 @@ public final class TheBelow {
     }
 
     /** It, standing on open ground minD..maxD blocks away, in clear sight of the player, watching (false = no spot). */
-    public static boolean spawnItInSight(ServerPlayerEntity p, double minD, double maxD) {
+    @org.jetbrains.annotations.Nullable
+    public static TallOneEntity spawnItInSight(ServerPlayerEntity p, double minD, double maxD) {
         Random r = p.getRandom();
         MinecraftServer server = p.getServer();
-        if (server == null || HauntDirector.countActive(server) >= Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)) return false;
+        if (server == null || HauntDirector.countActive(server) >= Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)) return null;
         ServerWorld world = p.getServerWorld();
         for (int attempt = 0; attempt < 30; attempt++) {
             double yaw = (p.getYaw() + (r.nextDouble() - 0.5) * 140) * MathHelper.RADIANS_PER_DEGREE;
@@ -272,13 +275,13 @@ public final class TheBelow {
             if (world.raycast(new RaycastContext(p.getEyePos(), head, RaycastContext.ShapeType.COLLIDER,
                     RaycastContext.FluidHandling.NONE, p)).getType() != HitResult.Type.MISS) continue;
             TallOneEntity it = ModEntities.TALL_ONE.create(world);
-            if (it == null) return false;
+            if (it == null) return null;
             it.refreshPositionAndAngles(x + 0.5, floor.getY(), z + 0.5, 0f, 0f);
             if (!world.isSpaceEmpty(it)) continue;
             it.setVictim(p);
-            return world.spawnEntity(it);
+            return world.spawnEntity(it) ? it : null;
         }
-        return false;
+        return null;
     }
 
     /** The chunks around the player get their bones, webs and cold camps once (the same ones every time). */
@@ -295,6 +298,14 @@ public final class TheBelow {
 
     private static void decorateChunk(ServerWorld world, int cx, int cz) {
         Random r = Random.create(ChunkPos.toLong(cx, cz) * 31L + 6_413_113L);
+        int rare = r.nextInt(40);
+        if (rare < 2) {                                            // a forgotten archive (5%)
+            BlockPos at = floorIn(world, (cx << 4) + 8, (cz << 4) + 8, 100, 20);
+            if (at != null) archive(world, at, r);
+        } else if (rare == 2) {                                    // an old altar with a hollow heart (2.5%)
+            BlockPos at = floorIn(world, (cx << 4) + 8, (cz << 4) + 8, 60, 16);
+            if (at != null) heartShrine(world, at, r);
+        }
         int n = r.nextInt(4);
         for (int i = 0; i < n; i++) {
             int x = (cx << 4) + r.nextInt(16), z = (cz << 4) + r.nextInt(16);
@@ -320,6 +331,7 @@ public final class TheBelow {
                         be.setStack(r.nextInt(27), new ItemStack(Items.BREAD, 1 + r.nextInt(3)));
                         if (r.nextInt(3) == 0) be.setStack(r.nextInt(27), new ItemStack(Items.IRON_INGOT, 1 + r.nextInt(4)));
                         if (r.nextInt(4) == 0) be.setStack(r.nextInt(27), new ItemStack(Items.BONE, 2 + r.nextInt(4)));
+                        if (r.nextInt(10) == 0) be.setStack(r.nextInt(27), new ItemStack(com.itwastall.registry.ModItems.HOLLOW_HEART));
                     }
                 }
                 BlockPos skull = floor.west();
@@ -327,6 +339,88 @@ public final class TheBelow {
                     world.setBlockState(skull, Blocks.SKELETON_SKULL.getDefaultState().with(SkullBlock.ROTATION, r.nextInt(16)), Block.NOTIFY_LISTENERS);
                 }
             }
+        }
+    }
+
+    // ------------------------------------------------------------------ the structures ----
+
+    /** A Forgotten Archive somewhere 14-30 blocks from here (the first time you come down, so the plan can be found). */
+    private static void archiveNear(ServerWorld world, BlockPos from, Random r) {
+        for (int attempt = 0; attempt < 30; attempt++) {
+            double a = r.nextDouble() * Math.PI * 2, d = 14 + r.nextDouble() * 16;
+            int x = from.getX() + (int) Math.round(Math.cos(a) * d), z = from.getZ() + (int) Math.round(Math.sin(a) * d);
+            world.getChunk(x >> 4, z >> 4);
+            BlockPos floor = floorIn(world, x, z, from.getY() + 10, Math.max(16, from.getY() - 10));
+            if (floor != null) {
+                archive(world, floor, r);
+                return;
+            }
+        }
+    }
+
+    /**
+     * THE FORGOTTEN ARCHIVE: a room cut into the rock, walls of forgotten stone bricks, a floor of oldrock bricks, a
+     * lectern, lanterns of oldrock, a doorway on every side — and a chest with the Ritual Plan and the Forgotten Book.
+     */
+    public static void archive(ServerWorld w, BlockPos f, Random r) {
+        BlockState wall = ModBlocks.FORGOTTEN_STONE_BRICKS.getDefaultState(), floorBlock = ModBlocks.OLDROCK_BRICKS.getDefaultState();
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                for (int dy = -1; dy <= 4; dy++) {
+                    BlockPos q = f.add(dx, dy, dz);
+                    boolean shell = Math.abs(dx) == 3 || Math.abs(dz) == 3 || dy == -1 || dy == 4;
+                    BlockState st = !shell ? Blocks.AIR.getDefaultState() : dy == -1 ? floorBlock
+                            : (dy == 2 && (dx == 0 || dz == 0)) ? ModBlocks.CARVED_FORGOTTEN_STONE.getDefaultState() : wall;
+                    w.setBlockState(q, st, Block.NOTIFY_LISTENERS);
+                }
+            }
+        }
+        for (Direction d : Direction.Type.HORIZONTAL) {                       // a doorway on every side
+            BlockPos door = f.offset(d, 3);
+            w.setBlockState(door, Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
+            w.setBlockState(door.up(), Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
+        }
+        for (int[] c : new int[][]{{-2, -2}, {2, 2}}) {                      // lanterns in the ceiling corners
+            w.setBlockState(f.add(c[0], 4, c[1]), ModBlocks.OLDROCK_LANTERN.getDefaultState(), Block.NOTIFY_LISTENERS);
+        }
+        for (int[] c : new int[][]{{-2, 2}, {2, -2}}) {                      // two ritual pillars in the other corners
+            w.setBlockState(f.add(c[0], 0, c[1]), ModBlocks.RITUAL_PILLAR.getDefaultState(), Block.NOTIFY_LISTENERS);
+            w.setBlockState(f.add(c[0], 1, c[1]), ModBlocks.RITUAL_PILLAR.getDefaultState(), Block.NOTIFY_LISTENERS);
+            w.setBlockState(f.add(c[0], 2, c[1]), Blocks.CANDLE.getDefaultState(), Block.NOTIFY_LISTENERS);
+        }
+        w.setBlockState(f.add(0, 0, -2), Blocks.LECTERN.getDefaultState(), Block.NOTIFY_LISTENERS);
+        w.setBlockState(f.add(1, 3, 1), Blocks.COBWEB.getDefaultState(), Block.NOTIFY_LISTENERS);
+        BlockPos chest = f.add(2, 0, 0);
+        w.setBlockState(chest, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
+        if (w.getBlockEntity(chest) instanceof ChestBlockEntity be) {
+            be.setStack(4, new ItemStack(com.itwastall.registry.ModItems.RITUAL_PLAN));
+            be.setStack(13, new ItemStack(com.itwastall.registry.ModItems.FORGOTTEN_BOOK));
+            be.setStack(r.nextInt(9) + 18, new ItemStack(Items.CANDLE, 2 + r.nextInt(3)));
+            be.setStack(r.nextInt(4), new ItemStack(Items.TORCH, 4 + r.nextInt(8)));
+            if (r.nextInt(4) == 0) be.setStack(22, new ItemStack(com.itwastall.registry.ModItems.HOLLOW_HEART));
+        }
+    }
+
+    /** THE OLD ALTAR: an oldrock platform, four pillars with dead candles at its corners, a chest with a hollow heart. */
+    public static void heartShrine(ServerWorld w, BlockPos f, Random r) {
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                w.setBlockState(f.add(dx, -1, dz), ModBlocks.OLDROCK_BRICKS.getDefaultState(), Block.NOTIFY_LISTENERS);
+                for (int dy = 0; dy <= 3; dy++) w.setBlockState(f.add(dx, dy, dz), Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
+            }
+        }
+        for (int[] c : new int[][]{{-2, -2}, {-2, 2}, {2, -2}, {2, 2}}) {
+            w.setBlockState(f.add(c[0], 0, c[1]), ModBlocks.RITUAL_PILLAR.getDefaultState(), Block.NOTIFY_LISTENERS);
+            w.setBlockState(f.add(c[0], 1, c[1]), ModBlocks.RITUAL_PILLAR.getDefaultState(), Block.NOTIFY_LISTENERS);
+            w.setBlockState(f.add(c[0], 2, c[1]), Blocks.CANDLE.getDefaultState(), Block.NOTIFY_LISTENERS);
+        }
+        w.setBlockState(f, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
+        if (w.getBlockEntity(f) instanceof ChestBlockEntity be) {
+            be.setStack(13, new ItemStack(com.itwastall.registry.ModItems.HOLLOW_HEART));
+            be.setStack(r.nextInt(9), new ItemStack(Items.BONE, 2 + r.nextInt(5)));
+        }
+        for (Direction d : Direction.Type.HORIZONTAL) {
+            w.setBlockState(f.offset(d), Blocks.SKELETON_SKULL.getDefaultState().with(SkullBlock.ROTATION, r.nextInt(16)), Block.NOTIFY_LISTENERS);
         }
     }
 

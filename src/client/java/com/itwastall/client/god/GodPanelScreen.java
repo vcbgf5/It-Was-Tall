@@ -27,7 +27,7 @@ public class GodPanelScreen extends Screen {
             {"Deep One", "deepone"}, {"The Hanged", "hanged"}, {"Mimics", "mimic"}, {"Eye swarm", "eyes"}, {"It whispers", "voice"}, {"Steal a voice", "mimicvoice"}, {"Record 5 s + play", "recordvoice"}, {"Corruption", "corruption"}, {"Small scare", "scare"}, {"JUMPSCARE", "jumpscare"}};
     private static final String[][] SCENES = {
             {"Chopping block", "scene_chopping"}, {"Empty camp", "scene_camp"}, {"Missing posters", "scene_missing"},
-            {"Animal circle", "scene_circle"}, {"Footprints", "scene_footprints"}, {"Dream (outspace)", "outspace"}, {"The Below", "below"}, {"Cracked bedrock", "crackedbedrock"},
+            {"Animal circle", "scene_circle"}, {"Footprints", "scene_footprints"}, {"Dream (outspace)", "outspace"}, {"The Below", "below"}, {"Cracked bedrock", "crackedbedrock"}, {"Ritual (test)", "ritual"}, {"Ending (test)", "ending"},
             {"Task: stay inside", "task_stayinside"}, {"Task: lights", "task_lights"}, {"Task: hide", "task_hide"},
             {"Task: don't look", "task_dontlook"}, {"Task: offering", "task_sacrifice"}};
     private static final String[][] WORLD = {

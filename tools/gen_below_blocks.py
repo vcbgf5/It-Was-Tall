@@ -3,6 +3,8 @@
   forgotten_stone  pale, ash-grey stone worn smooth, with hairline cracks and faint scratched tally marks —
                    as if someone down there once counted the days on it
   oldrock          dark brown-black rock in thin layers, pitted, older than the world above
+  and what is made of them: bricks of both, carved forgotten stone (an eye and tally marks), the ritual pillar
+  (side + top), the oldrock lantern
 Run: python3 tools/gen_below_blocks.py"""
 import math, os, random
 from PIL import Image
@@ -74,10 +76,95 @@ def oldrock():
     return img
 
 
+def bricks(base, mortar, seed):
+    """Stone bricks cut from a texture: two rows of bricks (offset), mortar lines darker, edges lighter."""
+    img = base.copy()
+    px = img.load()
+    rnd = random.Random(seed)
+    for y in range(16):
+        for x in range(16):
+            row = y // 8
+            off = 0 if row == 0 else 4
+            edge_h = y % 8 == 7
+            edge_v = (x + off) % 8 == 7
+            if edge_h or edge_v:
+                px[x, y] = mortar + (255,)
+            elif y % 8 == 0 or (x + off) % 8 == 0:
+                r, g, b, a = px[x, y]
+                px[x, y] = (min(255, r + 14), min(255, g + 14), min(255, b + 12), 255)
+    return img
+
+
+def carved(base):
+    """Forgotten stone bricks with a deep-cut eye and tally marks: someone was here, counting, watched."""
+    img = bricks(base, (88, 86, 81), 41)
+    px = img.load()
+    for x in range(3, 13):
+        px[x, 4] = (70, 68, 64, 255)
+        px[x, 11] = (70, 68, 64, 255)
+    for y in range(5, 11):
+        px[3, y] = (70, 68, 64, 255)
+        px[12, y] = (70, 68, 64, 255)
+    for (x, y) in [(6, 7), (7, 6), (8, 6), (9, 7), (8, 8), (7, 8)]:
+        px[x, y] = (60, 58, 54, 255)
+    px[7, 7] = (128, 18, 14, 255)
+    px[8, 7] = (128, 18, 14, 255)
+    return img
+
+
+def pillar_side(fs, ol):
+    """A carved column: forgotten stone with an oldrock band and grooves."""
+    img = fs.copy()
+    px = img.load()
+    olp = ol.load()
+    for y in range(16):
+        for x in range(16):
+            if 6 <= y <= 9:
+                px[x, y] = olp[x, y]
+            if x in (0, 15):
+                r, g, b, a = px[x, y]
+                px[x, y] = (max(0, r - 30), max(0, g - 30), max(0, b - 30), 255)
+            if x in (4, 11) and not 6 <= y <= 9:
+                r, g, b, a = px[x, y]
+                px[x, y] = (max(0, r - 22), max(0, g - 22), max(0, b - 20), 255)
+    return img
+
+
+def pillar_top(fs):
+    img = fs.copy()
+    px = img.load()
+    for i in range(16):
+        for (x, y) in ((i, 0), (i, 15), (0, i), (15, i)):
+            px[x, y] = (86, 84, 79, 255)
+    for (x, y) in [(7, 7), (8, 7), (7, 8), (8, 8)]:
+        px[x, y] = (40, 34, 31, 255)
+    return img
+
+
+def lantern(ol):
+    """Oldrock bricks with a glowing amber core showing through the cracks."""
+    img = bricks(ol, (24, 20, 18), 51)
+    px = img.load()
+    glow = [(255, 214, 120), (246, 170, 70), (226, 120, 40)]
+    for y in range(3, 13):
+        for x in range(3, 13):
+            d = abs(x - 7.5) + abs(y - 7.5)
+            if d < 4.6:
+                px[x, y] = glow[min(2, int(d / 1.6))] + (255,)
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
-    forgotten_stone().save(os.path.join(OUT, "forgotten_stone.png"))
-    oldrock().save(os.path.join(OUT, "oldrock.png"))
+    fs, ol = forgotten_stone(), oldrock()
+    fs.save(os.path.join(OUT, "forgotten_stone.png"))
+    ol.save(os.path.join(OUT, "oldrock.png"))
+    bricks(fs, (92, 90, 85), 31).save(os.path.join(OUT, "forgotten_stone_bricks.png"))
+    bricks(ol, (24, 20, 18), 32).save(os.path.join(OUT, "oldrock_bricks.png"))
+    carved(fs).save(os.path.join(OUT, "carved_forgotten_stone.png"))
+    pillar_side(fs, ol).save(os.path.join(OUT, "ritual_pillar_side.png"))
+    pillar_top(fs).save(os.path.join(OUT, "ritual_pillar_top.png"))
+    lantern(ol).save(os.path.join(OUT, "oldrock_lantern.png"))
 
 
 if __name__ == "__main__":

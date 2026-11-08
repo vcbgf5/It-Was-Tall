@@ -158,6 +158,21 @@ public class ItWasTallClient implements ClientModInitializer {
             com.itwastall.client.hud.NightTitle.tick(c);
             com.itwastall.client.hud.Polaroids.tick(c);
         });
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.EndingPayload.ID, (payload, context) ->
+                context.client().execute(() -> context.client().setScreen(new com.itwastall.client.ending.EndingScreen())));
+        // the plan and the book of the ending: right-click to read
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) -> {
+            net.minecraft.item.ItemStack stack = player.getStackInHand(hand);
+            boolean plan = stack.isOf(com.itwastall.registry.ModItems.RITUAL_PLAN), book = stack.isOf(com.itwastall.registry.ModItems.FORGOTTEN_BOOK);
+            if (!plan && !book) return net.minecraft.util.TypedActionResult.pass(stack);
+            if (world.isClient) {
+                net.minecraft.client.MinecraftClient.getInstance().setScreen(plan ? new com.itwastall.client.ending.PlanScreen()
+                        : new com.itwastall.client.ending.ForgottenBookScreen());
+                net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(
+                        net.minecraft.client.sound.PositionedSoundInstance.master(net.minecraft.sound.SoundEvents.ITEM_BOOK_PAGE_TURN, 0.8f));
+            }
+            return net.minecraft.util.TypedActionResult.success(stack, world.isClient);
+        });
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.SaveIconPayload.ID, (payload, context) ->
                 context.client().execute(com.itwastall.client.hud.SaveIcon::trigger));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.FogNightPayload.ID, (payload, context) ->

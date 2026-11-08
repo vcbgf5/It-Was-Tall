@@ -64,6 +64,19 @@ public final class ModBlocks {
     public static final Block OLDROCK = register("oldrock", new Block(AbstractBlock.Settings.create()
             .mapColor(MapColor.BLACK).strength(3.5f, 6.0f).requiresTool().sounds(BlockSoundGroup.DEEPSLATE)));
 
+    // ---- what is built from the stones of the Below (recipes in the Forgotten Book) ----
+    public static final Block FORGOTTEN_STONE_BRICKS = register("forgotten_stone_bricks", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).strength(3.0f, 6.0f).requiresTool().sounds(BlockSoundGroup.STONE)));
+    public static final Block OLDROCK_BRICKS = register("oldrock_bricks", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.BLACK).strength(3.5f, 6.0f).requiresTool().sounds(BlockSoundGroup.DEEPSLATE_BRICKS)));
+    public static final Block CARVED_FORGOTTEN_STONE = register("carved_forgotten_stone", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).strength(3.0f, 6.0f).requiresTool().sounds(BlockSoundGroup.STONE)));
+    /** Two of them, a lit candle on top: four such pillars around the fire make the ritual. */
+    public static final Block RITUAL_PILLAR = register("ritual_pillar", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).strength(3.0f, 6.0f).requiresTool().sounds(BlockSoundGroup.STONE)));
+    public static final Block OLDROCK_LANTERN = register("oldrock_lantern", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.ORANGE).strength(2.0f, 6.0f).requiresTool().sounds(BlockSoundGroup.DEEPSLATE_BRICKS).luminance(s -> 14)));
+
     private static Block register(String name, Block block) {
         Registry.register(Registries.BLOCK, ItWasTall.id(name), block);
         Registry.register(Registries.ITEM, ItWasTall.id(name), new BlockItem(block, new Item.Settings()));
@@ -82,6 +95,13 @@ public final class ModBlocks {
             entries.add(FORGOTTEN_STONE);
             entries.add(OLDROCK);
             entries.add(CRACKED_BEDROCK);
+        });
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register(entries -> {
+            entries.add(FORGOTTEN_STONE_BRICKS);
+            entries.add(OLDROCK_BRICKS);
+            entries.add(CARVED_FORGOTTEN_STONE);
+            entries.add(RITUAL_PILLAR);
+            entries.add(OLDROCK_LANTERN);
         });
     }
 }

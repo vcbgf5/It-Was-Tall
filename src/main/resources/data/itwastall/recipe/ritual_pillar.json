@@ -1,0 +1,21 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "building",
+ "pattern": [
+  "F",
+  "O",
+  "F"
+ ],
+ "key": {
+  "F": {
+   "item": "itwastall:forgotten_stone_bricks"
+  },
+  "O": {
+   "item": "itwastall:oldrock_bricks"
+  }
+ },
+ "result": {
+  "id": "itwastall:ritual_pillar",
+  "count": 1
+ }
+}

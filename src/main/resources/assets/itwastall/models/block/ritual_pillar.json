@@ -1,0 +1,7 @@
+{
+ "parent": "minecraft:block/cube_column",
+ "textures": {
+  "end": "itwastall:block/ritual_pillar_top",
+  "side": "itwastall:block/ritual_pillar_side"
+ }
+}

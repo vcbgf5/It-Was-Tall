@@ -1,0 +1,16 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "building",
+ "ingredients": [
+  {
+   "item": "itwastall:forgotten_stone_bricks"
+  },
+  {
+   "item": "minecraft:flint"
+  }
+ ],
+ "result": {
+  "id": "itwastall:carved_forgotten_stone",
+  "count": 1
+ }
+}

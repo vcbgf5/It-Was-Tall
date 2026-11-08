@@ -1102,6 +1102,26 @@ gggggggggggggGgg
 """)
 
 
+icon("ritual", """
+................
+.......y........
+......yoy.......
+y.....yeoy.....y
+w....yeeoy.....w
+WW...kbbbk....WW
+WW..kbBkBbk...WW
+WW.kkkkkkkkk..WW
+WW.kBBBBBBBk..WW
+WW.kBBBBBBBk..WW
+WW..kkkkkkk...WW
+WW............WW
+................
+................
+................
+................
+""")
+
+
 def shadow(img):
     out = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     px = img.load()

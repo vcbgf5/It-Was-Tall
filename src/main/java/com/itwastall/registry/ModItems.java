@@ -57,6 +57,14 @@ public final class ModItems {
             ItWasTall.id("icon"),
             new Item(new Item.Settings().maxCount(1)));
 
+    /** THE ENDING: the offering (old altars deep in the Below), the plan of the ritual, the book of the stones. */
+    public static final Item HOLLOW_HEART = Registry.register(Registries.ITEM, ItWasTall.id("hollow_heart"),
+            new com.itwastall.entity.LastNight.HollowHeartItem(new Item.Settings().maxCount(16).rarity(net.minecraft.util.Rarity.EPIC)));
+    public static final Item RITUAL_PLAN = Registry.register(Registries.ITEM, ItWasTall.id("ritual_plan"),
+            new Item(new Item.Settings().maxCount(1).rarity(net.minecraft.util.Rarity.UNCOMMON)));
+    public static final Item FORGOTTEN_BOOK = Registry.register(Registries.ITEM, ItWasTall.id("forgotten_book"),
+            new Item(new Item.Settings().maxCount(1).rarity(net.minecraft.util.Rarity.UNCOMMON)));
+
     /** THE RADIO: right-click to switch on; it hisses and now and then a voice breaks through. */
     public static final Item RADIO = Registry.register(
             Registries.ITEM,
