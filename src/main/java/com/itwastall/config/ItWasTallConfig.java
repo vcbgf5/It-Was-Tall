@@ -134,6 +134,10 @@ public final class ItWasTallConfig {
         /** Share of the great halls of the dream that hold the Sleeper's bed (with a Warding Crystal by it). */
         public double outspaceSleeperChance = 0.35;
 
+        // ---- music ----
+        /** The game's own songs are sometimes played corrupted (slowed, warbling, dropping out); more in every stage. */
+        public boolean corruptedMusic = true;
+
         // ---- THE BELOW, the endless caves under the bedrock ----
         /** Falling into the void and cracked bedrock lead to the caves under the world. */
         public boolean below = true;
