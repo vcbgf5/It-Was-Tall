@@ -11,8 +11,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
 /**
- * THE ENDING: black, the story typed line by line, IT WAS TALL. in red, then the credits rise. The game's own credits
- * music plays (never corrupted). ESC goes back to the world.
+ * THE ENDING: black, the story typed line by line, IT WAS TALL. in red, then the credits rise over dark dirt like the
+ * game's own: who made it, and the Sleeper talking to the player (red the Sleeper, blue the player). The game's own
+ * credits music plays (never corrupted). ESC goes back to the world.
  */
 public class EndingScreen extends Screen {
     private static final String[] STORY = {
@@ -23,30 +24,44 @@ public class EndingScreen extends Screen {
             "",
             "But some nights, when the wind stops,",
             "you still look at the treeline."};
+    /** Lines of the credits: "S:" the Sleeper speaks, "P:" the player, plain = a title or nothing. */
     private static final String[] CREDITS = {
             "IT WAS TALL", "", "a horror mod for Minecraft", "", "",
-            "Mixiki made the mod by himself.", "", "", "",
-            "THE STORY", "",
-            "It came on the first night.",
-            "Tall, at the edge of the forest. Just watching.", "",
-            "Then it joined the world.", "",
-            "It knocked on our windows. It stood behind the trees.",
-            "It told us what to do: stay inside, put out the lights, don't look.",
-            "The ones who did not listen were caught.", "",
-            "In the mines it dug toward us through the stone.",
-            "In our sleep it took us to the endless wooden halls,",
-            "where the Old One ran after us.", "",
-            "The moon turned red. The fog came down.",
-            "The radio read out where we were standing.",
-            "Something wore the faces of our friends, and their voices.", "",
-            "Under the bedrock there were caves,",
-            "and the ones who came before us had left a book.", "",
-            "We built the ritual. We gave the fire a hollow heart.",
-            "We held it until dawn.", "",
-            "The chains took it up into the morning sky.", "", "",
-            "It was tall.", "", "", "",
+            "Mixiki made the mod by himself.", "", "", "", "",
+            "S:You are awake.",
+            "P:Who are you?",
+            "S:I was the one in the bed. In the fifteenth room.",
+            "S:I had your face.",
+            "P:Something ran after me in those halls.",
+            "S:That was the Old One. I only slept.",
+            "S:I slept, so that you could dream.", "",
+            "P:Is it over?",
+            "S:The fire burned until morning. The chains took it up.",
+            "S:Yes. It is over.", "",
+            "P:What was it?",
+            "S:Something tall. Something that watched you build",
+            "S:your little house, and wanted to be let in.",
+            "S:It knocked because you had a door.",
+            "S:It waited because you had nights.", "",
+            "P:Why me?",
+            "S:Because you looked back.", "",
+            "P:Will it come back?",
+            "S:Only if you call it. Some do.",
+            "S:The silence is very loud, after.", "",
+            "P:And you?",
+            "S:I will lie down again, in a bed you will never find.",
+            "S:I will dream your world for you,",
+            "S:so you can keep walking in it.", "",
+            "P:I don't want to forget.",
+            "S:You won't. Every time the wind stops at the edge of a forest,",
+            "S:you will look at the trees.",
+            "S:And the trees will be only trees.", "",
+            "P:...thank you.", "",
+            "S:Wake up, %name%.",
+            "S:Wake up.", "", "", "", "",
             "Thank you for playing.", "", "", "", "Press ESC"};
     private static final long PER_CHAR = 45, LINE_PAUSE = 900;
+    private static final net.minecraft.util.Identifier DIRT = net.minecraft.util.Identifier.ofVanilla("textures/block/dirt.png");
     private long start;
     private SoundInstance music;
 
@@ -98,14 +113,28 @@ public class EndingScreen extends Screen {
         }
         long creditsAt = titleAt + 5000;
         if (el >= creditsAt) {
+            // the credits roll over dark dirt, like the game's own credits
+            float fade = Math.min(1f, (el - creditsAt) / 1500f);
             float scroll = (el - creditsAt) / 40f;                  // 25 px a second
+            ctx.setShaderColor(0.25f * fade, 0.25f * fade, 0.25f * fade, 1f);
+            ctx.drawTexture(DIRT, 0, 0, 0f, scroll, width, height, 32, 32);
+            ctx.setShaderColor(1f, 1f, 1f, 1f);
+            String name = client != null && client.player != null ? client.player.getName().getString() : "player";
             for (int i = 0; i < CREDITS.length; i++) {
                 int y = (int) (height + 20 + i * 14 - scroll);
                 if (y < -10 || y > height + 10) continue;
                 String c = CREDITS[i];
-                int color = i == 0 || c.equals("THE STORY") || c.equals("It was tall.") ? 0xFFC8281E
-                        : i == CREDITS.length - 1 ? 0xFF9C8E78 : 0xFFE8D9B8;
-                ctx.drawCenteredTextWithShadow(textRenderer, CREDITS[i], width / 2, y, color);
+                int color;
+                if (c.startsWith("S:")) {
+                    c = c.substring(2).replace("%name%", name);
+                    color = 0xFFC86A5A;                             // the Sleeper
+                } else if (c.startsWith("P:")) {
+                    c = c.substring(2);
+                    color = 0xFF8FC7D0;                             // the player
+                } else {
+                    color = i == 0 ? 0xFFC8281E : i == CREDITS.length - 1 ? 0xFF9C8E78 : 0xFFE8D9B8;
+                }
+                ctx.drawCenteredTextWithShadow(textRenderer, c, width / 2, y, color);
             }
         }
     }
