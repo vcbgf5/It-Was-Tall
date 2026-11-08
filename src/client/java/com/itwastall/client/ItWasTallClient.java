@@ -160,6 +160,11 @@ public class ItWasTallClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.SaveIconPayload.ID, (payload, context) ->
                 context.client().execute(com.itwastall.client.hud.SaveIcon::trigger));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.FogNightPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    com.itwastall.client.BloodMoonClient.fogNight = payload.active();
+                    com.itwastall.client.sound.CorruptedMusic.forced = payload.active();
+                }));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.BloodMoonPayload.ID, (payload, context) ->
                 context.client().execute(() -> com.itwastall.client.BloodMoonClient.active = payload.active()));
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.EyeSwarmPayload.ID, (payload, context) ->
@@ -249,7 +254,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); com.itwastall.client.hud.HudExtras.reset(); com.itwastall.client.hud.FlashlightClient.reset(); com.itwastall.client.sound.CorruptedMusic.stop(); com.itwastall.client.sound.CorruptedMusic.forced = false; })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.BloodMoonClient.fogNight = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); com.itwastall.client.hud.HudExtras.reset(); com.itwastall.client.hud.FlashlightClient.reset(); com.itwastall.client.sound.CorruptedMusic.stop(); com.itwastall.client.sound.CorruptedMusic.forced = false; })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

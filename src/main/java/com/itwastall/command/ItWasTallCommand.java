@@ -245,6 +245,7 @@ public final class ItWasTallCommand {
                     if (!com.itwastall.entity.DynamicStructures.buildChoppingInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))
                 .then(eventKind("bloodmoon", p -> com.itwastall.entity.BloodMoon.start(p.getServer())))
+                .then(eventKind("fog", p -> com.itwastall.entity.FogNight.start(p.getServer())))
                 .then(eventKind("corruption", p -> {
                     if (!com.itwastall.entity.Corruption.startInFront(p)) throw new IllegalStateException("no solid ground in front of the player");
                 }))

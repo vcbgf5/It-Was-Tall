@@ -92,6 +92,10 @@ public final class ItWasTallConfig {
         public boolean bloodMoon = true;
         /** Chance each morning (stage 3+) that the coming night is a blood moon. */
         public double bloodMoonChance = 0.12;
+        /** FOG NIGHTS: now and then (stage 2+) a night of thick fog, footsteps in it, and It at its edge. */
+        public boolean fogNights = true;
+        /** Chance of a fog night, decided at dusk (never on a blood moon). */
+        public double fogNightChance = 0.12;
         /** THE CORRUPTION: near the base the world starts to go wrong at night (stage 4+) until dawn or the source breaks. */
         public boolean corruption = true;
         /** Chance per night and player (inside the base, stage 4+) that a corruption begins. */

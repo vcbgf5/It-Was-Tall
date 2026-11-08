@@ -48,6 +48,7 @@ public final class GodActions {
             Map.entry("scare", "itwastall scare %p"),
             Map.entry("outspace", "itwastall outspace %p"),
             Map.entry("below", "itwastall event below %p"),
+            Map.entry("fog", "itwastall event fog %p"),
             Map.entry("crackedbedrock", "itwastall event crackedbedrock %p"),
             Map.entry("scene_chopping", "itwastall event scene chopping %p"),
             Map.entry("scene_camp", "itwastall event scene camp %p"),

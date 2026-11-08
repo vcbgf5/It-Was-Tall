@@ -253,12 +253,18 @@ public final class TheBelow {
         if (next == null || now < next || p.isCreative()) return;
         Random r = p.getRandom();
         NEXT_IT.put(p.getUuid(), now + 20L * (60 + r.nextInt(90)));
+        spawnItInSight(p, 12, 26);
+    }
+
+    /** It, standing on open ground minD..maxD blocks away, in clear sight of the player, watching (false = no spot). */
+    public static boolean spawnItInSight(ServerPlayerEntity p, double minD, double maxD) {
+        Random r = p.getRandom();
         MinecraftServer server = p.getServer();
-        if (server == null || HauntDirector.countActive(server) >= Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)) return;
+        if (server == null || HauntDirector.countActive(server) >= Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)) return false;
         ServerWorld world = p.getServerWorld();
         for (int attempt = 0; attempt < 30; attempt++) {
             double yaw = (p.getYaw() + (r.nextDouble() - 0.5) * 140) * MathHelper.RADIANS_PER_DEGREE;
-            double d = 12 + r.nextDouble() * 14;
+            double d = minD + r.nextDouble() * (maxD - minD);
             int x = MathHelper.floor(p.getX() - Math.sin(yaw) * d), z = MathHelper.floor(p.getZ() + Math.cos(yaw) * d);
             BlockPos floor = floorIn(world, x, z, p.getBlockY() + 6, p.getBlockY() - 6);
             if (floor == null || !world.getBlockState(floor.up(3)).isAir()) continue;
@@ -266,13 +272,13 @@ public final class TheBelow {
             if (world.raycast(new RaycastContext(p.getEyePos(), head, RaycastContext.ShapeType.COLLIDER,
                     RaycastContext.FluidHandling.NONE, p)).getType() != HitResult.Type.MISS) continue;
             TallOneEntity it = ModEntities.TALL_ONE.create(world);
-            if (it == null) return;
+            if (it == null) return false;
             it.refreshPositionAndAngles(x + 0.5, floor.getY(), z + 0.5, 0f, 0f);
             if (!world.isSpaceEmpty(it)) continue;
             it.setVictim(p);
-            world.spawnEntity(it);
-            return;
+            return world.spawnEntity(it);
         }
+        return false;
     }
 
     /** The chunks around the player get their bones, webs and cold camps once (the same ones every time). */

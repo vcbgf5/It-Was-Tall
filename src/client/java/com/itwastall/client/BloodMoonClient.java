@@ -3,6 +3,8 @@ package com.itwastall.client;
 /** Client side of THE BLOOD MOON: the sky, the fog and the moon turn red (BloodMoonMixins). */
 public final class BloodMoonClient {
     public static boolean active;
+    /** A fog night is on (thick grey fog in the Overworld, see BelowFogMixin). */
+    public static boolean fogNight;
 
     private BloodMoonClient() {}
 
