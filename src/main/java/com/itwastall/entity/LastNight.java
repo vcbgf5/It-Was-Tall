@@ -70,6 +70,7 @@ public final class LastNight {
 
     public static void init() {
         PayloadTypeRegistry.playS2C().register(EndingPayload.ID, EndingPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.itwastall.net.CutscenePayload.ID, com.itwastall.net.CutscenePayload.CODEC);
         ServerTickEvents.END_SERVER_TICK.register(LastNight::tick);
     }
 
@@ -276,6 +277,7 @@ public final class LastNight {
     public static void testFinale(ServerPlayerEntity p) {
         buildInFront(p);
         BlockPos c = p.getBlockPos().offset(p.getHorizontalFacing(), 6);
+        RitualFinale.viewer = p.getUuid();
         RitualFinale.start(p.getServerWorld(), c, false, () -> showEnding(p));
     }
 

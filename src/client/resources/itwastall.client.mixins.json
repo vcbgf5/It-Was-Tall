@@ -21,7 +21,9 @@
     "WalkieScrollMixin",
     "WalkieUseMixin",
     "PickBlockMixin",
-    "MusicTrackerMixin"
+    "MusicTrackerMixin",
+    "CutsceneCameraMixin",
+    "CutsceneInputMixin"
   ],
   "injectors": {
     "defaultRequire": 1

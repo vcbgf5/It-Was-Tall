@@ -159,7 +159,12 @@ public class ItWasTallClient implements ClientModInitializer {
             com.itwastall.client.hud.Polaroids.tick(c);
         });
         ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.EndingPayload.ID, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(new com.itwastall.client.ending.EndingScreen())));
+                context.client().execute(() -> {
+                    com.itwastall.client.ending.CutsceneCamera.stop();
+                    context.client().setScreen(new com.itwastall.client.ending.EndingScreen());
+                }));
+        ClientPlayNetworking.registerGlobalReceiver(com.itwastall.net.CutscenePayload.ID, (payload, context) ->
+                context.client().execute(() -> com.itwastall.client.ending.CutsceneCamera.start(payload.fire())));
         // the plan and the book of the ending: right-click to read
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) -> {
             net.minecraft.item.ItemStack stack = player.getStackInHand(hand);
@@ -269,7 +274,7 @@ public class ItWasTallClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) ->
-                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.BloodMoonClient.fogNight = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); com.itwastall.client.hud.HudExtras.reset(); com.itwastall.client.hud.FlashlightClient.reset(); com.itwastall.client.sound.CorruptedMusic.stop(); com.itwastall.client.sound.CorruptedMusic.forced = false; })
+                        client.execute(() -> { warningDelay[0] = -1; JournalData.reset(); com.itwastall.client.hud.ChaseHud.reset(); com.itwastall.client.render.GuestFigures.clear(); com.itwastall.client.hud.TaskTimerHud.clear(); god = false; com.itwastall.client.god.GodMapData.clear(); com.itwastall.client.god.GodClientState.reset(); com.itwastall.client.render.EyeSwarmRenderer.clear(); com.itwastall.client.BloodMoonClient.active = false; com.itwastall.client.BloodMoonClient.fogNight = false; com.itwastall.client.hud.RadioHud.clear(); com.itwastall.client.hud.WalkieHud.reset(); com.itwastall.client.hud.HudExtras.reset(); com.itwastall.client.hud.FlashlightClient.reset(); com.itwastall.client.sound.CorruptedMusic.stop(); com.itwastall.client.ending.CutsceneCamera.stop(); com.itwastall.client.sound.CorruptedMusic.forced = false; })
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

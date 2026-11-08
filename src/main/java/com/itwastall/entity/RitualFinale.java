@@ -62,6 +62,8 @@ public final class RitualFinale {
     /** Height of the ground the pentagram lies on (the floor of the ritual may be raised or sunk into it). */
     private static double groundY;
     @Nullable private static Runnable onEnd;
+    /** For a test: the only player who sees the cutscene. */
+    @Nullable public static java.util.UUID viewer;
 
     private RitualFinale() {}
 
@@ -92,6 +94,13 @@ public final class RitualFinale {
         // the ground between the floor and the pillars: level with the fire (floor sunk in) or a block lower (floor on top)
         BlockPos between = fire.offset(Direction.NORTH, 2);
         groundY = !w.getBlockState(between.down()).isAir() ? fire.getY() + 0.03 : fire.getY() - 1 + 0.03;
+        // the cutscene: everyone who can see it (a test: only whoever asked for it, see LastNight.testFinale)
+        for (net.minecraft.server.network.ServerPlayerEntity p : w.getPlayers(pl -> pl.getBlockPos().isWithinDistance(fire, 96))) {
+            if (!real && viewer != null && !p.getUuid().equals(viewer)) continue;
+            if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(p, com.itwastall.net.CutscenePayload.ID)) {
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, new com.itwastall.net.CutscenePayload(fire));
+            }
+        }
         ItWasTall.LOGGER.info("The ritual's end begins at {}.", fire.toShortString());
     }
 
