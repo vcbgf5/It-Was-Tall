@@ -67,6 +67,7 @@ public class ItWasTall implements ModInitializer {
         com.itwastall.entity.Flashlight.init();
         com.itwastall.entity.FogNight.init();
         com.itwastall.entity.LastNight.init();
+        com.itwastall.entity.RitualFinale.init();
         com.itwastall.entity.TheCount.init();
         com.itwastall.entity.DeepOneEntity.init();
         com.itwastall.entity.TheGuest.init();

@@ -57,7 +57,7 @@ public final class FalsePresences {
         if (server.getTicks() % 20 != 0) return; // one roll per second is plenty
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (!cfg.falsePresence) return;
-        if (Director.phase() == 0) return;      // PHASE PRE: total silence (PHASES §1)
+        if (Director.phase() != 1) return;      // PHASE PRE: total silence (PHASES §1)
 
         Stage st = Director.currentStage();     // live read, /itwastall stage works next tick
         double chance = st.falsePresenceChance();

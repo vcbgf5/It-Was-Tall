@@ -144,6 +144,24 @@ A["emerge"] = dict(loop="hold_on_last_frame", animation_length=1.6, bones={
     "head": {"rotation": kf((0.0, [-40, 0, 0]), (0.9, [-30, 0, 15]), (1.3, [10, 0, -10]), (1.6, [0, 0, 0]))},
 })
 
+# --- bound: the ritual's end. Lying on its back in the air, held by the chains: arms, legs and head hang down
+# (the root tips 90 degrees backward and is moved forward by half its height, so it lies centred on the entity),
+# swaying a little, as if it were heavy and limp ---------------------------------------------------------------
+A["bound"] = dict(loop=True, animation_length=3.0, bones={
+    "root": {"rotation": kf((0.0, [-90, 0, 0])), "position": kf((0.0, [0, 0, -28]))},
+    "torso": {"rotation": merge(cycle(3.0, -14, -10, axis=0), cycle(3.0, -2, 2, phase=0.25, axis=2))},
+    "neck": {"rotation": kf((0.0, [-30, 0, 0]))},
+    "head": {"rotation": merge(cycle(3.0, -62, -54, phase=0.1, axis=0), cycle(3.0, -6, 6, phase=0.4, axis=2))},
+    "right_arm": {"rotation": merge(cycle(3.0, 84, 92, axis=0), cycle(3.0, 6, 10, phase=0.3, axis=2))},
+    "left_arm": {"rotation": merge(cycle(3.0, 86, 94, phase=0.5, axis=0), cycle(3.0, -10, -6, phase=0.8, axis=2))},
+    "right_forearm": {"rotation": kf((0.0, [8, 0, 0]))},
+    "left_forearm": {"rotation": kf((0.0, [8, 0, 0]))},
+    "right_leg": {"rotation": merge(cycle(3.0, 86, 92, phase=0.2, axis=0), cycle(3.0, 2, 5, axis=2))},
+    "left_leg": {"rotation": merge(cycle(3.0, 88, 94, phase=0.7, axis=0), cycle(3.0, -5, -2, axis=2))},
+    "right_shin": {"rotation": kf((0.0, [-6, 0, 0]))},
+    "left_shin": {"rotation": kf((0.0, [-6, 0, 0]))},
+})
+
 doc = {"format_version": "1.8.0",
        "animations": {f"animation.tall_one.{k}": v for k, v in A.items()}}
 os.makedirs(os.path.dirname(OUT), exist_ok=True)

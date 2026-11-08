@@ -133,7 +133,7 @@ public final class ScareSounds {
      */
     private static long nextScareDelay(Random random) {
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
-        if (Director.phase() == 0) return 20L * (90 + random.nextInt(61)); // PHASE PRE: as quiet as ETAP 0
+        if (Director.phase() != 1) return 20L * (90 + random.nextInt(61)); // PHASE PRE: as quiet as ETAP 0
         switch (Director.currentStage().ordinal()) {
             case 0: return 20L * (90 + random.nextInt(61));
             case 1: return 20L * (40 + random.nextInt(41));
@@ -209,7 +209,7 @@ public final class ScareSounds {
      * ETAP 0-1 never). Local mapping, documented here — option per audit of the phase system.
      */
     private static boolean closeAllowed(Random random) {
-        if (Director.phase() == 0) return false;
+        if (Director.phase() != 1) return false;
         return switch (Director.currentStage().ordinal()) {
             case 0, 1 -> false;
             case 2, 3 -> random.nextFloat() < 0.40f;

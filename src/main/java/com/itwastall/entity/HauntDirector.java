@@ -48,7 +48,7 @@ public final class HauntDirector {
         // PHASES §0/§1: FAZA PRE (before IT JOINED) and ETAP 0 ("CISZA" — the stage table has
         // cooldown 0 there = haunting disabled) -> no hauntings at all. Read live, never cached,
         // so /itwastall phase|stage takes effect from the very next check.
-        if (Director.phase() == 0) return;                          // PHASE PRE: total silence
+        if (Director.phase() != 1) return;                          // PHASE PRE: total silence
         if (Director.currentStage() == Stage.STAGE_0) return;       // ETAP 0: It does not exist yet
         long now = server.getOverworld().getTime();
 

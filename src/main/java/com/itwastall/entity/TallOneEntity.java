@@ -79,7 +79,7 @@ import java.util.UUID;
  */
 public class TallOneEntity extends HostileEntity implements GeoEntity {
     /** Order matters (saved as ordinal). */
-    public enum Mode {STARE, CHASE, SINK, DIG, PEEK, EMERGE, IDLE, STALK, WATCHED, MOVE_UNSEEN, ATTACK, DISAPPEAR, FEINT, TREE, KNOCK}
+    public enum Mode {STARE, CHASE, SINK, DIG, PEEK, EMERGE, IDLE, STALK, WATCHED, MOVE_UNSEEN, ATTACK, DISAPPEAR, FEINT, TREE, KNOCK, BOUND}
 
     private static final TrackedData<Integer> MODE = DataTracker.registerData(TallOneEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
@@ -91,6 +91,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     public static final RawAnimation KNOCK = RawAnimation.begin().thenLoop("animation.tall_one.knock");
     public static final RawAnimation DIG = RawAnimation.begin().thenLoop("animation.tall_one.dig");
     public static final RawAnimation EMERGE = RawAnimation.begin().thenPlayAndHold("animation.tall_one.emerge");
+    public static final RawAnimation BOUND_ANIM = RawAnimation.begin().thenLoop("animation.tall_one.bound");
     /** Ticks of the emerge animation (1.6 s) before it starts the chase. */
     private static final int EMERGE_TICKS = 32;
 
@@ -283,6 +284,21 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
     }
 
     /** Turns this It into the body of the god of the session (see com.itwastall.god.ItForm). */
+    /** THE RITUAL'S END: held up by the chains, lying on its back, limp — no AI, nothing; it is only moved. */
+    private boolean bound;
+
+    public void makeBound() {
+        this.bound = true;
+        setAiDisabled(true);
+        setInvulnerable(true);
+        setNoGravity(true);
+        setMode(Mode.BOUND);
+    }
+
+    public boolean isBound() {
+        return bound;
+    }
+
     public void makePuppetOf(UUID god) {
         this.puppetOwner = god;
         setAiDisabled(true);
@@ -302,12 +318,12 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean shouldSave() {
-        return puppetOwner == null && super.shouldSave();   // the god's body never stays in the world
+        return puppetOwner == null && !bound && super.shouldSave();   // the god's body (and the bound It) never stay
     }
 
     @Override
     protected void mobTick() {
-        if (puppetOwner != null) return;
+        if (puppetOwner != null || bound) return;
         super.mobTick();
         modeTicks++;
         if (attackCooldown > 0) attackCooldown--;
@@ -1219,6 +1235,7 @@ public class TallOneEntity extends HostileEntity implements GeoEntity {
             case STALK -> state.setAndContinue(WALK);
             case ATTACK, KNOCK, WATCHED, MOVE_UNSEEN, DISAPPEAR, IDLE -> state.setAndContinue(IDLE);
             case STARE, TREE -> state.setAndContinue(state.isMoving() ? WALK : IDLE);
+            case BOUND -> state.setAndContinue(BOUND_ANIM);
         };
     }
 

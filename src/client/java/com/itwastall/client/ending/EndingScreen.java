@@ -24,8 +24,28 @@ public class EndingScreen extends Screen {
             "But some nights, when the wind stops,",
             "you still look at the treeline."};
     private static final String[] CREDITS = {
-            "IT WAS TALL", "", "a horror mod for Minecraft", "", "", "made by vcbgf5", "", "", "Thank you for playing.", "",
-            "It is gone.", "", "", "", "Press ESC"};
+            "IT WAS TALL", "", "a horror mod for Minecraft", "", "",
+            "Mixiki made the mod by himself.", "", "", "",
+            "THE STORY", "",
+            "It came on the first night.",
+            "Tall, at the edge of the forest. Just watching.", "",
+            "Then it joined the world.", "",
+            "It knocked on our windows. It stood behind the trees.",
+            "It told us what to do: stay inside, put out the lights, don't look.",
+            "The ones who did not listen were caught.", "",
+            "In the mines it dug toward us through the stone.",
+            "In our sleep it took us to the endless wooden halls,",
+            "where the Old One ran after us.", "",
+            "The moon turned red. The fog came down.",
+            "The radio read out where we were standing.",
+            "Something wore the faces of our friends, and their voices.", "",
+            "Under the bedrock there were caves,",
+            "and the ones who came before us had left a book.", "",
+            "We built the ritual. We gave the fire a hollow heart.",
+            "We held it until dawn.", "",
+            "The chains took it up into the morning sky.", "", "",
+            "It was tall.", "", "", "",
+            "Thank you for playing.", "", "", "", "Press ESC"};
     private static final long PER_CHAR = 45, LINE_PAUSE = 900;
     private long start;
     private SoundInstance music;
@@ -82,7 +102,9 @@ public class EndingScreen extends Screen {
             for (int i = 0; i < CREDITS.length; i++) {
                 int y = (int) (height + 20 + i * 14 - scroll);
                 if (y < -10 || y > height + 10) continue;
-                int color = i == 0 ? 0xFFC8281E : i == CREDITS.length - 1 ? 0xFF9C8E78 : 0xFFE8D9B8;
+                String c = CREDITS[i];
+                int color = i == 0 || c.equals("THE STORY") || c.equals("It was tall.") ? 0xFFC8281E
+                        : i == CREDITS.length - 1 ? 0xFF9C8E78 : 0xFFE8D9B8;
                 ctx.drawCenteredTextWithShadow(textRenderer, CREDITS[i], width / 2, y, color);
             }
         }

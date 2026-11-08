@@ -241,7 +241,7 @@ public final class TaskManager {
         }
 
         // 2) new assignments keep all their rules
-        if (Director.phase() == 0) return;       // PHASE PRE: total silence
+        if (Director.phase() != 1) return;       // PHASE PRE: total silence
         Stage st = Director.currentStage();
         int flag = st.tasksFlag();               // live read: /itwastall stage works next tick
         if (flag <= 0) return;
@@ -468,7 +468,7 @@ public final class TaskManager {
      */
     public static void onWindowLooked(ServerPlayerEntity player) {
         com.itwastall.advancement.Achievements.grant(player, "in_the_window");
-        if (Director.phase() == 0) return;      // PHASE PRE: total silence
+        if (Director.phase() != 1) return;      // PHASE PRE: total silence
         UUID uuid = player.getUuid();
         if (ACTIVE.containsKey(uuid)) return;   // already working: no double assignment
         if (player.isSpectator() || !player.isAlive()) return;

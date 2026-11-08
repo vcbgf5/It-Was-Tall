@@ -77,7 +77,7 @@ public final class DynamicStructures {
         if (server.getTicks() % 20 != 0) return;      // one decision tick per second
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (!cfg.dynamicStructures) return;
-        if (Director.phase() == 0) return;            // PHASE PRE: total silence
+        if (Director.phase() != 1) return;            // PHASE PRE: total silence
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (!eligible(player)) continue;

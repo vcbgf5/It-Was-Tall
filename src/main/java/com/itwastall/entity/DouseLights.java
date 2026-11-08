@@ -64,7 +64,7 @@ public final class DouseLights {
         if (server.getTicks() % 20 != 0) return;      // one decision tick per second
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (!cfg.baseDousing) return;
-        if (Director.phase() == 0) return;            // PHASE PRE: total silence
+        if (Director.phase() != 1) return;            // PHASE PRE: total silence
 
         Stage st = Director.currentStage();           // live read: /itwastall stage next tick
         int level = st.torchDouseLevel();

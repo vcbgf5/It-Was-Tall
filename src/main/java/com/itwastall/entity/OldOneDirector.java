@@ -43,7 +43,7 @@ public final class OldOneDirector {
     private static void tick(MinecraftServer server) {
         if (server.getTicks() % 40 != 0) return;
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
-        if (!cfg.oldOne || Director.phase() == 0 || Director.stageIndex() < cfg.oldOneMinStage) return;
+        if (!cfg.oldOne || Director.phase() != 1 || Director.stageIndex() < cfg.oldOneMinStage) return;
         long now = server.getOverworld().getTime();
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             Random random = player.getRandom();

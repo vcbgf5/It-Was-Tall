@@ -82,7 +82,7 @@ public final class MineEvents {
 
     private static void tick(MinecraftServer server) {
         ACTIVE.removeIf(Active::tick);
-        if (server.getTicks() % 20 != 0) return;
+        if (server.getTicks() % 20 != 0 || Director.phase() == 2) return;   // the end: the mines are quiet
 
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {

@@ -102,7 +102,7 @@ public final class HouseEvents {
         }
         if (server.getTicks() % 20 != 0) return;
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
-        if (!cfg.houseEvents || Director.phase() == 0) return;
+        if (!cfg.houseEvents || Director.phase() != 1) return;
         int stage = Director.stageIndex();
         if (stage < 2) return;
 

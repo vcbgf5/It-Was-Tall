@@ -233,7 +233,18 @@ public final class LastNight {
         active = false;
         FogNight.stop(server);
         HauntDirector.clearForCommand(server);
-        Director.end(server);
+        ServerWorld world = fireWorld == null ? null : server.getWorld(fireWorld);
+        if (world != null && fire != null) {
+            Director.end(server);                     // nothing may come any more while the chains take it away
+            RitualFinale.start(world, fire, true, () -> finish(server));
+        } else {
+            Director.end(server);
+            finish(server);
+        }
+    }
+
+    /** After the ritual's end has been played: the ending for everyone. */
+    private static void finish(MinecraftServer server) {
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
             JournalLog.add(p, "The sun came up. The fire was still burning. The edge of the forest was empty. It was gone.");
             com.itwastall.advancement.Achievements.grant(p, "banished");
@@ -259,6 +270,13 @@ public final class LastNight {
         }
         p.getInventory().offerOrDrop(new ItemStack(ModItems.HOLLOW_HEART));
         return true;
+    }
+
+    /** Test: the ritual's end played at a ritual built in front of the player, then the ending screen (only for them). */
+    public static void testFinale(ServerPlayerEntity p) {
+        buildInFront(p);
+        BlockPos c = p.getBlockPos().offset(p.getHorizontalFacing(), 6);
+        RitualFinale.start(p.getServerWorld(), c, false, () -> showEnding(p));
     }
 
     /** Test: only the ending screen, for this player (nothing changes in the world). */

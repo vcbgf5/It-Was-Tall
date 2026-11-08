@@ -73,7 +73,7 @@ public final class WindowKnocks {
         if (server.getTicks() % 20 != 0) return;
         ItWasTallConfig.Values cfg = ItWasTallConfig.INSTANCE;
         if (!cfg.windowKnocks) return;
-        if (Director.phase() == 0) return; // PHASE PRE: total silence
+        if (Director.phase() != 1) return; // PHASE PRE: total silence
 
         Stage st = Director.currentStage(); // live read (PHASES §0)
         int level = st.windowKnockLevel();

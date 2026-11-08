@@ -141,7 +141,7 @@ public final class AmbientSounds {
      * PHASES.md §3: blocked until ETAP 2, 40% from ETAP 2, 60% from ETAP 4; FAZA PRE never).
      */
     private static boolean closeAllowed(Random random) {
-        if (Director.phase() == 0) return false;
+        if (Director.phase() != 1) return false;
         return switch (Director.currentStage().ordinal()) {
             case 0, 1 -> false;
             case 2, 3 -> random.nextFloat() < 0.40f;

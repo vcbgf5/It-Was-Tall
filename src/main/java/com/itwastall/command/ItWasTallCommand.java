@@ -248,6 +248,7 @@ public final class ItWasTallCommand {
                 .then(eventKind("fog", p -> com.itwastall.entity.FogNight.start(p.getServer())))
                 .then(eventKind("ritual", com.itwastall.entity.LastNight::buildInFront))
                 .then(eventKind("ending", com.itwastall.entity.LastNight::showEnding))
+                .then(eventKind("finale", com.itwastall.entity.LastNight::testFinale))
                 .then(eventKind("archive", p -> com.itwastall.entity.TheBelow.archive(p.getServerWorld(),
                         p.getBlockPos().offset(p.getHorizontalFacing(), 5), p.getRandom())))
                 .then(eventKind("altar", p -> com.itwastall.entity.TheBelow.heartShrine(p.getServerWorld(),
@@ -589,7 +590,7 @@ public final class ItWasTallCommand {
         java.util.UUID u = p.getUuid();
         java.util.function.LongFunction<String> in = at -> at < 0 ? "not scheduled" : at <= now ? "due now" : "in " + (at - now) / 20 + " s";
         List<String> lines = List.of(
-                "Events of " + p.getName().getString() + " — phase " + (Director.phase() == 0 ? "PRE" : "ACTIVE") + ", stage " + Director.stageIndex(),
+                "Events of " + p.getName().getString() + " — phase " + (Director.phase() == 0 ? "PRE" : Director.phase() == 2 ? "ENDED" : "ACTIVE") + ", stage " + Director.stageIndex(),
                 "  real It counted against the limit: " + HauntDirector.countActive(p.getServer()) + " / " + Math.max(1, ItWasTallConfig.INSTANCE.maxActiveIts)
                         + nearestIt(p),
                 "  shared event gap (minEventCooldown): " + (com.itwastall.entity.EventGate.secondsLeft(p) == 0 ? "ready" : com.itwastall.entity.EventGate.secondsLeft(p) + " s left"),
