@@ -59,6 +59,8 @@ public final class RitualFinale {
     private static final List<DisplayEntity> PENTAGRAM = new ArrayList<>();
     @Nullable private static TallOneEntity bound;
     private static float spin;
+    /** Height of the ground the pentagram lies on (the floor of the ritual may be raised or sunk into it). */
+    private static double groundY;
     @Nullable private static Runnable onEnd;
 
     private RitualFinale() {}
@@ -87,6 +89,9 @@ public final class RitualFinale {
         CHAINS.clear();
         CHAIN_FROM.clear();
         for (Direction d : Direction.Type.HORIZONTAL) CHAIN_FROM.add(Vec3d.ofCenter(fire.offset(d, 3)).add(0, 0.75, 0));
+        // the ground between the floor and the pillars: level with the fire (floor sunk in) or a block lower (floor on top)
+        BlockPos between = fire.offset(Direction.NORTH, 2);
+        groundY = !w.getBlockState(between.down()).isAir() ? fire.getY() + 0.03 : fire.getY() - 1 + 0.03;
         ItWasTall.LOGGER.info("The ritual's end begins at {}.", fire.toShortString());
     }
 
@@ -142,7 +147,7 @@ public final class RitualFinale {
         }
         if (t >= FIRE_OUT && t < END) {
             spin += 2.5f;
-            Vec3d c = Vec3d.ofBottomCenter(fire).add(0, 0.03, 0);
+            Vec3d c = new Vec3d(fire.getX() + 0.5, groundY, fire.getZ() + 0.5);
             for (DisplayEntity e : PENTAGRAM) e.refreshPositionAndAngles(c.x, c.y, c.z, spin, 0f);
             if (t % 2 == 0) {
                 DustParticleEffect red = new DustParticleEffect(new Vector3f(0.9f, 0.05f, 0.03f), 1.6f);
@@ -232,7 +237,7 @@ public final class RitualFinale {
 
     /** A thin glowing red bar lying on the ground from p to q (relative to the fire), turning with the others. */
     private static DisplayEntity spawnLine(ServerWorld w, Vec3d p, Vec3d q, float width) {
-        Vec3d c = Vec3d.ofBottomCenter(fire).add(0, 0.03, 0);
+        Vec3d c = new Vec3d(fire.getX() + 0.5, groundY, fire.getZ() + 0.5);
         DisplayEntity.BlockDisplayEntity e = EntityType.BLOCK_DISPLAY.create(w);
         e.refreshPositionAndAngles(c.x, c.y, c.z, 0f, 0f);
         double dx = q.x - p.x, dz = q.z - p.z;
