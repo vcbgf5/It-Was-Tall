@@ -1,0 +1,806 @@
+[
+ {
+  "path": "jumpscares",
+  "section": "General",
+  "label": "Jumpscares",
+  "help": "Show the full-screen jumpscare image (false = sound only)."
+ },
+ {
+  "path": "jumpscareMillis",
+  "section": "General",
+  "label": "Jumpscare millis",
+  "help": "How long the jumpscare image stays on screen."
+ },
+ {
+  "path": "chaseTriggerDistance",
+  "section": "General",
+  "label": "Chase trigger distance",
+  "help": "Distance at which a staring Tall One starts chasing."
+ },
+ {
+  "path": "stareTriggerSeconds",
+  "section": "General",
+  "label": "Stare trigger seconds",
+  "help": "Seconds of looking at it while walking closer before it starts chasing."
+ },
+ {
+  "path": "hauntEvents",
+  "section": "haunting",
+  "label": "Haunt events",
+  "help": "It shows up by itself in the distance and stares at you. Every player has their own timer."
+ },
+ {
+  "path": "hauntFirstMinutes",
+  "section": "haunting",
+  "label": "Haunt first minutes",
+  "help": "Minutes after joining before the first appearance."
+ },
+ {
+  "path": "hauntMinMinutes",
+  "section": "haunting",
+  "label": "Haunt min minutes",
+  "help": "Minutes between appearances for one player."
+ },
+ {
+  "path": "hauntMaxMinutes",
+  "section": "haunting",
+  "label": "Haunt max minutes",
+  "help": ""
+ },
+ {
+  "path": "hauntOnlyAtNight",
+  "section": "haunting",
+  "label": "Haunt only at night",
+  "help": "Only at night."
+ },
+ {
+  "path": "maxActiveIts",
+  "section": "haunting",
+  "label": "Max active its",
+  "help": "Server-wide limit of Its that exist at the same time."
+ },
+ {
+  "path": "stalking",
+  "section": "haunting",
+  "label": "Stalking",
+  "help": "From Stage 2 onward, It slowly approaches while the player is not looking directly at it."
+ },
+ {
+  "path": "moveUnseen",
+  "section": "haunting",
+  "label": "Move unseen",
+  "help": "MOVE_UNSEEN (MODPLAN §3): while you look away, a distant It can reappear closer — never in view."
+ },
+ {
+  "path": "stalkSpeed",
+  "section": "haunting",
+  "label": "Stalk speed",
+  "help": "Movement speed used while stalking (separate from the chase speed)."
+ },
+ {
+  "path": "stalkStopDistance",
+  "section": "haunting",
+  "label": "Stalk stop distance",
+  "help": "It stops approaching at or below this distance from the player."
+ },
+ {
+  "path": "stalkMaxDistance",
+  "section": "haunting",
+  "label": "Stalk max distance",
+  "help": "It will not begin stalking when farther away than this distance."
+ },
+ {
+  "path": "chaseSpeed",
+  "section": "haunting",
+  "label": "Chase speed",
+  "help": "Speed multiplier while chasing."
+ },
+ {
+  "path": "jumpscareDelayMinTicks",
+  "section": "haunting",
+  "label": "Jumpscare delay min ticks",
+  "help": "Ticks between sinking into the ground and the jumpscare."
+ },
+ {
+  "path": "jumpscareDelayMaxTicks",
+  "section": "haunting",
+  "label": "Jumpscare delay max ticks",
+  "help": ""
+ },
+ {
+  "path": "stareTimeoutSeconds",
+  "section": "haunting",
+  "label": "Stare timeout seconds",
+  "help": "If it is not approached, it gives up staring after this many seconds."
+ },
+ {
+  "path": "feints",
+  "section": "haunting",
+  "label": "Feints",
+  "help": "FEINT (MODPLAN §3.2, stage 3+): sometimes it screams and runs at you, then simply is not there."
+ },
+ {
+  "path": "feintChance",
+  "section": "haunting",
+  "label": "Feint chance",
+  "help": "Chance, once per sighting (after ~1.5 s of you looking at it), that the sighting turns into a feint."
+ },
+ {
+  "path": "treePeeks",
+  "section": "haunting",
+  "label": "Tree peeks",
+  "help": "TREE (MODPLAN §3.2, stage 2+): instead of standing in the open it peeks out from behind a tree."
+ },
+ {
+  "path": "treePeekChance",
+  "section": "haunting",
+  "label": "Tree peek chance",
+  "help": "Chance that one haunting tries the tree variant first (falls back to the open field if no tree fits)."
+ },
+ {
+  "path": "realKnockChance",
+  "section": "haunting",
+  "label": "Real knock chance",
+  "help": "KNOCK (stage 5): chance that a door-knock house event is the real It standing outside the door."
+ },
+ {
+  "path": "countEvents",
+  "section": "the new creatures",
+  "label": "Count events",
+  "help": "THE ONE WHO COUNTS: at night, alone outside, a countdown from ten; a figure closer with every number."
+ },
+ {
+  "path": "hangedTrees",
+  "section": "the new creatures",
+  "label": "Hanged trees",
+  "help": "THE HANGED: someone hangs from a tree at night (stage 2+), wearing your face, until morning."
+ },
+ {
+  "path": "tallFootprints",
+  "section": "the new creatures",
+  "label": "Tall footprints",
+  "help": "THE FOOTPRINTS: huge prints walk up to your door and under your windows at night (gone by morning)."
+ },
+ {
+  "path": "mimics",
+  "section": "the new creatures",
+  "label": "Mimics",
+  "help": "THE MIMICS: bloodied cows / sheep / pigs that follow you at night (stage 2+), hit once and vanish."
+ },
+ {
+  "path": "eyeSwarms",
+  "section": "the new creatures",
+  "label": "Eye swarms",
+  "help": "THE EYES: pairs of eyes open in a dark wood at night (stage 2+), close when you bring a light."
+ },
+ {
+  "path": "itVoice",
+  "section": "the new creatures",
+  "label": "It voice",
+  "help": "IT SPEAKS: It's voice lines (\"I'm here.\", \"What are you mining here?\") and its lone whispers."
+ },
+ {
+  "path": "bloodMoon",
+  "section": "the new creatures",
+  "label": "Blood moon",
+  "help": "THE BLOOD MOON: a rare red night (stage 3+) when every event comes twice as often."
+ },
+ {
+  "path": "bloodMoonChance",
+  "section": "the new creatures",
+  "label": "Blood moon chance",
+  "help": "Chance each morning (stage 3+) that the coming night is a blood moon."
+ },
+ {
+  "path": "fogNights",
+  "section": "the new creatures",
+  "label": "Fog nights",
+  "help": "FOG NIGHTS: now and then (stage 2+) a night of thick fog, footsteps in it, and It at its edge."
+ },
+ {
+  "path": "fogNightChance",
+  "section": "the new creatures",
+  "label": "Fog night chance",
+  "help": "Chance of a fog night, decided at dusk (never on a blood moon)."
+ },
+ {
+  "path": "corruption",
+  "section": "the new creatures",
+  "label": "Corruption",
+  "help": "THE CORRUPTION: near the base the world starts to go wrong at night (stage 4+) until dawn or the source breaks."
+ },
+ {
+  "path": "corruptionChance",
+  "section": "the new creatures",
+  "label": "Corruption chance",
+  "help": "Chance per night and player (inside the base, stage 4+) that a corruption begins."
+ },
+ {
+  "path": "itMimicsVoices",
+  "section": "the new creatures",
+  "label": "It mimics voices",
+  "help": "IT MIMICS YOUR VOICE (needs Simple Voice Chat): It keeps short pieces of what players say, in memory only, and plays them back from the dark at night (stage 3+). Off by default: it listens to everyone's voice."
+ },
+ {
+  "path": "hangedMinMinutes",
+  "section": "the new creatures",
+  "label": "Hanged min minutes",
+  "help": "Minutes between two hanged figures for one player (at most one per night)."
+ },
+ {
+  "path": "hangedMaxMinutes",
+  "section": "the new creatures",
+  "label": "Hanged max minutes",
+  "help": ""
+ },
+ {
+  "path": "countMinStage",
+  "section": "the new creatures",
+  "label": "Count min stage",
+  "help": ""
+ },
+ {
+  "path": "countChance",
+  "section": "the new creatures",
+  "label": "Count chance",
+  "help": "Chance per 10 s check while eligible (night, outside, alone; 25-40 min per player between counts)."
+ },
+ {
+  "path": "deepOne",
+  "section": "the new creatures",
+  "label": "Deep one",
+  "help": "THE DEEP ONE: crawls on cave ceilings deep underground, douses torches, shakes blocks out of your hands."
+ },
+ {
+  "path": "deepOneMinStage",
+  "section": "the new creatures",
+  "label": "Deep one min stage",
+  "help": ""
+ },
+ {
+  "path": "deepOneMaxY",
+  "section": "the new creatures",
+  "label": "Deep one max y",
+  "help": "Only below this height (the player's feet)."
+ },
+ {
+  "path": "deepOneChance",
+  "section": "the new creatures",
+  "label": "Deep one chance",
+  "help": "Chance per 10 s check while eligible (6-10 min per player between two)."
+ },
+ {
+  "path": "guest",
+  "section": "the new creatures",
+  "label": "Guest",
+  "help": "THE GUEST: an unknown name in YOUR player list, an echo of your chat, a far figure with its back to you."
+ },
+ {
+  "path": "guestMinStage",
+  "section": "the new creatures",
+  "label": "Guest min stage",
+  "help": ""
+ },
+ {
+  "path": "guestChance",
+  "section": "the new creatures",
+  "label": "Guest chance",
+  "help": "Chance per 30 s check (40-70 min per player between two visits)."
+ },
+ {
+  "path": "outspace",
+  "section": "OUTSPACE, the dream world",
+  "label": "Outspace",
+  "help": "Sometimes a sleeper is pulled into the dream maze (no damage, no death, the Old One hunts there)."
+ },
+ {
+  "path": "outspaceMinStage",
+  "section": "OUTSPACE, the dream world",
+  "label": "Outspace min stage",
+  "help": "First stage at which it can happen."
+ },
+ {
+  "path": "outspaceChance",
+  "section": "OUTSPACE, the dream world",
+  "label": "Outspace chance",
+  "help": "Chance when someone lies down to sleep (at most one player a night on the whole server)."
+ },
+ {
+  "path": "outspaceSeconds",
+  "section": "OUTSPACE, the dream world",
+  "label": "Outspace seconds",
+  "help": "How long a dream lasts before you wake up in your bed (seconds)."
+ },
+ {
+  "path": "outspaceLootChance",
+  "section": "OUTSPACE, the dream world",
+  "label": "Outspace loot chance",
+  "help": "Chance that a room of the maze holds a chest (dream books, torches, rarely a Warding Crystal)."
+ },
+ {
+  "path": "outspaceSleeperChance",
+  "section": "OUTSPACE, the dream world",
+  "label": "Outspace sleeper chance",
+  "help": "Share of the great halls of the dream that hold the Sleeper's bed (with a Warding Crystal by it)."
+ },
+ {
+  "path": "corruptedMusic",
+  "section": "music",
+  "label": "Corrupted music",
+  "help": "The game's own songs are sometimes played corrupted (slowed, warbling, dropping out); more in every stage."
+ },
+ {
+  "path": "below",
+  "section": "THE BELOW, the endless caves under the bedrock",
+  "label": "Below",
+  "help": "Falling into the void and cracked bedrock lead to the caves under the world."
+ },
+ {
+  "path": "belowMinStage",
+  "section": "THE BELOW, the endless caves under the bedrock",
+  "label": "Below min stage",
+  "help": "First stage at which cracked bedrock appears deep in the mines (the void works always)."
+ },
+ {
+  "path": "crackedBedrockMinutes",
+  "section": "THE BELOW, the endless caves under the bedrock",
+  "label": "Cracked bedrock minutes",
+  "help": "Minutes between two chances of cracked bedrock near a player in the deepest mine (min .. min*2)."
+ },
+ {
+  "path": "photosensitiveMode",
+  "section": "comfort / server settings",
+  "label": "Photosensitive mode",
+  "help": "Softer visuals: no flashing frames, gentler vignette and chase pulse, jumpscare image replaced by a dark fade."
+ },
+ {
+  "path": "effectsVolume",
+  "section": "comfort / server settings",
+  "label": "Effects volume",
+  "help": "Multiplier for the volume of every sound the mod plays to a player (0 = mute the mod, 1 = normal)."
+ },
+ {
+  "path": "minEventCooldown",
+  "section": "comfort / server settings",
+  "label": "Min event cooldown",
+  "help": "Minimum seconds between two bigger events (house events, window knocks, false presences, Old One, dynamic structures) for the same player. 0 = no global gap, only the per-event cooldowns."
+ },
+ {
+  "path": "maxEventRange",
+  "section": "comfort / server settings",
+  "label": "Max event range",
+  "help": "Nothing the mod spawns or places may be farther than this from the player it is meant for (blocks)."
+ },
+ {
+  "path": "customTitleScreen",
+  "section": "comfort / server settings",
+  "label": "Custom title screen",
+  "help": "The title screen shows the night clearing with the Tall One instead of the panorama (client side)."
+ },
+ {
+  "path": "taskTimerHud",
+  "section": "comfort / server settings",
+  "label": "Task timer hud",
+  "help": "The TASK TIMER in the top-left corner while a task runs (client side)."
+ },
+ {
+  "path": "hudExtras",
+  "section": "comfort / server settings",
+  "label": "Hud extras",
+  "help": "The extra HUD: heartbeat, time until dusk / dawn, distance to the base, shelter icon, last words on death."
+ },
+ {
+  "path": "debugAllowedForNonOps",
+  "section": "comfort / server settings",
+  "label": "Debug allowed for non ops",
+  "help": "Lets players without operator rights use /itwastall debug ... (read-only views)."
+ },
+ {
+  "path": "windowKnocks",
+  "section": "window knocks",
+  "label": "Window knocks",
+  "help": "The Tall One knocks three times on a window while you are inside your base at night."
+ },
+ {
+  "path": "windowKnockChance",
+  "section": "window knocks",
+  "label": "Window knock chance",
+  "help": "Chance rolled per check (~once per 20 s) while the conditions hold; 1 knock burst per night."
+ },
+ {
+  "path": "oldOne",
+  "section": "the Old One",
+  "label": "Old one",
+  "help": "A \"player\" named Old One appears close by and stares; walk up to it and It climbs out of it."
+ },
+ {
+  "path": "oldOneMinStage",
+  "section": "the Old One",
+  "label": "Old one min stage",
+  "help": "First stage at which it can appear."
+ },
+ {
+  "path": "oldOneFirstMinutes",
+  "section": "the Old One",
+  "label": "Old one first minutes",
+  "help": "Minutes (per player) before the first one / between two of them."
+ },
+ {
+  "path": "oldOneMinMinutes",
+  "section": "the Old One",
+  "label": "Old one min minutes",
+  "help": ""
+ },
+ {
+  "path": "oldOneMaxMinutes",
+  "section": "the Old One",
+  "label": "Old one max minutes",
+  "help": ""
+ },
+ {
+  "path": "oldOneOnlyAtNight",
+  "section": "the Old One",
+  "label": "Old one only at night",
+  "help": "Only after dark (false = any time; it looks more wrong in daylight)."
+ },
+ {
+  "path": "oldOneSplitDistance",
+  "section": "the Old One",
+  "label": "Old one split distance",
+  "help": "How close you get before it tears open."
+ },
+ {
+  "path": "houseEvents",
+  "section": "house events",
+  "label": "House events",
+  "help": "Things happen around your mapped base at night: doors, knocks, chests, signs."
+ },
+ {
+  "path": "houseEventChancePerSecond",
+  "section": "house events",
+  "label": "House event chance per second",
+  "help": "Chance per second (at night, near your base, stage 2+) that one house event starts."
+ },
+ {
+  "path": "houseEventCooldownSeconds",
+  "section": "house events",
+  "label": "House event cooldown seconds",
+  "help": "Minimum seconds between two house events for one player."
+ },
+ {
+  "path": "doorEvents",
+  "section": "house events",
+  "label": "Door events",
+  "help": "A wooden door of your base opens by itself (stage 3+); it may slam shut again (stage 4+)."
+ },
+ {
+  "path": "chestShuffle",
+  "section": "house events",
+  "label": "Chest shuffle",
+  "help": "A few stacks inside one of your chests swap places (stage 3+). Items are never removed."
+ },
+ {
+  "path": "signEvents",
+  "section": "house events",
+  "label": "Sign events",
+  "help": "A sign with a message appears outside your base (stage 3+)."
+ },
+ {
+  "path": "falsePresence",
+  "section": "false presence",
+  "label": "False presence",
+  "help": "A fake Tall One, rendered only on one client, gone when you look right at it."
+ },
+ {
+  "path": "loreBooks",
+  "section": "lore books",
+  "label": "Lore books",
+  "help": "Secret lore books may be placed in free slots of the player's mapped storage."
+ },
+ {
+  "path": "loreBookChance",
+  "section": "lore books",
+  "label": "Lore book chance",
+  "help": "Chance per eligible check (every 10 seconds) to place one new book."
+ },
+ {
+  "path": "loreBookCooldownMinutes",
+  "section": "lore books",
+  "label": "Lore book cooldown minutes",
+  "help": "Minimum minutes between books for one player."
+ },
+ {
+  "path": "scanBlocksPerTick",
+  "section": "base tracking",
+  "label": "Scan blocks per tick",
+  "help": "Minimum blocks the base scanner classifies per tick; it goes faster on its own so a full scan finishes within baseRescanSeconds, but never above scanMaxBlocksPerTick."
+ },
+ {
+  "path": "scanMaxBlocksPerTick",
+  "section": "base tracking",
+  "label": "Scan max blocks per tick",
+  "help": "Upper limit of blocks per tick for one base scan (all players together: twice this)."
+ },
+ {
+  "path": "baseRescanSeconds",
+  "section": "base tracking",
+  "label": "Base rescan seconds",
+  "help": "While you are within 64 blocks of your base it is rescanned this often (seconds)."
+ },
+ {
+  "path": "baseScanRadius",
+  "section": "base tracking",
+  "label": "Base scan radius",
+  "help": "Horizontal radius (anchor +-radius) of one base scan."
+ },
+ {
+  "path": "baseInteriorCap",
+  "section": "base tracking",
+  "label": "Base interior cap",
+  "help": "Hard cap of interior cells flood-fill may mark (MODPLAN §8.3 \"ograniczenie objętości\")."
+ },
+ {
+  "path": "baseCornerCap",
+  "section": "base tracking",
+  "label": "Base corner cap",
+  "help": "Dark interior corners (block light < 4) worth recording for search goals."
+ },
+ {
+  "path": "taskChancePerSecond",
+  "section": "tasks",
+  "label": "Task chance per second",
+  "help": "Chance per second (at night, sheltered, stage 3+) that a task gets assigned."
+ },
+ {
+  "path": "taskCooldownSeconds",
+  "section": "tasks",
+  "label": "Task cooldown seconds",
+  "help": "Seconds one player sits on the task cooldown after completing/failing one."
+ },
+ {
+  "path": "taskGetInsideSeconds",
+  "section": "tasks",
+  "label": "Task get inside seconds",
+  "help": "\"Don't go outside\", step 1: seconds the player has to GET inside (a house / under a roof)."
+ },
+ {
+  "path": "taskStayInsideSeconds",
+  "section": "tasks",
+  "label": "Task stay inside seconds",
+  "help": "\"Don't go outside\", step 2: seconds the player then has to STAY inside (MODPLAN 15.1)."
+ },
+ {
+  "path": "taskLightsCount",
+  "section": "tasks",
+  "label": "Task lights count",
+  "help": "\"Douse the lights\": how many light markers It picks (up to)."
+ },
+ {
+  "path": "taskLightsDeadlineSeconds",
+  "section": "tasks",
+  "label": "Task lights deadline seconds",
+  "help": "\"Douse the lights\": seconds until the assignment expires (dawn also kills it)."
+ },
+ {
+  "path": "taskHideCountdownSeconds",
+  "section": "tasks",
+  "label": "Task hide countdown seconds",
+  "help": "\"Hide and seek\" (§15.2, ETAP 5): seconds of the initial hide countdown."
+ },
+ {
+  "path": "taskWindowLookSeconds",
+  "section": "tasks",
+  "label": "Task window look seconds",
+  "help": "Looking at the figure behind a window gives a \"don't go outside\" task this long (seconds)."
+ },
+ {
+  "path": "taskDontLookSeconds",
+  "section": "tasks",
+  "label": "Task dont look seconds",
+  "help": "NIE PATRZ (§15.4, ETAP 4): seconds the watcher stands behind the player."
+ },
+ {
+  "path": "taskSacrificeItems",
+  "section": "tasks",
+  "label": "Task sacrifice items",
+  "help": "OFIARA (§15.5, ETAP 4+): comma-separated possible offering items (vanilla or mod ids)."
+ },
+ {
+  "path": "taskSacrificeCount",
+  "section": "tasks",
+  "label": "Task sacrifice count",
+  "help": "OFIARA: how many of the offering item are demanded."
+ },
+ {
+  "path": "taskSacrificeSeconds",
+  "section": "tasks",
+  "label": "Task sacrifice seconds",
+  "help": "OFIARA: seconds until the unkept offering deal collapses."
+ },
+ {
+  "path": "baseDousing",
+  "section": "base dousing",
+  "label": "Base dousing",
+  "help": "Enables the DouseLightsEvent snuffing mapped base lights at night."
+ },
+ {
+  "path": "baseDouseChance",
+  "section": "base dousing",
+  "label": "Base douse chance",
+  "help": "Chance per second (night, sheltered, ETAP 4+) that the burst starts."
+ },
+ {
+  "path": "dynamicStructures",
+  "section": "dynamic structures",
+  "label": "Dynamic structures",
+  "help": "Enables rare server-built structures (cemetery, shrine, cottage, black copy)."
+ },
+ {
+  "path": "structureChance",
+  "section": "dynamic structures",
+  "label": "Structure chance",
+  "help": "Chance per second (night, behind the player, one per night) that a build starts."
+ },
+ {
+  "path": "blackCopyChance",
+  "section": "dynamic structures",
+  "label": "Black copy chance",
+  "help": "Of those builds, the chance it is the base's black copy (needs a mapped base)."
+ },
+ {
+  "path": "taskSeekSeconds",
+  "section": "dynamic structures",
+  "label": "Task seek seconds",
+  "help": "How long It walks the rooms searching before it gives up (survive this long)."
+ },
+ {
+  "path": "taskSeekCheckSeconds",
+  "section": "dynamic structures",
+  "label": "Task seek check seconds",
+  "help": "Seconds between two checked dark corners (step/breath cues play at that spot)."
+ },
+ {
+  "path": "taskSeekFindDistance",
+  "section": "dynamic structures",
+  "label": "Task seek find distance",
+  "help": "Blocks: player sitting this close to the checked corner is FOUND (chase follows)."
+ },
+ {
+  "path": "mineEvents",
+  "section": "mine / cave events",
+  "label": "Mine events",
+  "help": "Enable events while the player is underground (digging towards you, sounds, torches, peeking)."
+ },
+ {
+  "path": "digging",
+  "section": "mine / cave events",
+  "label": "Digging",
+  "help": "It may break blocks while digging towards you (also requires the mobGriefing gamerule)."
+ },
+ {
+  "path": "mineMinSecondsUnderground",
+  "section": "mine / cave events",
+  "label": "Mine min seconds underground",
+  "help": "Seconds a player has to spend underground before cave events can start."
+ },
+ {
+  "path": "mineEventCooldownSeconds",
+  "section": "mine / cave events",
+  "label": "Mine event cooldown seconds",
+  "help": "Minimum seconds between two cave events for one player."
+ },
+ {
+  "path": "mineEventChancePerSecond",
+  "section": "mine / cave events",
+  "label": "Mine event chance per second",
+  "help": "Chance per second (after the minimum time) that a cave event starts."
+ },
+ {
+  "path": "mineMaxY",
+  "section": "mine / cave events",
+  "label": "Mine max y",
+  "help": "Y level below which a dark spot counts as \"in a mine\"."
+ },
+ {
+  "path": "digSlowdown",
+  "section": "mine / cave events",
+  "label": "Dig slowdown",
+  "help": "Digging slowdown: 1.0 = like a player with an iron pickaxe, higher = slower and creepier."
+ },
+ {
+  "path": "ambientSounds",
+  "section": "ambience",
+  "label": "Ambient sounds",
+  "help": "Creepy ambient sounds (wind, whispers, breathing behind you, creaks, drones, distant screams...)."
+ },
+ {
+  "path": "ambientChancePerSecond",
+  "section": "ambience",
+  "label": "Ambient chance per second",
+  "help": "Chance per second that an ambient sound plays (at night / underground; daytime is 4x rarer)."
+ },
+ {
+  "path": "scareSounds",
+  "section": "small scares",
+  "label": "Scare sounds",
+  "help": "Short scare sounds close to you (twig snap, pebble, tap on glass, footsteps behind, giggle...)."
+ },
+ {
+  "path": "scareMinSeconds",
+  "section": "small scares",
+  "label": "Scare min seconds",
+  "help": ""
+ },
+ {
+  "path": "scareMaxSeconds",
+  "section": "small scares",
+  "label": "Scare max seconds",
+  "help": ""
+ },
+ {
+  "path": "scareMessages",
+  "section": "on-screen messages",
+  "label": "Scare messages",
+  "help": "Red flickering text in the middle of the screen."
+ },
+ {
+  "path": "scareText",
+  "section": "on-screen messages",
+  "label": "Scare text",
+  "help": "The main message (shown about half of the time, and always after it sinks at your base)."
+ },
+ {
+  "path": "messageMinMinutes",
+  "section": "on-screen messages",
+  "label": "Message min minutes",
+  "help": "Random messages at night / underground every this many minutes."
+ },
+ {
+  "path": "messageMaxMinutes",
+  "section": "on-screen messages",
+  "label": "Message max minutes",
+  "help": ""
+ },
+ {
+  "path": "messageMillis",
+  "section": "on-screen messages",
+  "label": "Message millis",
+  "help": "How long a message stays on screen."
+ },
+ {
+  "path": "activation.afterTicks",
+  "section": "Activation",
+  "label": "After ticks",
+  "help": "Physical elapsed server ticks during PHASE 0 before the IT JOINED sequence may fire (24000 = one day)."
+ },
+ {
+  "path": "activation.requireNight",
+  "section": "Activation",
+  "label": "Require night",
+  "help": "Require night (time of day 13000..23000) in the Overworld for the automatic activation."
+ },
+ {
+  "path": "tension.escalationSpeed",
+  "section": "Tension",
+  "label": "Escalation speed",
+  "help": "Scales every source of tension."
+ },
+ {
+  "path": "tension.nightPerSec",
+  "section": "Tension",
+  "label": "Night per sec",
+  "help": "Tension per second for playing at night in the Overworld."
+ },
+ {
+  "path": "tension.darknessPerSec",
+  "section": "Tension",
+  "label": "Darkness per sec",
+  "help": "Tension per second for standing in darkness (block light < 4) at night."
+ },
+ {
+  "path": "tension.undergroundPerSec",
+  "section": "Tension",
+  "label": "Underground per sec",
+  "help": "Tension per second for being underground (Y below mineMaxY), day or night."
+ }
+]

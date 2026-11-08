@@ -26,6 +26,14 @@ repositories {
             includeGroup('de.maxhenkel.voicechat')
         }
     }
+    maven {
+        // Mod Menu (optional: its "Config" button opens the settings screen)
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com/releases/'
+        content {
+            includeGroup('com.terraformersmc')
+        }
+    }
 }
 
 loom {
@@ -71,6 +79,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
     compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+    modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") { transitive = false }
 }
 
 processResources {

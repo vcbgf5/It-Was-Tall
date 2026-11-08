@@ -19,6 +19,9 @@
     ],
     "voicechat": [
       "com.itwastall.voice.ItWasTallVoicechat"
+    ],
+    "modmenu": [
+      "com.itwastall.client.config.ModMenuIntegration"
     ]
   },
   "depends": {
@@ -29,7 +32,8 @@
     "geckolib": ">=4.6"
   },
   "suggests": {
-    "voicechat": "*"
+    "voicechat": "*",
+    "modmenu": "*"
   },
   "mixins": [
     "itwastall.mixins.json",

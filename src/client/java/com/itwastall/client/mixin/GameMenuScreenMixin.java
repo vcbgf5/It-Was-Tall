@@ -43,6 +43,10 @@ public abstract class GameMenuScreenMixin extends Screen {
         addDrawableChild(ButtonWidget.builder(Text.literal("Journal"), b -> {
             if (this.client != null) this.client.setScreen(new JournalScreen());
         }).dimensions(6, this.height - 26, 74, 20).build());
+        Screen self = (Screen) (Object) this;
+        addDrawableChild(ButtonWidget.builder(Text.literal("Settings"), b -> {
+            if (this.client != null) this.client.setScreen(new com.itwastall.client.config.ConfigScreen(self));
+        }).dimensions(84, this.height - 26, 74, 20).build());
     }
 
     @Inject(method = "renderBackground", at = @At("TAIL"))
