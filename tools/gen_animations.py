@@ -145,10 +145,10 @@ A["emerge"] = dict(loop="hold_on_last_frame", animation_length=1.6, bones={
 })
 
 # --- bound: the ritual's end. Lying on its back in the air, held by the chains: arms, legs and head hang down
-# (the root tips 90 degrees backward and is moved forward by half its height, so it lies centred on the entity),
+# (the root tips 90 degrees backward and is moved forward so the lying body is centred on the entity — measured),
 # swaying a little, as if it were heavy and limp ---------------------------------------------------------------
 A["bound"] = dict(loop=True, animation_length=3.0, bones={
-    "root": {"rotation": kf((0.0, [-90, 0, 0])), "position": kf((0.0, [0, 0, -28]))},
+    "root": {"rotation": kf((0.0, [-90, 0, 0])), "position": kf((0.0, [0, 0, -37]))},
     "torso": {"rotation": merge(cycle(3.0, -14, -10, axis=0), cycle(3.0, -2, 2, phase=0.25, axis=2))},
     "neck": {"rotation": kf((0.0, [-30, 0, 0]))},
     "head": {"rotation": merge(cycle(3.0, -62, -54, phase=0.1, axis=0), cycle(3.0, -6, 6, phase=0.4, axis=2))},
